@@ -76,7 +76,7 @@ SUBSYSTEM_DEF(ticker)
 	/// Reports the current ruler's display name
 	var/rulertype = "Grand Duke"
 	/// The current ruling mob
-	var/rulermob = null
+	var/mob/rulermob = null
 	/// Current regent mob
 	var/regentmob = null
 	/// Prevent regent shuffling

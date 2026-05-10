@@ -95,7 +95,7 @@
 		if(proposal["is_selected"])
 			warlord_selected_id = proposal["proposal_id"]
 		var/list/details = proposal["term_details"] || list()
-		UNTYPED_LIST_ADD(proposals_out, list(
+		var/list/proposal_entry = list(
 			"proposal_id" = proposal["proposal_id"],
 			"term_type" = proposal["term_type"],
 			"term_name" = proposal["term_name"],
@@ -104,14 +104,19 @@
 			"pending_count" = pending_votes.len,
 			"is_user_proposal" = is_user_proposal,
 			"is_user_vote_confirmed" = user_vote_confirmed,
-			"is_warlord_selected" = proposal["is_selected"],
-			"term_custom_name" = details["custom_name"],
-			"term_text" = details["text"],
-			"term_number" = details["number"],
-			"term_target" = details["target"],
-			"term_receiver" = details["receiver"],
-			"term_obj_target" = details["obj_target"]
-		))
+			"is_warlord_selected" = proposal["is_selected"]
+		)
+		var/found_term_type = text2path(proposal["term_type"])
+		if(found_term_type)
+			var/datum/treaty/terms/proto = new found_term_type()
+			var/list/display_fields_out = list()
+			for(var/datum/treaty/input_field/field in proto.input_fields)
+				if(!field.client_only)
+					proposal_entry["term_[field.key]"] = details[field.key]
+					UNTYPED_LIST_ADD(display_fields_out, list("key" = field.key, "label" = field.label))
+			proposal_entry["display_fields"] = display_fields_out
+			qdel(proto)
+		UNTYPED_LIST_ADD(proposals_out, proposal_entry)
 	data["casus_belli_proposals"] = proposals_out
 	data["user_proposal"] = user_proposal_id_out
 	data["user_vote"] = user_vote_id_out
@@ -119,21 +124,18 @@
 	data["warlord_selected_proposal"] = warlord_selected_id
 
 	if(src.casus_belli_selection)
-		data["warlord_casus_belli"] = list(
+		var/list/casus_belli_out = list(
 			"name" = src.casus_belli_selection.name,
 			"desc" = src.casus_belli_selection.desc,
 			"type" = "[src.casus_belli_selection.type]",
-			"target_options" = src.casus_belli_selection.target_options,
-			"requires_text" = src.casus_belli_selection.requires_text,
-			"requires_number" = src.casus_belli_selection.requires_number,
+			"inputs" = src.casus_belli_selection.serialize_input_fields(),
+			"display_fields" = src.casus_belli_selection.get_display_fields(),
 			"open_signatures" = src.casus_belli_selection.open_signatures,
-			"target" = src.casus_belli_selection.target,
-			"receiver" = src.casus_belli_selection.receiver,
-			"obj_target" = src.casus_belli_selection.obj_target,
-			"text" = src.casus_belli_selection.text,
-			"number" = src.casus_belli_selection.number,
-			"custom_name" = src.casus_belli_selection.custom_name
 		)
+		for(var/datum/treaty/input_field/field in src.casus_belli_selection.input_fields)
+			if(!field.client_only)
+				casus_belli_out[field.key] = src.casus_belli_selection.vars[field.key]
+		data["warlord_casus_belli"] = casus_belli_out
 	else
 		data["warlord_casus_belli"] = null
 
@@ -268,8 +270,7 @@
 			"type" = class.type
 		))
 	data["classes"] = class_list
-
-	// faction & territory data for drafting terms that need targets
+	
 	var/list/cb_faction_list = list()
 	for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
 		if(faction.type in DEFAULT_TERRITORY_FACTIONS)
@@ -278,7 +279,6 @@
 				"desc" = faction.desc,
 				"vault" = faction.vault,
 				"owner" = faction.owner,
-				"territories" = list(),
 				"type" = "[faction.type]",
 				"icon" = ""
 			))
@@ -289,33 +289,10 @@
 			"desc" = src.linked_faction.desc,
 			"vault" = src.linked_faction.vault,
 			"owner" = src.linked_faction.owner,
-			"territories" = list(),
 			"type" = "[src.linked_faction.type]",
 			"icon" = ""
 		))
 	data["backend_factions"] = cb_faction_list
-
-	var/list/cb_territory_list = list()
-	for(var/datum/territory/land in SSwarbands.territory)
-		var/cb_faction_name
-		if(land.associated_faction)
-			cb_faction_name = land.associated_faction.name
-		var/list/aspect_data = list()
-		if(land.aspects && islist(land.aspects))
-			for(var/datum/territory/aspect/asp in land.aspects)
-				if(istype(asp))
-					aspect_data += list(list("name" = asp.name, "desc" = asp.desc))
-		var/prized_good_name
-		if(land.prized_good)
-			prized_good_name = land.prized_good.name
-		UNTYPED_LIST_ADD(cb_territory_list, list(
-			"name" = land.name,
-			"desc" = land.desc,
-			"prized_good" = prized_good_name,
-			"faction_name" = cb_faction_name,
-			"aspects" = aspect_data
-		))
-	data["backend_territories"] = cb_territory_list
 
 	// a list of treaty terms for casus belli browsing & proposal
 	// gets rebuilt in stage 2, as the decisions in stage 1 can potentially make more available
@@ -328,10 +305,8 @@
 			"name" = term.name,
 			"desc" = term.desc,
 			"hint" = term.hint,
-			"requires_text" = term.requires_text,
-			"requires_number" = term.requires_number,
 			"open_signatures" = term.open_signatures,
-			"target_options" = term.target_options,
+			"inputs" = term.serialize_input_fields(),
 			"type" = "[term.type]",
 			"warbandlock" = (term.warbandlock ? "[term.warbandlock]" : null)
 		))
@@ -499,19 +474,24 @@
 			var/found_type = text2path(term_type_str)
 			if(!found_type)
 				return
+
+			var/datum/treaty/terms/new_term = new found_type()
 			var/list/term_details = list()
-			if(params["custom_name"])
-				term_details["custom_name"] = sanitize(copytext(params["custom_name"], 1, MAX_MESSAGE_LEN))
-			if(params["text"])
-				term_details["text"] = sanitize(copytext(params["text"], 1, MAX_MESSAGE_LEN))
-			if(params["number"])
-				term_details["number"] = text2num(params["number"])
-			if(params["target"]) // copytext rather than sanitize at this point, because factions are already set in stone. nothing to worry about
-				term_details["target"] = copytext(params["target"], 1, MAX_MESSAGE_LEN)
-			if(params["receiver"])
-				term_details["receiver"] = copytext(params["receiver"], 1, MAX_MESSAGE_LEN)
-			if(params["obj_target"])
-				term_details["obj_target"] = copytext(params["obj_target"], 1, MAX_MESSAGE_LEN)
+			for(var/datum/treaty/input_field/field in new_term.input_fields)
+				if(field.client_only)
+					continue
+				var/raw = params[field.key]
+				if(!raw)
+					continue
+				var/val
+				if(istype(field, /datum/treaty/input_field/number))
+					val = text2num(raw)
+				else if(istype(field, /datum/treaty/input_field/textarea) || istype(field, /datum/treaty/input_field/text_input))
+					val = sanitize(copytext(raw, 1, MAX_MESSAGE_LEN))
+				else
+					val = copytext(raw, 1, MAX_MESSAGE_LEN)
+				term_details[field.key] = val
+				new_term.vars[field.key] = val
 
 			// removes authorship from the previous proposal BEFORE the duplicate check
 			for(var/list/existing in src.casus_belli_proposals)
@@ -523,18 +503,6 @@
 						src.casus_belli_proposals -= list(existing)
 					break
 
-			var/datum/treaty/terms/new_term = new found_type()
-			if(term_details["text"]) 
-				new_term.text = term_details["text"]
-			if(term_details["number"]) 
-				new_term.number = term_details["number"]
-			if(term_details["target"]) 
-				new_term.target = term_details["target"]
-			if(term_details["receiver"]) 
-				new_term.receiver = term_details["receiver"]
-			if(term_details["obj_target"]) 
-				new_term.obj_target = term_details["obj_target"]
-
 			// check for duplicate proposals
 			for(var/list/existing_proposal in src.casus_belli_proposals)
 				var/existing_type = text2path(existing_proposal["term_type"])
@@ -542,31 +510,12 @@
 					continue
 				var/datum/treaty/terms/existing_term = new existing_type()
 				var/list/ed = existing_proposal["term_details"] || list()
-				if(ed["text"]) 
-					existing_term.text = ed["text"]
-				if(ed["number"]) 
-					existing_term.number = ed["number"]
-				if(ed["target"]) 
-					existing_term.target = ed["target"]
-				if(ed["receiver"]) 
-					existing_term.receiver = ed["receiver"]
-				if(ed["obj_target"]) 
-					existing_term.obj_target = ed["obj_target"]
+				for(var/datum/treaty/input_field/field in existing_term.input_fields)
+					if(field.client_only || isnull(ed[field.key]))
+						continue
+					existing_term.vars[field.key] = ed[field.key]
 
-				var/is_dup = FALSE
-				if(istype(new_term, /datum/treaty/terms/territory_loss) && istype(existing_term, /datum/treaty/terms/territory_loss))
-					is_dup = (new_term.obj_target == existing_term.obj_target)
-				else if(istype(new_term, /datum/treaty/terms/cointribute) && istype(existing_term, /datum/treaty/terms/cointribute))
-					is_dup = (new_term.target == existing_term.target && new_term.receiver == existing_term.receiver)
-				else if(istype(new_term, /datum/treaty/terms/exile) && istype(existing_term, /datum/treaty/terms/exile))
-					is_dup = (new_term.target == existing_term.target)
-				else if(istype(new_term, /datum/treaty/terms/remove_law) && istype(existing_term, /datum/treaty/terms/remove_law))
-					is_dup = (new_term.number == existing_term.number)
-				else if(istype(new_term, /datum/treaty/terms/codify_law) && istype(existing_term, /datum/treaty/terms/codify_law))
-					is_dup = (new_term.text == existing_term.text)
-				else if(istype(new_term, /datum/treaty/terms/set_tax) && istype(existing_term, /datum/treaty/terms/set_tax))
-					is_dup = (new_term.number == existing_term.number)
-
+				var/is_dup = new_term.duplicate_check(existing_term)
 				qdel(existing_term)
 
 				if(is_dup)
@@ -671,18 +620,10 @@
 					qdel(src.casus_belli_selection)
 				src.casus_belli_selection = new found_type()
 				var/list/details = target_proposal["term_details"] || list()
-				if(details["custom_name"]) 
-					src.casus_belli_selection.custom_name = details["custom_name"]
-				if(details["text"]) 
-					src.casus_belli_selection.text = details["text"]
-				if(details["number"]) 
-					src.casus_belli_selection.number = details["number"]
-				if(details["target"]) 
-					src.casus_belli_selection.target = details["target"]
-				if(details["receiver"]) 
-					src.casus_belli_selection.receiver = details["receiver"]
-				if(details["obj_target"]) 
-					src.casus_belli_selection.obj_target = details["obj_target"]
+				for(var/datum/treaty/input_field/field in src.casus_belli_selection.input_fields)
+					if(field.client_only || isnull(details[field.key]))
+						continue
+					src.casus_belli_selection.vars[field.key] = details[field.key]
 			SStgui.update_uis(src)
 			return
 

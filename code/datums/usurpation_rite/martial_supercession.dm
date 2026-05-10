@@ -20,6 +20,11 @@
 	new_ruler_title_f = "Grand Master"
 	new_realm_type = "Sovereign Order"
 	new_realm_type_short = "Sovereign Order"
+	reformation_desc = "Steel bought this land long ago. Is it not fitting that steel should yet rule?"
+	new_minister_title = "Lord-Commander"
+	new_minister_title_f = "Lady-Commander"	
+	minister_eligibility_hint = "Warriors skilled enough to be considered experts with a weapon may act as Ministers."
+	minister_restriction_hint = "The Undead, however, are of no use to this new order."
 	roundend_epilogue = "The realm has been seized by the strong, " + \
 		"who claims to be just, to rule in Ravox's name. " + \
 		"It is said that the first King and Queen of the world were great warriors, " + \
@@ -48,31 +53,21 @@
 	fail("The warriors of the realm did not grant sufficient assent.")
 
 /// Override: warriors assent, not nobles. Check Expert+ combat skill instead of TRAIT_NOBLE. Outlaws may assent.
-/datum/usurpation_rite/martial_supercession/try_assent(mob/living/carbon/human/warrior)
-	if(stage != RITE_STAGE_GATHERING)
+/datum/usurpation_rite/martial_supercession/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
 		return FALSE
-	if(!istype(warrior))
+	if(candidate.stat != CONSCIOUS)
 		return FALSE
-	if(warrior.stat != CONSCIOUS)
+	if(!has_expert_combat_skill(candidate))
 		return FALSE
-	if(warrior == invoker)
-		to_chat(warrior, span_warning("You cannot assent to your own claim."))
+	if(HAS_TRAIT(candidate, TRAIT_ROTMAN) || (candidate.mob_biotypes & MOB_UNDEAD))
 		return FALSE
-	if(!has_expert_combat_skill(warrior))
-		to_chat(warrior, span_warning("Only those who have proven themselves as expert warriors may speak assent to this rite."))
-		return FALSE
-	if(HAS_TRAIT(warrior, TRAIT_ROTMAN) || (warrior.mob_biotypes & MOB_UNDEAD))
-		to_chat(warrior, span_warning("The dead cannot serve justice."))
-		return FALSE
-	if(assenters[warrior])
-		to_chat(warrior, span_warning("You have already spoken your assent."))
-		return FALSE
-	if(!throne || get_dist(warrior, throne) > RITE_ASSENT_RANGE)
-		return FALSE
-	assenters[warrior] = TRUE
-	on_assent_accepted(warrior)
-	check_assent_threshold()
 	return TRUE
+
+/datum/usurpation_rite/martial_supercession/assent_failure_reason(mob/living/carbon/human/warrior)
+	if(HAS_TRAIT(warrior, TRAIT_ROTMAN) || (warrior.mob_biotypes & MOB_UNDEAD))
+		return "The dead cannot serve justice."
+	return "Only those who have proven themselves as expert warriors may speak assent to this rite."
 
 /datum/usurpation_rite/martial_supercession/on_assent_accepted(mob/living/carbon/human/warrior)
 	warrior.visible_message( \

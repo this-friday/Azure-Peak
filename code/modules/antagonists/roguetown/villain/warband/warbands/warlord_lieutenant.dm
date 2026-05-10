@@ -396,7 +396,6 @@
 
 // standard
 // succeed when a term you wrote is in a submitted treaty
-// or if a faction you own is given territory
 // handled in treaty.dm
 /datum/objective/warband/aspirant/standard/check_completion()
 	return completed

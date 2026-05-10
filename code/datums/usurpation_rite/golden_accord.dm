@@ -23,6 +23,11 @@
 	new_ruler_title_f = "Grand Consul"
 	new_realm_type = "Republic"
 	new_realm_type_short = "Republic"
+	reformation_desc = "Mammon has always been the foremost expression of power. With a Throne commanded expressly by wealth, we can finally make it official."	
+	minister_eligibility_hint = "Anyone with a total of at least 200 mammon in their MEISTER account or on their person may serve as an Minister."
+	new_minister_title = "Merchant-Prince"
+	new_minister_title_f = "Merchant-Princess"
+	minister_restriction_hint = "Outlaws and the Undead are excluded."
 	roundend_epilogue = "The quill has proven mightier than the sword. " + \
 		"The old order has been overthrown, replaced by a democratic, prosperous republic -- " + \
 		"where only worthy burghers with coin earned by their own merit can claim the throne, " + \
@@ -51,34 +56,25 @@
 	fail("The burghers of the realm did not grant sufficient assent.")
 
 /// Override: citizens with bank accounts assent, not nobles.
-/datum/usurpation_rite/golden_accord/try_assent(mob/living/carbon/human/burgher)
-	if(stage != RITE_STAGE_GATHERING)
+/datum/usurpation_rite/golden_accord/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
 		return FALSE
-	if(!istype(burgher))
+	if(candidate.stat != CONSCIOUS)
 		return FALSE
-	if(burgher.stat != CONSCIOUS)
+	if(get_total_wealth(candidate) < GOLDEN_REQUIRED_WEALTH)
 		return FALSE
-	if(burgher == invoker)
-		to_chat(burgher, span_warning("You cannot assent to your own claim."))
+	if(HAS_TRAIT(candidate, TRAIT_OUTLAW))
 		return FALSE
-	if(get_total_wealth(burgher) < GOLDEN_REQUIRED_WEALTH)
-		to_chat(burgher, span_warning("You need at least [GOLDEN_REQUIRED_WEALTH] mammons to your name to speak assent, pauper."))
+	if(HAS_TRAIT(candidate, TRAIT_ROTMAN) || (candidate.mob_biotypes & MOB_UNDEAD))
 		return FALSE
-	if(HAS_TRAIT(burgher, TRAIT_OUTLAW))
-		to_chat(burgher, span_warning("Outlaws have no standing in matters of commerce."))
-		return FALSE
-	if(HAS_TRAIT(burgher, TRAIT_ROTMAN) || (burgher.mob_biotypes & MOB_UNDEAD))
-		to_chat(burgher, span_warning("The dead hold no contracts."))
-		return FALSE
-	if(assenters[burgher])
-		to_chat(burgher, span_warning("You have already spoken your assent."))
-		return FALSE
-	if(!throne || get_dist(burgher, throne) > RITE_ASSENT_RANGE)
-		return FALSE
-	assenters[burgher] = TRUE
-	on_assent_accepted(burgher)
-	check_assent_threshold()
 	return TRUE
+
+/datum/usurpation_rite/golden_accord/assent_failure_reason(mob/living/carbon/human/burgher)
+	if(HAS_TRAIT(burgher, TRAIT_ROTMAN) || (burgher.mob_biotypes & MOB_UNDEAD))
+		return "The dead hold no contracts."
+	if(HAS_TRAIT(burgher, TRAIT_OUTLAW))
+		return "Outlaws have no standing in matters of commerce."
+	return "You need at least [GOLDEN_REQUIRED_WEALTH] mammons to your name to speak assent, pauper."
 
 /datum/usurpation_rite/golden_accord/on_assent_accepted(mob/living/carbon/human/burgher)
 	burgher.visible_message( \

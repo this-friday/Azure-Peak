@@ -13,7 +13,6 @@ SUBSYSTEM_DEF(warbands)
 
 	var/list/treaties = list()
 	var/list/submitted_treaties = list()
-	var/territory = list()
 	var/territory_factions = list()
 
 	// list of associated faction names & jobs
@@ -58,8 +57,6 @@ SUBSYSTEM_DEF(warbands)
 	..()
 
 /datum/controller/subsystem/warbands/Initialize()
-	for(var/territory_path in DEFAULT_TERRITORY)
-		territory += new territory_path
 	for(var/territory_faction_path in DEFAULT_TERRITORY_FACTIONS)
 		territory_factions += new territory_faction_path
 	create_name_cache()

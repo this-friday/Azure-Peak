@@ -27,7 +27,7 @@ export const WarbandCreation = () => {
     allTerms, casusBelliProposals,
     userProposal, userVote, userVoteConfirmed,
     warlordSelectedProposal, warlordCasusBelli,
-    factions, territories,
+    factions,
     backend_warband,
   } = useWarbandData();
 
@@ -177,7 +177,7 @@ export const WarbandCreation = () => {
             warlordSelectedProposal={warlordSelectedProposal}
             warlordCasusBelli={warlordCasusBelli}
             isWarlord={is_warlord} locked={!canInteractCasusBelli}
-            factions={factions ?? []} territories={territories ?? []}
+            factions={factions ?? []}
             lockedWarbandType={lockedWarbandType}
           />
         )}

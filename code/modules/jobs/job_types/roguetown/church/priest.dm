@@ -262,10 +262,12 @@ GLOBAL_LIST_EMPTY(heretical_players)
 					HL.mind.assigned_role = "Towner" //So they don't get the innate traits of the king
 			if(HL.job == "Grand Duke")
 				HL.job = emeritus_title
+				HL.job_path = /datum/job/roguetown/villager
 
 		//Coronate new King (or Queen)
 		HU.mind.assigned_role = "Grand Duke"
 		HU.job = "Grand Duke"
+		HU.job_path = /datum/job/roguetown/lord
 		ADD_TRAIT(HU, TRAIT_DNR, TRAIT_GENERIC) // Consequences, Johnathan.
 		SSticker.set_ruler_mob(HU)
 		SSticker.regentmob = null
@@ -278,6 +280,19 @@ GLOBAL_LIST_EMPTY(heretical_players)
 		var/datum/job/roguetown/nomoredukes = SSjob.GetJob("Grand Duke")
 		if(nomoredukes)
 			nomoredukes.total_positions = -1000 //We got what we got now.
+
+		// when a Lord is elevated, we comb the list of treaties to see if anything required a Lord's signature
+		// if it did, we make sure to unsign it
+		for(var/obj/item/treaty/found_treaty in SSwarbands.treaties)
+			if(!found_treaty.active_terms.len)
+				continue
+			var/lord_term_found = FALSE
+			for(var/datum/treaty/terms/term in found_treaty.active_terms)
+				if(/datum/job/roguetown/lord in term.get_authorities())
+					lord_term_found = TRUE
+					break
+			if(lord_term_found)
+				found_treaty.unsign_all_terms()
 
 /mob/living/carbon/human/proc/churchannouncement()
 	set name = "Announcement"

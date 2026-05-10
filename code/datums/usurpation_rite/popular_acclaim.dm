@@ -15,6 +15,7 @@ The dead has no voice in this. The world is not progressive enough for that.
 /datum/usurpation_rite/popular_acclaim
 	name = "Rite of Popular Acclaim"
 	desc = "Claim the throne through the raw will of the people. No god, no mandate — just enough voices."
+	reformation_desc = "No longer shall the Throne's fate be determined by birthright. It shall be determined by the collective will of the realm's people - and the Tribune shall be their voice."
 	explanation = {"<p>Vox populi, vox dei. The voice of the people is the voice of the gods. When the people speak with one voice, no throne can stand against them.</p>\
 <p><b>Who may invoke:</b> Bandits, outlaws (including outlawed nobles), peasants, or sidefolk.</p>\
 <p><b>How it works:</b> The people of the realm must gather near the throne and speak the words 'I assent' to support your claim. Anyone may assent.</p>\
@@ -23,8 +24,11 @@ The dead has no voice in this. The world is not progressive enough for that.
 <p><b>Realm type if successful:</b> Republic, ruled by a Tribune.</p>"}
 	new_ruler_title = "Tribune"
 	new_ruler_title_f = "Tribune"
+	new_minister_title = "Senator"
+	new_minister_title_f = "Senator"
 	new_realm_type = "Republic"
 	new_realm_type_short = "Republic"
+	minister_eligibility_hint = "Any living soul may serve as a Minister."
 	roundend_epilogue = "The people have spoken, and the old order has crumbled. " + \
 		"The realm is ruled by the people, for the people! " + \
 		"The voice of the people is the voice of the gods! " + \
@@ -57,28 +61,17 @@ The dead has no voice in this. The world is not progressive enough for that.
 	fail("The people of the realm did not grant sufficient assent.")
 
 /// Override: anyone living can assent. Wide pool, weighted by outlaw status.
-/datum/usurpation_rite/popular_acclaim/try_assent(mob/living/carbon/human/person)
-	if(stage != RITE_STAGE_GATHERING)
+/datum/usurpation_rite/popular_acclaim/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
 		return FALSE
-	if(!istype(person))
+	if(candidate.stat != CONSCIOUS)
 		return FALSE
-	if(person.stat != CONSCIOUS)
+	if(HAS_TRAIT(candidate, TRAIT_ROTMAN) || (candidate.mob_biotypes & MOB_UNDEAD))
 		return FALSE
-	if(person == invoker)
-		to_chat(person, span_warning("You cannot assent to your own claim."))
-		return FALSE
-	if(HAS_TRAIT(person, TRAIT_ROTMAN) || (person.mob_biotypes & MOB_UNDEAD))
-		to_chat(person, span_warning("The dead have no voice among the living."))
-		return FALSE
-	if(assenters[person])
-		to_chat(person, span_warning("You have already spoken your assent."))
-		return FALSE
-	if(!throne || get_dist(person, throne) > RITE_ASSENT_RANGE)
-		return FALSE
-	assenters[person] = TRUE
-	on_assent_accepted(person)
-	check_assent_threshold()
 	return TRUE
+
+/datum/usurpation_rite/popular_acclaim/assent_failure_reason(mob/living/carbon/human/person)
+	return "The dead have no voice among the living."
 
 /datum/usurpation_rite/popular_acclaim/on_assent_accepted(mob/living/carbon/human/person)
 	var/weight = get_vote_weight(person)

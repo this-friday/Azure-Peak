@@ -28,7 +28,6 @@
 			campaign_options += "View Morale"		
 			if(user.mind.special_role == "Warlord" || user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant" || user.mind.special_role == "Warlord's Envoy")
 				campaign_options += "Prepare Treaty"
-				campaign_options += "Estate Import"
 			if(user.mind.special_role == "Warlord")
 				campaign_options += "Exile Member"
 				if(src.linked_warband.encounter_manager.outskirts_locked)
@@ -71,15 +70,12 @@
 						if(chosen_casus_belli.obj_target) 
 							cb_copy.obj_target  = chosen_casus_belli.obj_target
 						spawned_treaty.active_terms += cb_copy
-					COOLDOWN_START(user.mind, treaty_cooldown, 60 SECONDS)
+					COOLDOWN_START(user.mind, treaty_cooldown, 15 MINUTES)
 					return
 				if("View Troops")
 					to_chat(user, span_warning("[src.linked_warband.spawns] soldiers remain at our disposal. Our finest are..."))
 					for(var/mob/living/member in src.linked_warband.members)
 						to_chat(user, span_warning("- [member.real_name], the [member.job]."))
-					return
-				if("Estate Import")
-					import(user)
 					return
 				if("Exile Member")
 					var/list/viable_member_list = list()
@@ -547,74 +543,6 @@
 		src.disabled = TRUE
 		src.alpha = 50
 		to_chat(user, span_nicegreen("[destruction_msg]"))
-
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// WARBAND ESTATE IMPORT
-/*
-
-*/
-/obj/structure/fluff/warband/campaign_planner/proc/import(mob/user)
-	var/datum/territory_faction/user_faction
-
-	if(user.mind.special_role == "Warlord")
-		user_faction = src.linked_warband.linked_faction
-	else if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant")
-		for(var/datum/territory_faction/faction in user.mind.associated_factions)
-			if(faction.owner == user.real_name)
-				user_faction = faction
-				break
-	if(!user_faction)
-		to_chat(user, span_warning("I have no faction to import from."))
-		return
-	if(!user_faction.territories.len)
-		to_chat(user, span_warning("I have no territories to demand imports from. Woe."))
-		return
-	
-	var/list/territory_choices = list()
-	for(var/datum/territory/territory in user_faction.territories)
-		territory_choices[territory.name] = territory
-	var/chosen_territory_name = input(user, "Select a territory to import from:", "Estate Import") as null|anything in territory_choices
-	if(!chosen_territory_name)
-		return
-	
-	var/datum/territory/target_territory = territory_choices[chosen_territory_name]
-	var/datum/goods/prized_good = target_territory.prized_good
-	var/good_name = initial(prized_good.name)
-	to_chat(user, span_notice("[target_territory.name] - Prized Good: [good_name]"))
-	to_chat(user, span_notice("Distance: [target_territory.distance] | Faction Vault: [user_faction.vault] mammon"))
-	var/amount = input(user, "How much coin should be spent on the import?", "Estate Import") as null|num
-	if(!amount || amount <= 0)
-		return
-	amount = round(amount)
-
-	var/location = alert(user, "Delivery Location", "Estate Import", "Warcamp (No Toll)", "City Docks (High Toll)", "Groveside (No Toll)")
-	if(!location)
-		return
-	var/location_name = location
-
-	var/expected_value = validate_territory_import(target_territory, location_name, amount)
-	if(expected_value <= 25)
-		to_chat(user, span_warning("This import's final value would be too low to yield goods after accounting for costs. Try a larger amount."))
-		return
-
-	if(user_faction.vault < amount)
-		to_chat(user, span_warning("Insufficient funds in the faction vault. Need [amount]m, have [user_faction.vault]m."))
-		return
-
-	user_faction.vault -= amount
-	if(execute_territory_import(target_territory, location_name, amount, user))
-		if(location == "Warcamp (No Toll)")
-			to_chat(user, span_warning("I withdraw goods from my warchest."))
-		else if(location == "City Docks (High Toll)")
-			to_chat(user, span_notice("Import affirmed. It will arrive on the docks in twelve minutes."))
-		else
-			to_chat(user, span_notice("Import affirmed. It shall arrive on the Groveside dock in twelve minutes."))
-	else
-		user_faction.vault += amount
-		to_chat(user, span_warning("Import failed. Funds have been returned to the vault."))
-
-
 
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SPAWN BARRIER

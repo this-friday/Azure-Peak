@@ -12,6 +12,7 @@
 /datum/usurpation_rite
 	var/name = "Usurpation Rite"
 	var/desc = "A rite to claim the throne."
+	var/reformation_desc = ""
 	var/explanation = "A rite of succession."
 	var/stage = RITE_STAGE_INACTIVE
 	var/mob/living/carbon/human/invoker
@@ -23,6 +24,10 @@
 	var/new_ruler_title_f = "Grand Duchess"
 	var/new_realm_type = "Grand Duchy"
 	var/new_realm_type_short = "Duchy"
+	var/new_minister_title = "Councillor" // when filled, this title is given to Ministers after a successful Reformation term (/datum/treaty/terms/regime_change)
+	var/new_minister_title_f = "Councillor"
+	var/minister_eligibility_hint = "" // for the Reformation Term (/datum/treaty/terms/regime_change) | a string holding a hint regarding who's eligible to act as an Minister
+	var/minister_restriction_hint = ""
 	var/mob/living/carbon/human/contester
 	var/contester_timer_id
 	var/contest_time_remaining = 0
@@ -47,6 +52,21 @@
 	if(user.stat != CONSCIOUS)
 		return FALSE
 	if(SSticker.rulermob == user)
+		return FALSE
+	return TRUE
+
+// an additional assent check separated from the base essentials in try_assent (are they nearby, etc) 
+// used to define a rite's unique assent requirements
+/datum/usurpation_rite/proc/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
+		return FALSE
+	if(candidate.stat != CONSCIOUS)
+		return FALSE
+	if(!HAS_TRAIT(candidate, TRAIT_NOBLE))
+		return FALSE
+	if(HAS_TRAIT(candidate, TRAIT_OUTLAW))
+		return FALSE
+	if(HAS_TRAIT(candidate, TRAIT_ROTMAN) || (candidate.mob_biotypes & MOB_UNDEAD))
 		return FALSE
 	return TRUE
 
@@ -77,19 +97,13 @@
 		return FALSE
 	if(!istype(noble))
 		return FALSE
-	if(noble.stat != CONSCIOUS)
-		return FALSE
 	if(noble == invoker)
 		to_chat(noble, span_warning("You cannot assent to your own claim."))
 		return FALSE
-	if(!HAS_TRAIT(noble, TRAIT_NOBLE))
-		to_chat(noble, span_warning("Only those of noble blood may speak assent."))
-		return FALSE
-	if(HAS_TRAIT(noble, TRAIT_OUTLAW))
-		to_chat(noble, span_warning("Astrata shuns those who stand outside the order."))
-		return FALSE
-	if(HAS_TRAIT(noble, TRAIT_ROTMAN) || (noble.mob_biotypes & MOB_UNDEAD))
-		to_chat(noble, span_warning("The sun has no place for the living dead."))
+	if(!can_assent(noble))
+		var/msg = assent_failure_reason(noble)
+		if(msg)
+			to_chat(noble, span_warning(msg))
 		return FALSE
 	if(assenters[noble])
 		to_chat(noble, span_warning("You have already spoken your assent."))
@@ -100,6 +114,10 @@
 	on_assent_accepted(noble)
 	check_assent_threshold()
 	return TRUE
+
+// returns a failure message to show a candidate when can_assent() rejects them
+/datum/usurpation_rite/proc/assent_failure_reason(mob/living/carbon/human/candidate)
+	return
 
 /datum/usurpation_rite/proc/on_assent_accepted(mob/living/carbon/human/noble)
 	return
@@ -191,6 +209,7 @@
 				HL.mind.RemoveSpell(spell_type)
 		if(HL.job == "Grand Duke")
 			HL.job = "Towner"
+			HL.job_path = /datum/job/roguetown/villager
 			HL.advjob = emeritus_title
 			GLOB.lord_titles[HL.real_name] = emeritus_title
 
@@ -203,7 +222,7 @@
 
 	SSticker.realm_type = new_realm_type
 	SSticker.realm_type_short = new_realm_type_short
-
+	invoker.job_path = /datum/job/roguetown/lord
 	invoker.mind.assigned_role = "Grand Duke"
 	invoker.job = "Grand Duke"
 	// Grant the Grand Duke's governance spells to the new ruler
@@ -225,6 +244,19 @@
 				to_chat(HH, span_warning("The crown is wrenched from you by an unseen force!"))
 			to_chat(invoker, span_notice("The crown materializes at your feet."))
 		crown.forceMove(get_turf(invoker))
+
+	// when a Lord is elevated, we comb the list of treaties to see if anything required a Lord's signature
+	// if it did, we make sure to unsign it
+	for(var/obj/item/treaty/found_treaty in SSwarbands.treaties)
+		if(!found_treaty.active_terms.len)
+			continue
+		var/lord_term_found = FALSE
+		for(var/datum/treaty/terms/term in found_treaty.active_terms)
+			if(/datum/job/roguetown/lord in term.get_authorities())
+				lord_term_found = TRUE
+				break
+		if(lord_term_found)
+			found_treaty.unsign_all_terms()
 
 	var/realm = SSticker.realm_name || "Azure Peak"
 	// Imitate the text whenever a new Duke joins the game

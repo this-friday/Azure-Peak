@@ -116,24 +116,23 @@
 
 /atom/movable/screen/warband/manager/proc/figure_refresh()
 	var/list/important_jobs = list(
-		"Grand Duke",
-		"Bishop",
-		"Consort Dowager",
-		"Consort",
-		"Hand",
-		"Prince",		
-		"Marshal",
-		"Steward",		
-		"Suitor",
-		"Knight Captain",
-		"Martyr",
-		"Guildmaster",
-		"Court Magician",
-		"Councillor"
+		/datum/job/roguetown/lord,
+		/datum/job/roguetown/priest,
+		/datum/job/roguetown/exlady,
+		/datum/job/roguetown/lady,
+		/datum/job/roguetown/hand,
+		/datum/job/roguetown/prince,
+		/datum/job/roguetown/marshal,
+		/datum/job/roguetown/steward,
+		/datum/job/roguetown/suitor,
+		/datum/job/roguetown/martyr,
+		/datum/job/roguetown/guildmaster,
+		/datum/job/roguetown/magician,
+		/datum/job/roguetown/councillor
 	)
 	for(var/mob/living/carbon/human/important_figure in GLOB.player_list)
-		if(important_jobs.Find(important_figure.job))
-			src.importantfigures += important_figure
+		if(important_jobs.Find(important_figure.job_path))
+			src.importantfigures |= important_figure
 
 ///////////////////////////////////////////////////////
 /////////////////////////////////// STORYTELLER REFRESH
@@ -155,7 +154,7 @@
 		src.storyinfluence += new roundstart_storyteller_string()
 
 	for(var/mob/living/carbon/human/deadbeat in src.importantfigures)
-		if(deadbeat.job == "Prince" && deadbeat.patron)
+		if(deadbeat.job_path == /datum/job/roguetown/prince && deadbeat.patron)
 			if(prob(50))
 				var/datum/patron/prince_patron_datum = deadbeat.patron
 				src.storyinfluence += new prince_patron_datum.storyteller()

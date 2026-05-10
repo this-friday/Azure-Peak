@@ -51,8 +51,6 @@
 	var/treaty_desc = "Azuria bears no shortage of enemies."
 	var/icon = 'icons/roguetown/weapons/shields32.dmi'
 	var/icon_state = "ironsh"
-	var/territory_name = "Unknown Territory"	// for the warband faction's initial territory
-	var/territory_desc 
 
 	var/desc						// used for extra details
 	var/summary						// first description in a warband's info tab | followed up by var/desc

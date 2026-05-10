@@ -34,7 +34,6 @@ export const useWarbandData = () => {
   const warlordSelectedProposal = data?.warlord_selected_proposal ?? null;
   const warlordCasusBelli = data?.warlord_casus_belli ?? null;
   const factions = data?.backend_factions || [];
-  const territories = data?.backend_territories || [];
 
   return {
     user_role,
@@ -60,6 +59,5 @@ export const useWarbandData = () => {
     warlordSelectedProposal,
     warlordCasusBelli,
     factions,
-    territories,
   };
 };

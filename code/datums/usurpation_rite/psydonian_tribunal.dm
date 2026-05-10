@@ -66,31 +66,21 @@ The epilogue implies an impending war with Grenzelhoft - for breaking the status
 	fail("The followers of Psydon did not grant sufficient assent.")
 
 /// Override: Psydon followers or Heresiarchs can assent. No undead.
-/datum/usurpation_rite/psydonian_tribunal/try_assent(mob/living/carbon/human/follower)
-	if(stage != RITE_STAGE_GATHERING)
+/datum/usurpation_rite/psydonian_tribunal/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
 		return FALSE
-	if(!istype(follower))
+	if(candidate.stat != CONSCIOUS)
 		return FALSE
-	if(follower.stat != CONSCIOUS)
+	if(HAS_TRAIT(candidate, TRAIT_ROTMAN) || (candidate.mob_biotypes & MOB_UNDEAD))
 		return FALSE
-	if(follower == invoker)
-		to_chat(follower, span_warning("You cannot assent to your own claim."))
+	if(!istype(candidate.patron, /datum/patron/old_god))
 		return FALSE
-	if(HAS_TRAIT(follower, TRAIT_ROTMAN) || (follower.mob_biotypes & MOB_UNDEAD))
-		to_chat(follower, span_warning("Psydon does not suffer the undead."))
-		return FALSE
-	if(!istype(follower.patron, /datum/patron/old_god))
-		to_chat(follower, span_warning("Only the faithful of Psydon may speak assent to this tribunal."))
-		return FALSE
-	if(assenters[follower])
-		to_chat(follower, span_warning("You have already spoken your assent."))
-		return FALSE
-	if(!throne || get_dist(follower, throne) > RITE_ASSENT_RANGE)
-		return FALSE
-	assenters[follower] = TRUE
-	on_assent_accepted(follower)
-	check_assent_threshold()
 	return TRUE
+
+/datum/usurpation_rite/psydonian_tribunal/assent_failure_reason(mob/living/carbon/human/follower)
+	if(HAS_TRAIT(follower, TRAIT_ROTMAN) || (follower.mob_biotypes & MOB_UNDEAD))
+		return "Psydon does not suffer the undead."
+	return "Only the faithful of Psydon may speak assent to this tribunal."
 
 /datum/usurpation_rite/psydonian_tribunal/on_assent_accepted(mob/living/carbon/human/follower)
 	follower.visible_message( \

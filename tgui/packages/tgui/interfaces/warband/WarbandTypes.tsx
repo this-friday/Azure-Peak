@@ -68,10 +68,9 @@ export type CasusBelliTerm = {
   name: string;
   desc: string;
   hint?: string;
-  requires_text: boolean;
-  requires_number: boolean;
   open_signatures: boolean;
-  target_options: number;
+  inputs?: import('./TreatyTypes').InputFieldDescriptor[];
+  display_fields?: import('./TreatyTypes').DisplayField[];
   type: string;
   warbandlock?: string;
   custom_name?: string;
@@ -127,5 +126,4 @@ export type Data = {
   warlord_selected_proposal?: string | null;
   warlord_casus_belli?: CasusBelliTerm | null;
   backend_factions?: any[];
-  backend_territories?: any[];
 };

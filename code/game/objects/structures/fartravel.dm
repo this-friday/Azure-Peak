@@ -63,7 +63,6 @@
 		SSticker.rulermob = null
 	if(SSticker.regentmob == departing_mob)
 		SSticker.regentmob = null
-	// if the departing mob was associated with a Warband
 	departing_mob.clear_warband()
 	GLOB.chosen_names -= departing_mob.real_name
 	LAZYREMOVE(GLOB.actors_list, departing_mob.mobid)

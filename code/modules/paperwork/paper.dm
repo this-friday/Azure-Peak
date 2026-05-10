@@ -434,21 +434,6 @@
 	if(is_blind(user))
 		return ..()
 	
-	if(!istype(src, /obj/item/paper/inqslip))
-		if(istype(P, /obj/item/clothing/ring/signet))
-			var/obj/item/clothing/ring/signet/ring = P
-			if(ring.tallowed)
-				return create_import_writ(user)
-		if(istype(P, /obj/item/scomstone/garrison))
-			return create_import_writ(user)
-
-	if(istype(P, /obj/item/grant))
-		var/obj/item/grant/grant = P
-		if(!grant.sealed)
-			to_chat(user, span_warning("This grant must be sealed first."))
-			return
-		return create_import_writ(user, grant)
-
 	if(istype(P, /obj/item/natural/feather/infernal))
 		if(trapped)
 			to_chat(user, span_warning("[src] is already trapped."))
@@ -484,32 +469,6 @@
 			return qdel(src)
 	if(!P.can_be_package_wrapped())
 		return ..()
-
-	if(istype(P, /obj/item/roguecoin))
-		if(mailer || trapped)
-			return ..()
-		
-		var/obj/item/roguecoin/C = P
-		var/grant_amount = C.get_real_price()
-		
-		if(grant_amount <= 0)
-			to_chat(user, span_warning("These coins have no value."))
-			return
-		
-		to_chat(user, span_info("I start preparing a grant with [grant_amount] mammon..."))
-		if(do_after(user, 90, target = src))
-			var/obj/item/grant/new_grant = new /obj/item/grant(src.loc)
-			new_grant.grant_amount = grant_amount
-			if(!user.transferItemToLoc(C, new_grant)) // this shouldn't fail
-				to_chat(user, span_warning("I couldn't get the coins inside the grant!"))
-				qdel(new_grant)
-				return
-			new_grant.update_name()
-			qdel(src)
-			user.put_in_hands(new_grant)
-			to_chat(user, span_notice("I've prepared a grant of [grant_amount] mammon."))
-		return
-
 
 	if(!istype(src, /obj/item/paper/inqslip))
 		to_chat(user, span_info("I start to wrap [P] in [src]..."))

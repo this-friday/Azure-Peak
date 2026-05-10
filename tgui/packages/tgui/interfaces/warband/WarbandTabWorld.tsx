@@ -18,7 +18,6 @@ type WorldTabProps = {
   isWarlord: boolean;
   locked?: boolean;
   factions: any[];
-  territories: any[];
   lockedWarbandType: string | null;
 };
 
@@ -30,7 +29,7 @@ export const WorldTab = ({
   proposals, availableTerms,
   userProposal, userVote, userVoteConfirmed,
   warlordSelectedProposal, warlordCasusBelli,
-  isWarlord, locked = false, factions, territories,
+  isWarlord, locked = false, factions,
   lockedWarbandType,
 }: WorldTabProps) => {
   const [casusBelliHeight, setCasusBelliHeight] = useState(SPLIT_DEFAULT);
@@ -68,7 +67,7 @@ export const WorldTab = ({
               warlordSelectedProposal={warlordSelectedProposal}
               warlordCasusBelli={warlordCasusBelli}
               isWarlord={isWarlord} act={act}
-              factions={factions ?? []} territories={territories ?? []}
+              factions={factions ?? []}
               locked={locked}
               lockedWarbandType={lockedWarbandType}
             />

@@ -300,6 +300,8 @@
 #define COMSIG_LIVING_IMPACT_ZONE "living_impact_zone"			//from base of mob/living/hitby(): (mob/living/target, hit_zone)
 #define COMSIG_LIVING_ONJUMP "living_onjump"					//from base of /mob/living/proc/jump_action(atom/A)
 #define COMSIG_LIVING_SWINGDELAY_MOD "living_swingdelay_mod"	//from base of /obj/item/proc/attack(mob/living/M, mob/living/user)
+#define COMSIG_LIVING_TOD_CHANGE_DAWN "living_tod_change"		//from /mob/living/proc/do_time_change()
+#define COMSIG_LIVING_SURRENDER "living_surrender"				//from /mob/living/proc/submit()
 #define COMSIG_PROCESS_BORGCHARGER_OCCUPANT "living_charge"		//sent from borg recharge stations: (amount, repairs)
 #define COMSIG_BORG_SAFE_DECONSTRUCT "borg_safe_decon"			//sent from borg mobs to itself, for tools to catch an upcoming destroy() due to safe decon (rather than detonation)
 

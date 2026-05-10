@@ -30,8 +30,12 @@
 <p><b>Realm type if successful:</b> Dominion, ruled by an Exarch.</p>"}
 	new_ruler_title = "Exarch"
 	new_ruler_title_f = "Exarch"
+	new_minister_title = "Vizier"
+	new_minister_title_f = "Vizier"
 	new_realm_type = "Dominion"
 	new_realm_type_short = "Dominion"
+	minister_eligibility_hint = "Disciples of Our Lady of Progress, Mages and the Undead may serve as Ministers."
+	reformation_desc = "As surrounded as we are by worshippers of lesser gods, this is almost certain to be suicide. And yet, Progress demands we try. Here upon this Azure Peak, shall we walk in Her footsteps and forge a Work of our own."
 
 /// Any mage with T2+ arcyne training, any Zizite follower, or any undead, can invoke.
 /datum/usurpation_rite/progressive_dominion/can_invoke(mob/living/carbon/human/user)
@@ -56,28 +60,17 @@
 	fail("The voices of progress did not grant sufficient assent.")
 
 /// Override: mages, Zizite followers, and undead assent. Any arcyne training, Zizo patron, OR undead status qualifies.
-/datum/usurpation_rite/progressive_dominion/try_assent(mob/living/carbon/human/supporter)
-	if(stage != RITE_STAGE_GATHERING)
+/datum/usurpation_rite/progressive_dominion/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
 		return FALSE
-	if(!istype(supporter))
+	if(candidate.stat != CONSCIOUS)
 		return FALSE
-	if(supporter.stat != CONSCIOUS)
+	if(!is_qualified_voice(candidate))
 		return FALSE
-	if(supporter == invoker)
-		to_chat(supporter, span_warning("You cannot assent to your own claim."))
-		return FALSE
-	if(!is_qualified_voice(supporter))
-		to_chat(supporter, span_warning("Only those trained in the arcyne arts, followers of Zizo, or touched by undeath may speak assent to this rite."))
-		return FALSE
-	if(assenters[supporter])
-		to_chat(supporter, span_warning("You have already spoken your assent."))
-		return FALSE
-	if(!throne || get_dist(supporter, throne) > RITE_ASSENT_RANGE)
-		return FALSE
-	assenters[supporter] = TRUE
-	on_assent_accepted(supporter)
-	check_assent_threshold()
 	return TRUE
+
+/datum/usurpation_rite/progressive_dominion/assent_failure_reason(mob/living/carbon/human/supporter)
+	return "Only those trained in the arcyne arts, followers of Zizo, or touched by undeath may speak assent to this rite."
 
 /datum/usurpation_rite/progressive_dominion/on_assent_accepted(mob/living/carbon/human/supporter)
 	supporter.visible_message( \

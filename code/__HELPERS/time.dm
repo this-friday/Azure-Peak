@@ -118,6 +118,7 @@ GLOBAL_VAR_INIT(date_override_offset, 0)
 	if(!mind)
 		return
 	if(GLOB.tod == "dawn")
+		SEND_SIGNAL(src, COMSIG_LIVING_TOD_CHANGE_DAWN)
 		var/text_to_show
 		var/day_number = get_current_day_of_week()
 		switch(day_number)

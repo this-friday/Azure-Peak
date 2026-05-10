@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Input, NumberInput, Section, Stack, TextArea } from 'tgui-core/components';
+import { Box, Button, Section, Stack } from 'tgui-core/components';
 
-import { sanitize } from './TreatyData';
-import { ComplexTargetInput, TargetInput } from './TreatyInputs';
+import { DynamicInputs } from './TreatyInputs';
 import { CasusBelliProposal, CasusBelliTerm } from './WarbandTypes';
 
 type CasusBelliPanelProps = {
@@ -16,7 +15,6 @@ type CasusBelliPanelProps = {
   isWarlord: boolean;
   act: (action: string, payload?: object) => void;
   factions: any[];
-  territories: any[];
   locked?: boolean;
   lockedWarbandType: string | null; // the warlord's locked warband type string | used to filter out warband-specific terms/proposals
 };
@@ -46,7 +44,6 @@ export const CasusBelliPanel = ({
   isWarlord,
   act,
   factions,
-  territories,
   locked = false,
   lockedWarbandType,
 }: CasusBelliPanelProps) => {
@@ -60,10 +57,6 @@ export const CasusBelliPanel = ({
 
   const updateDraftState = (key: string, val: any) =>
     setDraftState((prev) => ({ ...prev, [key]: val }));
-
-  const lists = useMemo(() => ({
-    factions: (factions ?? []).map((f: any) => ({ value: f.name, displayText: f.name })),
-  }), [factions]);
 
   const sortedProposals = useMemo(() => {
     return [...proposals].sort((a, b) => b.vote_count - a.vote_count);
@@ -84,28 +77,48 @@ export const CasusBelliPanel = ({
   // draft validity checks
   const isDraftValid = useMemo(() => {
     if (!draftingTerm) return false;
-    const opts = draftingTerm.target_options ?? 0;
-    if (draftingTerm.requires_text && (!draftState.text || draftState.text.length < 5)) return false;
-    if (draftingTerm.requires_number && (!draftState.number || draftState.number < 1)) return false;
-    if ([1, 2, 3].includes(opts) && !draftState.target) return false;
-    if (opts === 5 && (!draftState.target || !draftState.receiver || !draftState.obj_target)) return false;
-    if (opts === 7 && (!draftState.target || !draftState.receiver)) return false;
+    for (const field of draftingTerm.inputs ?? []) {
+      if (!field.required || field.client_only) continue;
+      const val = draftState[field.key];
+      switch (field.widget) {
+        case 'number_input': {
+          const n = Number(val);
+          if (!val && val !== 0) return false;
+          if (n < (field.min_value ?? 1)) return false;
+          break;
+        }
+        case 'textarea': {
+          const s = String(val ?? '');
+          if (s.length < (field.min_length ?? 1)) return false;
+          if (s.length > (field.max_length ?? Infinity)) return false;
+          break;
+        }
+        case 'text_input': {
+          const s = String(val ?? '');
+          if (s.trim().length < (field.min_length ?? 1)) return false;
+          break;
+        }
+        default:
+          if (!val || String(val).trim().length === 0) return false;
+      }
+    }
     return true;
   }, [draftingTerm, draftState]);
 
   const handleDraftSubmit = () => {
     if (!draftingTerm || !isDraftValid) return;
-    const needsNumber = !!draftingTerm.requires_number;
-    act('propose_casus_belli', {
-      term_type:   draftingTerm.type,
-      term_name:   draftState.custom_name || draftingTerm.name,
-      custom_name: draftState.custom_name || undefined,
-      text:        draftState.text || undefined,
-      number:      needsNumber ? draftState.number : undefined,
-      target:      draftState.target || undefined,
-      receiver:    draftState.receiver || undefined,
-      obj_target:  draftState.obj_target || undefined,
-    });
+    const payload: Record<string, any> = {
+      term_type: draftingTerm.type,
+      term_name: draftState.custom_name || draftingTerm.name,
+    };
+    for (const field of draftingTerm.inputs ?? []) {
+      if (field.client_only) continue;
+      const val = draftState[field.key];
+      if (val !== undefined && val !== '' && val !== null) {
+        payload[field.key] = val;
+      }
+    }
+    act('propose_casus_belli', payload);
     setShowVoteResetWarning(false);
     setView('list');
   };
@@ -183,40 +196,16 @@ export const CasusBelliPanel = ({
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
 
-          {draftingTerm.open_signatures ? (
-            <Input fluid bold value={draftState.custom_name}
-              onChange={(v: string) => updateDraftState('custom_name', sanitize(v, 'text'))}
-              placeholder="Enter Term Title..."
-            />
-          ) : (
-            <Box bold color="#e9ca9e">{draftingTerm.name}</Box>
-          )}
+          <Box bold color="#e9ca9e">{draftingTerm.name}</Box>
 
           <Box fontSize="0.9em" color="#b1a390">{draftingTerm.desc}</Box>
 
-          <div style={{ width: '100%' }}>
-            <TargetInput term={draftingTerm as any} state={draftState} updateState={updateDraftState}
-              lists={lists} factions={factions as any} territories={territories as any} />
-          </div>
-          <div style={{ width: '100%' }}>
-            <ComplexTargetInput term={draftingTerm as any} state={draftState} updateState={updateDraftState}
-              lists={lists} factions={factions as any} territories={territories as any} />
-          </div>
-
-          {!!draftingTerm.requires_text && (
-            <TextArea fluid height="100px" placeholder="Enter details (5-2048 chars)"
-              value={draftState.text}
-              onChange={(v: string) => updateDraftState('text', sanitize(v, 'text'))}
-            />
-          )}
-
-          {!!draftingTerm.requires_number && (
-            <NumberInput fluid value={draftState.number}
-              onChange={(v: number) => updateDraftState('number', v)}
-              minValue={1} step={1}
-              maxValue={draftingTerm.name.includes('Tax') ? 100 : draftingTerm.name === 'Mammon' ? 20000 : 999999}
-            />
-          )}
+          <DynamicInputs
+            inputs={draftingTerm.inputs ?? []}
+            state={draftState}
+            updateState={updateDraftState}
+            factions={factions}
+          />
 
           <Stack mt={1}>
             <Stack.Item grow={1}>
@@ -324,26 +313,37 @@ export const CasusBelliPanel = ({
                           {proposal.term_text}
                         </Box>
                       )}
-                      {!!proposal.term_number && (proposal.term_number > 0) && (
-                        <span style={detailStyle}>
-                          Number: {proposal.term_number}
-                        </span>
-                      )}
-                      {!!proposal.term_target && (
-                        <span style={detailStyle}>
-                          Target: {proposal.term_target}
-                        </span>
-                      )}
-                      {!!proposal.term_receiver && (
-                        <span style={detailStyle}>
-                          Recipient: {proposal.term_receiver}
-                        </span>
-                      )}
-                      {!!proposal.term_obj_target && (
-                        <span style={detailStyle}>
-                          Territory: {proposal.term_obj_target}
-                        </span>
-                      )}
+                      {(() => {
+                        const displayFields = (proposal as any).display_fields as { key: string; label: string }[] | undefined;
+                        if (displayFields?.length) {
+                          return displayFields.map((field) => {
+                            const val = (proposal as any)[`term_${field.key}`];
+                            if (!val) return null;
+                            return (
+                              <span key={field.key} style={detailStyle}>
+                                {field.label}: {val}
+                              </span>
+                            );
+                          });
+                        }
+                        // a fallback for proposals missing display_fields (e.g. older data)
+                        return (
+                          <>
+                            {!!proposal.term_number && proposal.term_number > 0 && (
+                              <span style={detailStyle}>Number: {proposal.term_number}</span>
+                            )}
+                            {!!proposal.term_target && (
+                              <span style={detailStyle}>Target: {proposal.term_target}</span>
+                            )}
+                            {!!proposal.term_receiver && (
+                              <span style={detailStyle}>Recipient: {proposal.term_receiver}</span>
+                            )}
+                            {!!proposal.term_obj_target && (
+                              <span style={detailStyle}>Territory: {proposal.term_obj_target}</span>
+                            )}
+                          </>
+                        );
+                      })()}
 
                       <span style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
                         {proposal.vote_count} vote{proposal.vote_count !== 1 ? 's' : ''}

@@ -33,20 +33,10 @@
 		if(selected_subtype.treaty_desc != "Azuria bears no shortage of enemies.")
 			chosen_desc = selected_subtype.treaty_desc
 
-		if(selected_subtype.territory_name != "Unknown Territory")
-			land_name = selected_subtype.territory_name
-		if(selected_subtype.territory_desc != "")
-			land_desc = selected_subtype.territory_desc
-
 	if(!chosen_name) // if there's no subtype, fall back on the warband's descriptions
 		chosen_name = selected_warband.treaty_name
 	if(!chosen_desc)
 		chosen_desc = selected_warband.treaty_desc
-
-	if(!land_name)
-		land_name = selected_warband.territory_name
-	if(!land_desc)
-		land_desc = selected_warband.territory_desc
 
 	var/returned_faction = new_faction.generate_faction(owner, chosen_name, chosen_desc, land_name, land_desc, TRUE)
 	return returned_faction

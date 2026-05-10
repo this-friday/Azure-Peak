@@ -60,37 +60,29 @@
 	fail("The faithful of the realm did not grant sufficient assent.")
 
 /// Override: church faithful assent, not nobles. Must follow a divine patron. Church position OR T1+ Divine devotion.
-/datum/usurpation_rite/sacred_supercession/try_assent(mob/living/carbon/human/faithful)
-	if(stage != RITE_STAGE_GATHERING)
+/datum/usurpation_rite/sacred_supercession/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
 		return FALSE
-	if(!istype(faithful))
+	if(candidate.stat != CONSCIOUS)
 		return FALSE
-	if(faithful.stat != CONSCIOUS)
+	if(!istype(candidate.patron, /datum/patron/divine))
 		return FALSE
-	if(faithful == invoker)
-		to_chat(faithful, span_warning("You cannot assent to your own claim."))
+	if(!is_qualified_faithful(candidate))
 		return FALSE
-	if(!istype(faithful.patron, /datum/patron/divine))
-		to_chat(faithful, span_warning("Only followers of the Ten may speak assent to this rite."))
+	if(HAS_TRAIT(candidate, TRAIT_OUTLAW))
 		return FALSE
-	if(!is_qualified_faithful(faithful))
-		to_chat(faithful, span_warning("Only ordained members of the Church or those who have proven their devotion may speak assent."))
+	if(HAS_TRAIT(candidate, TRAIT_ROTMAN) || (candidate.mob_biotypes & MOB_UNDEAD))
 		return FALSE
-	if(HAS_TRAIT(faithful, TRAIT_OUTLAW))
-		to_chat(faithful, span_warning("Astrata shuns those who stand outside the order."))
-		return FALSE
-	if(HAS_TRAIT(faithful, TRAIT_ROTMAN) || (faithful.mob_biotypes & MOB_UNDEAD))
-		to_chat(faithful, span_warning("The sun has no place for the living dead."))
-		return FALSE
-	if(assenters[faithful])
-		to_chat(faithful, span_warning("You have already spoken your assent."))
-		return FALSE
-	if(!throne || get_dist(faithful, throne) > RITE_ASSENT_RANGE)
-		return FALSE
-	assenters[faithful] = TRUE
-	on_assent_accepted(faithful)
-	check_assent_threshold()
 	return TRUE
+
+/datum/usurpation_rite/sacred_supercession/assent_failure_reason(mob/living/carbon/human/faithful)
+	if(HAS_TRAIT(faithful, TRAIT_ROTMAN) || (faithful.mob_biotypes & MOB_UNDEAD))
+		return "The sun has no place for the living dead."
+	if(HAS_TRAIT(faithful, TRAIT_OUTLAW))
+		return "Astrata shuns those who stand outside the order."
+	if(!istype(faithful.patron, /datum/patron/divine))
+		return "Only followers of the Ten may speak assent to this rite."
+	return "Only ordained members of the Church or those who have proven their devotion may speak assent."
 
 /datum/usurpation_rite/sacred_supercession/on_assent_accepted(mob/living/carbon/human/faithful)
 	var/weight = get_vote_weight(faithful)

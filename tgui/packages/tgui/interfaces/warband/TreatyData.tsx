@@ -16,8 +16,6 @@ export const useTreatyData = () => {
   const availableTerms = data?.all_terms || [];
   const factions = data?.backend_factions || [];
 
-  const territories = data?.backend_territories ||[];
-
   return {
     act,
     data,
@@ -26,7 +24,6 @@ export const useTreatyData = () => {
     activeTerms,
     availableTerms,
     factions,
-    territories,
   };
 };
 

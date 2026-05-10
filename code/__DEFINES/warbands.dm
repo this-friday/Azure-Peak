@@ -53,9 +53,22 @@
 #define ASPECTS					list(ASPECT_FORT, ASPECT_BLOCKADE, ASPECT_SURPRISE, ASPECT_HOST, ASPECT_FIGUREHEAD, ASPECT_ENVY, ASPECT_BADSPAWN)
 
 // terms
-#define WARBAND_TERMS list(/datum/treaty/terms/codify_law, /datum/treaty/terms/remove_law, /datum/treaty/terms/freeze_laws, /datum/treaty/terms/set_tax/noble, \
-							/datum/treaty/terms/set_tax/yeoman, /datum/treaty/terms/set_tax/peasant, /datum/treaty/terms/set_tax/church, /datum/treaty/terms/territory_loss, \
-							/datum/treaty/terms/cointribute, /datum/treaty/terms/exile, /datum/treaty/terms/freeform)
+#define WARBAND_TERMS list(/datum/treaty/terms/regime_change, /datum/treaty/terms/codify_law, /datum/treaty/terms/remove_law, /datum/treaty/terms/freeze_laws, \
+						/datum/treaty/terms/set_tax, /datum/treaty/terms/cointribute, /datum/treaty/terms/exile, /datum/treaty/terms/blood_pact, \
+						/datum/treaty/terms/attainder, /datum/treaty/terms/seal_grave, /datum/treaty/terms/peace, /datum/treaty/terms/freeform)
+						  
+
+// treaty flavor datums
+#define TFACTION_AZURE /datum/territory_faction/azure
+#define TFACTION_CHURCH /datum/territory_faction/church
+#define TFACTION_HEARTFELT /datum/territory_faction/heartfelt
+#define TFACTION_ORTHODOX /datum/territory_faction/orthodoxy
+#define TFACTION_SOILER	/datum/territory_faction/farm
+#define TFACTION_GUILD /datum/territory_faction/guild
+#define TFACTION_MERCHANT /datum/territory_faction/merchant
+
+#define DEFAULT_TERRITORY_FACTIONS list(TFACTION_AZURE, TFACTION_CHURCH, TFACTION_HEARTFELT, TFACTION_ORTHODOX, TFACTION_SOILER, TFACTION_GUILD, TFACTION_MERCHANT)
+
 
 #define TEMPLATE_OUTSKIRTS 1
 #define TEMPLATE_INTERMISSION 2

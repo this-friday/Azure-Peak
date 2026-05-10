@@ -224,4 +224,4 @@
 	var/last_breath_spent = 0
 	var/client/swimming_filter_client = null
 
-	var/job_path	// the latest job path a mob used. we don't want to rely on job strings for Treaties & Territories
+	var/job_path	// the latest job path a mob used

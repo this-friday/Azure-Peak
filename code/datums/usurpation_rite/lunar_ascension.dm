@@ -18,8 +18,12 @@
 <p><b>Realm type if successful:</b> Magocracy, ruled by an Archmagos.</p>"}
 	new_ruler_title = "Archmagos"
 	new_ruler_title_f = "Archmagos"
+	new_minister_title = "Magister"
+	new_minister_title_f = "Magister"
 	new_realm_type = "Magocracy"
 	new_realm_type_short = "Magocracy"
+	reformation_desc = "The order prescribed by Noc's lesser half has proven disastrous. Let Nite reign, and let the masters of His mysteries guide us. Never again shall the realm be at the mercy of the mundane's idiotic designs."
+	minister_eligibility_hint = "To serve as a Minister, one need only possess Arcyne talent."
 	roundend_epilogue = "For the first time in centuries, " + \
 		"an Archmagos rules openly without the assent of Astrata or the pretensions of wealth. " + \
 		"They say their rule is enlightened, but foreign rulers only see the vestige of the Celestial Empire. " + \
@@ -43,28 +47,17 @@
 	fail("The mages of the realm did not grant sufficient assent.")
 
 /// Override: mages assent, not nobles. Check arcyne training instead of TRAIT_NOBLE.
-/datum/usurpation_rite/lunar_ascension/try_assent(mob/living/carbon/human/mage)
-	if(stage != RITE_STAGE_GATHERING)
+/datum/usurpation_rite/lunar_ascension/can_assent(mob/living/carbon/human/candidate)
+	if(!istype(candidate))
 		return FALSE
-	if(!istype(mage))
+	if(candidate.stat != CONSCIOUS)
 		return FALSE
-	if(mage.stat != CONSCIOUS)
+	if(!HAS_TRAIT(candidate, TRAIT_ARCYNE))
 		return FALSE
-	if(mage == invoker)
-		to_chat(mage, span_warning("You cannot assent to your own claim."))
-		return FALSE
-	if(!HAS_TRAIT(mage, TRAIT_ARCYNE))
-		to_chat(mage, span_warning("Only those trained in the Arcyne arts may speak assent to this rite."))
-		return FALSE
-	if(assenters[mage])
-		to_chat(mage, span_warning("You have already spoken your assent."))
-		return FALSE
-	if(!throne || get_dist(mage, throne) > RITE_ASSENT_RANGE)
-		return FALSE
-	assenters[mage] = TRUE
-	on_assent_accepted(mage)
-	check_assent_threshold()
 	return TRUE
+
+/datum/usurpation_rite/lunar_ascension/assent_failure_reason(mob/living/carbon/human/mage)
+	return "Only those trained in the Arcyne arts may speak assent to this rite."
 
 /datum/usurpation_rite/lunar_ascension/on_assent_accepted(mob/living/carbon/human/mage)
 	mage.visible_message( \
