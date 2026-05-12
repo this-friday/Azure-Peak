@@ -54,8 +54,8 @@
 
 // terms
 #define WARBAND_TERMS list(/datum/treaty/terms/regime_change, /datum/treaty/terms/codify_law, /datum/treaty/terms/remove_law, /datum/treaty/terms/freeze_laws, \
-						/datum/treaty/terms/set_tax, /datum/treaty/terms/cointribute, /datum/treaty/terms/exile, /datum/treaty/terms/blood_pact, \
-						/datum/treaty/terms/attainder, /datum/treaty/terms/seal_grave, /datum/treaty/terms/peace, /datum/treaty/terms/freeform)
+						/datum/treaty/terms/abolish_charter, /datum/treaty/terms/seal_grave, /datum/treaty/terms/exile, /datum/treaty/terms/blood_pact, \
+						/datum/treaty/terms/attainder, /datum/treaty/terms/peace, /datum/treaty/terms/freeform)
 						  
 
 // treaty flavor datums

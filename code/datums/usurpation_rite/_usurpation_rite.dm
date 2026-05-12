@@ -220,6 +220,7 @@
 		lord_job.f_title = new_ruler_title_f
 		lord_job.total_positions = -1000 // Lock out the slot so no new one spawns
 
+	SStreasury.abolished_decree_ids = list() // clear out any treaty-enforced charter abolitions (/datum/treaty/terms/abolish_charter) after a usurpation
 	SSticker.realm_type = new_realm_type
 	SSticker.realm_type_short = new_realm_type_short
 	invoker.job_path = /datum/job/roguetown/lord

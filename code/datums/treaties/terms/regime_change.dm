@@ -29,7 +29,7 @@
 		"Stratocracy" =				/datum/usurpation_rite/martial_supercession,
 	)
 
-	var/static/list/style_info_cache
+	var/static/list/style_info_cache = list()
 
 // builds authorities via by_field resolver, so the minister count can vary by the chosen style
 /datum/treaty/terms/regime_change/build_authorities()
@@ -63,9 +63,12 @@
 	)
 	input_fields += style
 
-	if(!style_info_cache)
-		style_info_cache = list()
-		for(var/governance_style in style_to_rite)
+	var/datum/treaty/input_field/display/info = new()
+	info.key = "style_info"
+	info.display_key = "target"
+	info.placeholder = "Select a governance style to see details."
+	for(var/governance_style in style_to_rite)
+		if(!style_info_cache[governance_style])
 			var/rite_type = style_to_rite[governance_style]
 			var/datum/usurpation_rite/rite = new rite_type()
 			var/list/blocks = list()
@@ -77,13 +80,7 @@
 				UNTYPED_LIST_ADD(blocks, list("label" = "Who Serves as a Minister?", "text" = minister_text))
 			style_info_cache[governance_style] = blocks
 			qdel(rite)
-
-	var/datum/treaty/input_field/display/info = new()
-	info.key = "style_info"
-	info.display_key = "target"
-	info.placeholder = "Select a governance style to see details."
-	for(var/governance_style in style_to_rite)
-		info.content_map[governance_style] = style_info_cache[governance_style].Copy()
+		info.content_map[governance_style] = style_info_cache[governance_style]
 	input_fields += info
 
 /datum/treaty/terms/regime_change/duplicate_check(datum/treaty/terms/existing)
@@ -153,10 +150,12 @@
 	if(roundend_epilogue)
 		SSticker.roundend_epilogue = roundend_epilogue
 
+	SStreasury.abolished_decree_ids = list()
+
 	// combs through the human list to find the Ministers, and applies their relevant title
 	if(minister_title && minister_signatures.len)
 		for(var/mob/living/carbon/human/found_minister in GLOB.human_list)
-			if(!(found_minister.real_name in minister_signatures))
+			if(!(found_minister.real_name in minister_signatures) || !found_minister.mind)
 				continue
 			var/given_title = (found_minister.gender == FEMALE && minister_title_f) ? minister_title_f : minister_title
 			found_minister.job = given_title

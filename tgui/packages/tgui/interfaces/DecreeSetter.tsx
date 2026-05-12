@@ -36,6 +36,7 @@ type DecreeState = {
   id: string;
   active: BooleanLike;
   cooldown_left: number;
+  sealed: BooleanLike;
 };
 
 type Data = {
@@ -115,18 +116,36 @@ const proclamationNoteStyle: React.CSSProperties = {
   margin: '4px 0 8px',
 };
 
+const sealedCardStyle: React.CSSProperties = {
+  ...cardStyle,
+  opacity: 0.6,
+  borderColor: '#5a3e36',
+  background: 'repeating-linear-gradient(135deg, transparent, transparent 8px, rgba(90,62,54,0.04) 8px, rgba(90,62,54,0.04) 16px)',
+};
+
+const sealedBannerStyle: React.CSSProperties = {
+  color: '#5a3e36',
+  marginTop: '4px',
+  letterSpacing: '0.5px',
+  textAlign: 'center',
+  fontStyle: 'italic',
+  fontSize: '11px',
+  margin: '4px 0 8px',
+};
+
 type DecreeCardProps = {
   decree: Decree;
   state: DecreeState | undefined;
   revokeUsed: boolean;
   restoreUsed: boolean;
+  sealed: boolean;
   onToggle: () => void;
 };
 
 const CONFIRM_TIMEOUT_MS = 3000;
 
 const DecreeCard = (props: DecreeCardProps) => {
-  const { decree, state, revokeUsed, restoreUsed, onToggle } = props;
+  const { decree, state, revokeUsed, restoreUsed, sealed, onToggle } = props;
   const [expanded, setExpanded] = useState(false);
   const [armed, setArmed] = useState(false);
   const armedTimerRef = useRef<number | null>(null);
@@ -189,25 +208,38 @@ const DecreeCard = (props: DecreeCardProps) => {
   };
 
   return (
-    <div style={cardStyle}>
+    <div style={sealed ? sealedCardStyle : cardStyle}>
       <div style={cardHeaderStyle}>
-        <span style={cardTitleStyle}>{decree.name}</span>
+        <span style={{ ...cardTitleStyle, textDecoration: sealed ? 'line-through' : undefined }}>
+          {decree.name}
+        </span>
         <span style={cardYearStyle}>of {decree.year}</span>
-        <span style={badgeStyle(statusColor)}>{statusLabel}</span>
-        <button
-          type="button"
-          style={inkButtonStyle({ color: buttonColor, disabled })}
-          disabled={disabled}
-          title={tooltip}
-          onClick={handleClick}
-        >
-          {buttonLabel}
-        </button>
+        {sealed ? (
+          <span style={badgeStyle('#5a3e36')}>Abolished</span>
+        ) : (
+          <span style={badgeStyle(statusColor)}>{statusLabel}</span>
+        )}
+        {!sealed && (
+          <button
+            type="button"
+            style={inkButtonStyle({ color: buttonColor, disabled })}
+            disabled={disabled}
+            title={tooltip}
+            onClick={handleClick}
+          >
+            {buttonLabel}
+          </button>
+        )}
       </div>
+      {sealed && (
+        <div style={sealedBannerStyle}>
+          Abolished by treaty. This charter may only be restored under a new regime.
+        </div>
+      )}
       {decree.mechanical && (
         <div style={mechanicalStyle}>{decree.mechanical}</div>
       )}
-      {onCooldown && (
+      {!sealed && onCooldown && (
         <div style={{ fontSize: '11px', color: SEAL_AMBER, fontStyle: 'italic' }}>
           Cooldown: {formatCooldown(cooldownLeft)}
         </div>
@@ -293,6 +325,7 @@ export const DecreeSetter = () => {
                 state={stateById[d.id]}
                 revokeUsed={revokeUsed}
                 restoreUsed={restoreUsed}
+                sealed={!!stateById[d.id]?.sealed}
                 onToggle={() => act('toggle', { id: d.id })}
               />
             ))

@@ -58,6 +58,20 @@
 	var/mob/living/spelltarget = cast_on
 
 	if(!isliving(spelltarget))
+		if(istype(spelltarget, /obj/item/treaty)) 
+			var/obj/item/treaty/invoked_treaty = spelltarget
+			var/all_signed = TRUE // the spell fails if any terms are unsigned
+			for(var/datum/treaty/terms/term in invoked_treaty.active_terms)
+				if(!term.signed && term.name != "Freeform")
+					all_signed = FALSE
+					break
+			if(all_signed && invoked_treaty.active_terms.len > 0) // if the treaty's ready, finalize it
+				owner.visible_message("<font color='yellow'>[owner] points at [spelltarget], igniting it with sacred flames!</font>")
+				invoked_treaty.treaty_submission()
+				return TRUE
+			else
+				to_chat(owner, span_notice("The treaty isn't ready."))
+				return FALSE
 		if(spelltarget.fire_act())
 			owner.visible_message("<font color='yellow'>[owner] engulfs [spelltarget] in sacred flame!</font>")
 			spelltarget.fire_act()

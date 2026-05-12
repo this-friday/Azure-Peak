@@ -29,6 +29,7 @@
 			"id" = D.id,
 			"active" = D.active,
 			"cooldown_left" = round(cooldown_left / 10),
+			"sealed" = (id in SStreasury.abolished_decree_ids),
 		))
 	return list(
 		"decrees" = decree_list,
@@ -45,6 +46,8 @@
 			var/decree_id = params["id"]
 			var/datum/decree/D = SStreasury.get_decree(decree_id)
 			if(!D)
+				return FALSE
+			if(decree_id in SStreasury.abolished_decree_ids) // treaty-abolished decrees are untouchable until the duke's usurpation (/datum/treaty/terms/abolish_charter)
 				return FALSE
 			if(!D.can_change_state())
 				return FALSE

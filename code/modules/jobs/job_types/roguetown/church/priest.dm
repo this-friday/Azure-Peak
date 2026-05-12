@@ -273,6 +273,7 @@ GLOBAL_LIST_EMPTY(heretical_players)
 		ADD_TRAIT(HU, TRAIT_DNR, TRAIT_GENERIC) // Consequences, Johnathan.
 		SSticker.set_ruler_mob(HU)
 		SSticker.regentmob = null
+		SStreasury.abolished_decree_ids = list() // clear out any treaty-enforced charter abolitions (/datum/treaty/terms/abolish_charter) after a coronation
 		var/dispjob = mind.assigned_role
 		var/realm = SSticker.realm_name || "Azure Peak"
 		var/ruler_title = SSticker.rulertype || "Grand Duke"

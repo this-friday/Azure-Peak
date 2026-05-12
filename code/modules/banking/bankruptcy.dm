@@ -170,6 +170,8 @@
 	var/datum/decree/D = decrees[decree_id]
 	if(!D || !D.bankruptcy_suspended || D.active)
 		return FALSE
+	if(decree_id in abolished_decree_ids) // if the decree is forcibly suspended via (/datum/treaty/terms/abolish_charter), it stays suspended
+		return FALSE
 	D.bankruptcy_suspended = FALSE
 	D.active = TRUE
 	D.year = CALENDAR_EPOCH_YEAR

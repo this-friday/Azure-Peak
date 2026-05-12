@@ -61,6 +61,9 @@ SUBSYSTEM_DEF(treasury)
 	var/list/stockpile_by_trade_good = list()
 	var/decree_revoke_used_day = -1
 	var/decree_restore_used_day = -1
+	/// decrees which are permanently locked/deactivated, as demanded by an Abolish Charter treaty term (/datum/treaty/terms/abolish_charter)
+	/// cleared after the Duke's usurpation
+	var/list/abolished_decree_ids = list()
 	var/next_treasury_check = 0
 	var/economic_output = 0
 	var/total_deposit_tax = 0

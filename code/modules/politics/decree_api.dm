@@ -12,20 +12,21 @@
 		return decree_restore_used_day != GLOB.dayspassed
 	return decree_revoke_used_day != GLOB.dayspassed
 
-/datum/controller/subsystem/treasury/proc/set_decree_active(decree_id, new_active)
+/datum/controller/subsystem/treasury/proc/set_decree_active(decree_id, new_active, forced = FALSE)
 	var/datum/decree/D = get_decree(decree_id)
 	if(!D)
 		return FALSE
-	// Bankruptcy lock: charters suspended by receivership are immutable through this path,
-	// and the Golden Bull cannot be revoked while the Crown is in receivership.
-	if(!can_mutate_decree(decree_id, new_active))
-		return FALSE
-	if(!D.can_change_state())
-		return FALSE
 	if(D.active == new_active)
 		return FALSE
-	if(!can_change_decree_state(new_active))
-		return FALSE
+	if(!forced) // state adjustments can be forced by things like (/datum/treaty/terms/abolish_charter)
+		// Bankruptcy lock: charters suspended by receivership are immutable through this path,
+		// and the Golden Bull cannot be revoked while the Crown is in receivership.
+		if(!can_mutate_decree(decree_id, new_active))
+			return FALSE
+		if(!D.can_change_state())
+			return FALSE
+		if(!can_change_decree_state(new_active))
+			return FALSE
 	if(!D.set_state(new_active))
 		return FALSE
 	if(new_active)
