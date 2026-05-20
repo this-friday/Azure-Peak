@@ -68,12 +68,12 @@ export const ClassesTab = ({
         </Section>
         
         <Section 
-          title={<span style={{ color: '#7a2525ff' }}>AVAILABLE SUBCLASSES</span>} 
+          title={<span style={{ color: '#7a2525ff' }}>AVAILABLE {(selectedWarband?.subclass_label || 'SUBCLASS').toUpperCase()}ES</span>} 
           scrollable 
           fill 
           style={{ flex: 1 }}
         >
-          {selectedWarband?.title === "MERCENARY COMPANY" && filteredSubclasses.length > 0 ? (
+          {selectedWarband?.multiclass_enabled && filteredSubclasses.length > 0 ? (
             <Stack vertical>
               {filteredSubclasses.map((subclass) => {
                 const isSelected = selectedSubclass?.alt_name === subclass.alt_name;
@@ -102,9 +102,9 @@ export const ClassesTab = ({
           ) : (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
               <p style={{ color: '#7a2525ff' }}>
-                {selectedWarband?.title === "MERCENARY COMPANY" 
-                  ? 'NO SUBCLASSES AVAILABLE' 
-                  : 'UNAVAILABLE | MERCENARY ONLY'}
+                {selectedWarband?.multiclass_enabled 
+                  ? `NO ${(selectedWarband.subclass_label || 'SUBCLASS').toUpperCase()}ES AVAILABLE`
+                  : 'UNAVAILABLE FOR THIS WARBAND'}
               </p>
             </div>
           )}

@@ -126,7 +126,13 @@ SUBSYSTEM_DEF(warbands)
 				currentrun_encounters += warband.encounter_manager
 	
 	process_encounters()
-	
+
+	// push timer updates for any lobby currently counting down
+	for(var/atom/movable/screen/warband/manager/manager in warband_managers)
+		if(manager.creation_timer_active)
+			manager.cached_remaining_time = manager.get_remaining_time()
+			SStgui.update_uis(manager)
+
 	// when the unassigned mob cache hits 10, we swap to slowmode
 	if(cache_mode == 0 && unassigned_mob_cache.len <= 10)
 		cache_mode = 1

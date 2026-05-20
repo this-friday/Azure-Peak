@@ -15,16 +15,16 @@
 		grunt = cache_to_use[1]
 		cache_to_use -= grunt
 		grunt.forceMove(spawn_location)
-		grunt.warband_ID = src.warband_ID
+		grunt.warband_ID = warband_ID
 		grunt.faction = list()  // clear any old factions
-		grunt.faction |= list("warband_[src.warband_ID]")
+		grunt.faction |= list("warband_[warband_ID]")
 		grunt.ai_controller?.set_ai_status(AI_STATUS_IDLE)
 	else
 		grunt = new /mob/living/carbon/human/species/human/northern/goon(spawn_location)
-		grunt.warband = src.selected_warband
-		if(src.selected_subtype)
-			grunt.subtype = src.selected_subtype
-		grunt.warband_ID = src.warband_ID
+		grunt.warband = selected_warband
+		if(selected_subtype)
+			grunt.subtype = selected_subtype
+		grunt.warband_ID = warband_ID
 		grunt.equip_for_warband()
 	return grunt
 
@@ -37,10 +37,10 @@
 	if so, both warbands share a single cache
 */
 /atom/movable/screen/warband/manager/proc/has_compatible_cache(atom/movable/screen/warband/manager/other_manager)
-	if(src.selected_warband.type != other_manager.selected_warband.type)
+	if(selected_warband.type != other_manager.selected_warband.type)
 		return FALSE
 	
-	if(src.selected_subtype?.type != other_manager.selected_subtype?.type)
+	if(selected_subtype?.type != other_manager.selected_subtype?.type)
 		return FALSE
 	
 	return TRUE // we'll assume they're compatible if they have the same warband and subtype
@@ -53,11 +53,11 @@
 	while(root_source.cache_source) 
 		root_source = root_source.cache_source 
 	
-	src.cache_source = root_source
+	cache_source = root_source
 	root_source.cache_dependents += src
 	return TRUE
 
 /atom/movable/screen/warband/manager/proc/get_grunt_cache()
-	if(src.cache_source)
-		return src.cache_source.assigned_grunt_cache
-	return src.assigned_grunt_cache
+	if(cache_source)
+		return cache_source.assigned_grunt_cache
+	return assigned_grunt_cache

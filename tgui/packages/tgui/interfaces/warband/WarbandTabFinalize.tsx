@@ -55,8 +55,8 @@ export const FinalizeTab = ({
     if (!selectedClass) {
       return "NO CLASS SELECTED";
     }
-    if (selectedWarband?.title === "MERCENARY COMPANY" && !selectedSubclass) {
-      return "MERCENARY REQUIRES A SUBCLASS";
+    if (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedSubclass) {
+      return `${(selectedWarband.subclass_label || 'SUBCLASS').toUpperCase()} REQUIRED`;
     }
     return null;
   };

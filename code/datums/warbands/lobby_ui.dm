@@ -6,12 +6,9 @@
 			user.client.screen += listed_manager
 			animate(listed_manager, alpha = 255, time = 800)
 			break
-
-////////////////////////
-//////////////////////////////////////////////// UI DATA
-////////////////////////
+			
 /atom/movable/screen/warband/manager/Click()
-	src.ui_interact(usr)
+	ui_interact(usr)
 
 /atom/movable/screen/warband/manager/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
@@ -22,35 +19,36 @@
 /atom/movable/screen/warband/manager/ui_data(mob/user)
 	var/list/data = ..()
 
-	var/finalized_status = src.finalized
-	var/user_role = user.mind.special_role
-	var/list/noble_list = list()
-	var/list/allies_list = list()
-
-	data["creation_stage"] = src.creation_stage
-	data["warlord_spawned"] = src.warlord_spawned
-	data["is_warlord"] = (user_role == "Warlord")
-	data["user_role"] = user_role
-	data["finalized_status"] = finalized_status
-
-	var/remaining_time = get_remaining_time()
-	if(remaining_time >= 0)
-		data["time_remaining"] = remaining_time
+	if(cached_remaining_time >= 0)
+		data["time_remaining"] = cached_remaining_time
 		data["timer_active"] = TRUE
 	else
 		data["time_remaining"] = 0
 		data["timer_active"] = FALSE
 
+	return data
+
+/atom/movable/screen/warband/manager/ui_static_data(mob/user)
+	var/list/data = ..()
+	var/user_role = user.mind.special_role
+	data["creation_stage"] = creation_stage
+	data["warlord_spawned"] = warlord_spawned
+	data["is_warlord"] = (user_role == "Warlord")
+	data["user_role"] = user_role
+	data["finalized_status"] = finalized
+
 	// a list of important figures in town | used in the 'know thy enemy' list in the creation menu | helps in plotting an initial gimmick
-	for(var/mob/living/carbon/human/quote_importantperson_unquote in src.importantfigures)
+	var/list/noble_list = list()
+	for(var/mob/living/carbon/human/quote_importantperson_unquote in importantfigures)
 		UNTYPED_LIST_ADD(noble_list, list(
 			"name" = quote_importantperson_unquote.real_name,
 			"job" = quote_importantperson_unquote.job
 		))
 	data["nobles"] = noble_list
 
-	// a list of teammates (living)
-	for(var/mob/living/carbon/human/buddy in src.members)	
+	// a list of teammates
+	var/list/allies_list = list()
+	for(var/mob/living/carbon/human/buddy in members)
 		var/member_role = buddy.mind?.special_role || "Unknown"
 		UNTYPED_LIST_ADD(allies_list, list(
 			"name" = buddy.real_name,
@@ -58,9 +56,7 @@
 			"special_role" = member_role,
 			"in_lobby" = FALSE
 		))
-
-	// a list of teammates (in the lobby)
-	for(var/mob/living/lobby_member in src.lobby_members)
+	for(var/mob/living/lobby_member in lobby_members)
 		if(!lobby_member.client || !lobby_member.client.prefs)
 			continue
 		var/char_name = lobby_member.client.prefs.real_name
@@ -70,17 +66,17 @@
 			"job" = member_role,
 			"in_lobby" = TRUE
 		))
-	data["allies"] = allies_list	
+	data["allies"] = allies_list
 
-	// casus belli voting state (per-user)
+	// casus belli voting state
 	var/user_ckey = user.ckey
 	var/user_proposal_id_out	// proposal_id of the term the user authored
-	var/user_vote_id_out 		// proposal_id of the term the user is voting on
+	var/user_vote_id_out		// proposal_id of the term the user is voting on
 	var/user_vote_confirmed_flag = FALSE
 	var/warlord_selected_id		// proposal_id the warlord has selected
 	var/list/proposals_out = list()
 
-	for(var/list/proposal in src.casus_belli_proposals)
+	for(var/list/proposal in casus_belli_proposals)
 		var/list/confirmed_votes = proposal["confirmed_votes"]
 		var/list/pending_votes = proposal["pending_votes"]
 		var/is_user_proposal = (proposal["author"] == user_ckey)
@@ -123,26 +119,21 @@
 	data["user_vote_confirmed"] = user_vote_confirmed_flag
 	data["warlord_selected_proposal"] = warlord_selected_id
 
-	if(src.casus_belli_selection)
+	if(casus_belli_selection)
 		var/list/casus_belli_out = list(
-			"name" = src.casus_belli_selection.name,
-			"desc" = src.casus_belli_selection.desc,
-			"type" = "[src.casus_belli_selection.type]",
-			"inputs" = src.casus_belli_selection.serialize_input_fields(),
-			"display_fields" = src.casus_belli_selection.get_display_fields(),
-			"open_signatures" = src.casus_belli_selection.open_signatures,
+			"name" = casus_belli_selection.name,
+			"desc" = casus_belli_selection.desc,
+			"type" = "[casus_belli_selection.type]",
+			"inputs" = casus_belli_selection.serialize_input_fields(),
+			"display_fields" = casus_belli_selection.get_display_fields(),
+			"open_signatures" = casus_belli_selection.open_signatures,
 		)
-		for(var/datum/treaty/input_field/field in src.casus_belli_selection.input_fields)
+		for(var/datum/treaty/input_field/field in casus_belli_selection.input_fields)
 			if(!field.client_only)
-				casus_belli_out[field.key] = src.casus_belli_selection.vars[field.key]
+				casus_belli_out[field.key] = casus_belli_selection.vars[field.key]
 		data["warlord_casus_belli"] = casus_belli_out
 	else
 		data["warlord_casus_belli"] = null
-
-	return data
-
-/atom/movable/screen/warband/manager/ui_static_data(mob/user)
-	var/list/data = ..()
 
 	var/list/storyteller_list = list()
 	var/list/warbands_list = list()
@@ -154,7 +145,7 @@
 	var/list/backend_subtype_list = list()
 	var/list/backend_aspects_list = list()
 
-	if(src.selected_warband)
+	if(selected_warband)
 		UNTYPED_LIST_ADD(backend_warband_list, list(
 			"title" = selected_warband.title,
 			"summary" = selected_warband.summary,
@@ -167,11 +158,14 @@
 			"type" = selected_warband.type,
 			"warlordclasses" = selected_warband.warlordclasses,
 			"lieuclasses" = selected_warband.lieutenantclasses,
-			"gruntclasses" = selected_warband.gruntclasses
+			"gruntclasses" = selected_warband.gruntclasses,
+			"multiclass_enabled" = selected_warband.multiclass_enabled,
+			"subclass_required" = selected_warband.subclass_required,
+			"subclass_label" = selected_warband.subclass_label
 		))
 	data["backend_warband"] = backend_warband_list
 
-	if(src.selected_subtype)
+	if(selected_subtype)
 		UNTYPED_LIST_ADD(backend_subtype_list, list(
 			"title" = selected_subtype.title,
 			"summary" = selected_subtype.summary,
@@ -186,7 +180,7 @@
 		))
 	data["backend_subtype"] = backend_subtype_list
 
-	for(var/datum/warbands/aspects/selected_aspect in src.selected_aspects)
+	for(var/datum/warbands/aspects/selected_aspect in selected_aspects)
 		UNTYPED_LIST_ADD(backend_aspects_list, list(
 			"title" = selected_aspect.title,
 			"summary" = selected_aspect.summary,
@@ -202,7 +196,7 @@
 	data["backend_aspects"] = backend_aspects_list
 
 	if(!static_data_set) // we want to be absolutely sure we're only checking storytellers Once
-		for(var/datum/storyteller/storyteller in src.storyinfluence)
+		for(var/datum/storyteller/storyteller in storyinfluence)
 			UNTYPED_LIST_ADD(storyteller_list, list(
 				"title" = storyteller.name,
 				"summary" = storyteller.desc,
@@ -210,7 +204,7 @@
 			))
 	data["backendstorytellers"] = storyteller_list
 
-	for(var/datum/warbands/warband in src.warbands)
+	for(var/datum/warbands/warband in warbands)
 		UNTYPED_LIST_ADD(warbands_list, list(
 			"title" = warband.title,
 			"summary" = warband.summary,
@@ -223,11 +217,14 @@
 			"type" = warband.type,
 			"warlordclasses" = warband.warlordclasses,
 			"lieuclasses" = warband.lieutenantclasses,
-			"gruntclasses" = warband.gruntclasses
+			"gruntclasses" = warband.gruntclasses,
+			"multiclass_enabled" = warband.multiclass_enabled,
+			"subclass_required" = warband.subclass_required,
+			"subclass_label" = warband.subclass_label
 		))
 	data["warbands"] = warbands_list
 
-	for(var/datum/warbands/subtypes/subtype in src.subtypes)
+	for(var/datum/warbands/subtypes/subtype in subtypes)
 		UNTYPED_LIST_ADD(subtypes_list, list(
 			"title" = subtype.title,
 			"summary" = subtype.summary,
@@ -244,7 +241,7 @@
 		))
 	data["subtypes"] = subtypes_list
 
-	for(var/datum/warbands/aspects/aspect in src.aspects)
+	for(var/datum/warbands/aspects/aspect in aspects)
 		UNTYPED_LIST_ADD(aspects_list, list(
 			"title" = aspect.title,
 			"summary" = aspect.summary,
@@ -259,7 +256,7 @@
 		))
 	data["aspects"] = aspects_list
 
-	for(var/datum/advclass/class in src.classes)
+	for(var/datum/advclass/class in classes)
 		UNTYPED_LIST_ADD(class_list, list(
 			"name" = class.title,
 			"desc" = class.tutorial,
@@ -267,7 +264,8 @@
 			"storyinfluence" = class.storytellerlimit,
 			"rarity" = class.rarity,
 			"slots" = class.maximum_possible_slots,
-			"type" = class.type
+			"type" = class.type,
+			"multiclass_capable" = class.multiclass_capable
 		))
 	data["classes"] = class_list
 	
@@ -283,13 +281,13 @@
 				"icon" = ""
 			))
 
-	if(src.linked_faction)
+	if(linked_faction)
 		UNTYPED_LIST_ADD(cb_faction_list, list(
-			"name" = src.linked_faction.name,
-			"desc" = src.linked_faction.desc,
-			"vault" = src.linked_faction.vault,
-			"owner" = src.linked_faction.owner,
-			"type" = "[src.linked_faction.type]",
+			"name" = linked_faction.name,
+			"desc" = linked_faction.desc,
+			"vault" = linked_faction.vault,
+			"owner" = linked_faction.owner,
+			"type" = "[linked_faction.type]",
 			"icon" = ""
 		))
 	data["backend_factions"] = cb_faction_list
@@ -297,7 +295,7 @@
 	// a list of treaty terms for casus belli browsing & proposal
 	// gets rebuilt in stage 2, as the decisions in stage 1 can potentially make more available
 	var/obj/item/treaty/temp_treaty = new /obj/item/treaty()
-	if(src.creation_stage >= 2 && src.selected_warband)
+	if(creation_stage >= 2 && selected_warband)
 		temp_treaty.add_unique_terms(src)
 	var/list/all_terms_list = list()
 	for(var/datum/treaty/terms/term in temp_treaty.terms)
@@ -312,7 +310,7 @@
 		))
 	qdel(temp_treaty)
 	data["all_terms"] = all_terms_list
-	src.static_data_set = TRUE
+	static_data_set = TRUE
 	return data
 
 
@@ -338,7 +336,7 @@
 			if(user.mind.special_role == "Warlord")
 				to_chat(user, span_warning("Use the finalize button to complete your warband."))
 				return
-			if(!src.warlord_spawned)
+			if(!warlord_spawned)
 				to_chat(user, span_warning("Wait for the Warlord to be finalized, first."))
 				user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 				return
@@ -346,7 +344,7 @@
 			user.mind.warband_manager = src
 			var/class_path = text2path(params["class"])
 			var/subclass_path = text2path(params["subclass"])
-			if(user in src.lobby_members)
+			if(user in lobby_members)
 				lobby_members -= user
 			load_appearance(user, user)
 			lock_check(user)
@@ -361,53 +359,63 @@
 				return
 
 			// stage 1 -> 2: commit the warband selection and move to casus belli phase
-			// the warband's mob cache will start filling up at this point, too
-			if(src.creation_stage == 1)
+			// the warband's mob cache will start filling up at this point
+			if(creation_stage == 1)
 				var/warband_path = text2path(params["warband"])
 				if(!warband_path || !SSwarbands.warband_lookup[warband_path])
 					to_chat(user, span_warning("Select a valid warband before advancing."))
 					user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 					return
-				src.selected_warband = SSwarbands.warband_lookup[warband_path]
+				selected_warband = SSwarbands.warband_lookup[warband_path]
 				var/subtype_path = text2path(params["subtype"])
 				if(subtype_path && SSwarbands.subtype_lookup[subtype_path])
-					src.selected_subtype = SSwarbands.subtype_lookup[subtype_path]
+					selected_subtype = SSwarbands.subtype_lookup[subtype_path]
 				var/list/aspect_paths = params["aspects"]
 				for(var/aspect_path in aspect_paths)
 					var/aspect_type = text2path(aspect_path)
 					if(aspect_type && SSwarbands.aspect_lookup[aspect_type])
-						src.selected_aspects += SSwarbands.aspect_lookup[aspect_type]
-				if(!src.linked_faction)
+						selected_aspects += SSwarbands.aspect_lookup[aspect_type]
+				if(!linked_faction)
 					var/datum/territory_faction/custom/seed_faction = new /datum/territory_faction/custom()
 					SSwarbands.territory_factions += seed_faction	// added first so verify_faction_name sees it
 					seed_faction.name = seed_faction.verify_faction_name("The Warband", null)
-					src.linked_faction = seed_faction
-				src.creation_stage = 2
-				SStgui.update_uis(user)
-				for(var/mob/living/carbon/human/member in src.lobby_members)
-					to_chat(member, span_greenteamradio("The Warlord has chosen a warband. But what are you fighting for? Propose a Casus Belli."))
-					SStgui.update_uis(member)
-					update_static_data(member)
-				envy_check()
+					linked_faction = seed_faction
+				creation_stage = 2
+				selected_subtype?.on_warband_confirmed(src)
+				selected_warband?.on_warband_confirmed(src)
+				for(var/datum/warbands/aspects/aspect in selected_aspects)
+					aspect.on_warband_confirmed(src)
+
+				for(var/mob/living/carbon/human/member in lobby_members)
+					var/warband_info = "<span style='color:#e8bf67'>WARBAND CHOSEN:</span> [selected_warband.title]"
+					if(selected_subtype)
+						warband_info += " ([selected_subtype.title])"
+					if(selected_aspects.len)
+						warband_info += ". <span style='color:#e8bf67'>ASPECTS:</span>"
+						for(var/datum/warbands/aspects/aspect in selected_aspects)
+							warband_info += "<br>- <span style='color:#c9a347'><b>[aspect.title]</b></span>: [aspect.summary]"
+					else
+						warband_info += "."
+					to_chat(member, span_greenteamradio(warband_info))
+					to_chat(member, span_redteamradio("A Warband is chosen. But what are you fighting for? Propose a Casus Belli."))
+				update_static_data_for_all_viewers()
 				set_race_and_faith_locks()
-				notify_sect()
 				send_warnings()	
 				reset_creation_timer()							
 				return
 
 			// stage 2 -> 3: commit the casus belli and open up class selection & finalization
-			if(src.creation_stage == 2)
-				if(!src.casus_belli_selection)
+			if(creation_stage == 2)
+				if(!casus_belli_selection)
 					to_chat(user, span_warning("A casus belli must be chosen before advancing."))
 					user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 					return
-				src.creation_stage = 3
+				creation_stage = 3
 				reset_creation_timer()
 
-				for(var/mob/living/carbon/human/member in src.lobby_members)
+				for(var/mob/living/carbon/human/member in lobby_members)
 					to_chat(member, span_greenteamradio("The Warlord has advanced to class selection. You may now choose your class."))
-					SStgui.update_uis(member)
-					update_static_data(member)
+				update_static_data_for_all_viewers()
 				return
 
 		// warband finalization
@@ -417,7 +425,7 @@
 				to_chat(user, span_warning("Only the Warlord may finalize the warband."))
 				user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 				return
-			if(src.creation_stage != 3)
+			if(creation_stage != 3)
 				to_chat(user, span_warning("Select a Warband first."))
 				user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 				return
@@ -429,35 +437,39 @@
 			SStgui.close_user_uis(user)
 			var/class_path = text2path(params["class"])
 			var/subclass_path = text2path(params["subclass"])
-			if(user in src.lobby_members)
+			if(user in lobby_members)
 				lobby_members -= user
 			load_appearance(user, user)
-			lock_check(user) 		// checks if the warlord is breaking any faith or species limits, and corrects them if so
-			apply_sect_faithlock(user)
-			spawn_warband(user) 	// this spawns the map, too
+			lock_check(user) // checks if the warlord is breaking any faith or species limits, and corrects them if so
+			selected_warband?.on_warlord_spawned(user, src)
+			selected_subtype?.on_warlord_spawned(user, src)
+			for(var/datum/warbands/aspects/aspect in selected_aspects)
+				aspect.on_warlord_spawned(user, src)
+			spawn_warband(user)
 			set_IDs()
-			if(src.linked_faction && !src.linked_faction.owner)
-				src.linked_faction.owner = user.real_name
-				src.linked_faction.name = src.linked_faction.verify_faction_name("[user.real_name]'s Warband", user)
+			if(linked_faction && !linked_faction.owner)
+				linked_faction.owner = user.real_name
+				linked_faction.name = linked_faction.verify_faction_name("[user.real_name]'s Warband", user)
 			// we use "The Warband" as a placeholder faction for the UI. once we're actually in-game, we need to update it
-			if(src.casus_belli_selection && src.linked_faction)
-				var/real_name = src.linked_faction.name
-				if(src.casus_belli_selection.target == "The Warband") 
-					src.casus_belli_selection.target = real_name
-				if(src.casus_belli_selection.receiver == "The Warband") 
-					src.casus_belli_selection.receiver = real_name
+			if(casus_belli_selection && linked_faction)
+				var/real_name = linked_faction.name
+				if(casus_belli_selection.target == "The Warband") 
+					casus_belli_selection.target = real_name
+				if(casus_belli_selection.receiver == "The Warband") 
+					casus_belli_selection.receiver = real_name
 			spawn_character(class_path, user, subclass_path, is_leader = 1)			
 			set_default_exit()
 			
-			src.warlord_spawned = TRUE
+			warlord_spawned = TRUE
 			SSwarbands.warband_managers_busy = FALSE
-			src.finalized = TRUE
+			finalized = TRUE
 			user.mind.warband_manager = src
 			end_intro(user)
-			for(var/mob/living/carbon/human/member in src.lobby_members) 
+			for(var/mob/living/carbon/human/member in lobby_members) 
 				if(member.mind.special_role == "Lieutenant" || member.mind.special_role == "Aspirant Lieutenant" || member.mind.special_role == "Grunt")
 					to_chat(member, span_greenteamradio("The Warlord has established the warband. You may now finalize your character."))
 					member.playsound_local(member, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
+			update_static_data_for_all_viewers()
 			return
 
 		if("interaction_sound")
@@ -494,17 +506,17 @@
 				new_term.vars[field.key] = val
 
 			// removes authorship from the previous proposal BEFORE the duplicate check
-			for(var/list/existing in src.casus_belli_proposals)
+			for(var/list/existing in casus_belli_proposals)
 				if(existing["author"] == user.ckey)
 					existing["author"] = null
 					var/list/existing_confirmed = existing["confirmed_votes"]
 					var/list/existing_pending = existing["pending_votes"]
 					if(!existing_confirmed.len && !existing_pending.len)
-						src.casus_belli_proposals -= list(existing)
+						casus_belli_proposals -= list(existing)
 					break
 
 			// check for duplicate proposals
-			for(var/list/existing_proposal in src.casus_belli_proposals)
+			for(var/list/existing_proposal in casus_belli_proposals)
 				var/existing_type = text2path(existing_proposal["term_type"])
 				if(!existing_type)
 					continue
@@ -542,8 +554,8 @@
 				"pending_votes" = list(),
 				"is_selected" = FALSE
 			)
-			src.casus_belli_proposals += list(new_proposal)
-			SStgui.update_uis(src)
+			casus_belli_proposals += list(new_proposal)
+			update_static_data_for_all_viewers()
 			return
 
 		// vote on a proposal
@@ -554,25 +566,25 @@
 			if(!target_id)
 				return
 			// if they already have a confirmed vote, cancel it
-			for(var/list/proposal in src.casus_belli_proposals)
+			for(var/list/proposal in casus_belli_proposals)
 				if(user.ckey in proposal["confirmed_votes"])
 					return
 			// if they're already pending on the chosen proposal, toggle it off
 			var/already_pending = FALSE
-			for(var/list/proposal in src.casus_belli_proposals)
+			for(var/list/proposal in casus_belli_proposals)
 				if(proposal["proposal_id"] == target_id)
 					if(user.ckey in proposal["pending_votes"])
 						already_pending = TRUE
 					break
 			// if they have a vote pending elsewhere, remove them
-			for(var/list/proposal in src.casus_belli_proposals)
+			for(var/list/proposal in casus_belli_proposals)
 				proposal["pending_votes"] -= user.ckey
 			if(!already_pending)
-				for(var/list/proposal in src.casus_belli_proposals)
+				for(var/list/proposal in casus_belli_proposals)
 					if(proposal["proposal_id"] == target_id)
 						proposal["pending_votes"] += user.ckey
 						break
-			SStgui.update_uis(src)
+			update_static_data_for_all_viewers()
 			return
 
 		// lock in your pending vote
@@ -582,12 +594,12 @@
 			var/target_id = params["proposal_id"]
 			if(!target_id)
 				return
-			for(var/list/proposal in src.casus_belli_proposals)
+			for(var/list/proposal in casus_belli_proposals)
 				if(proposal["proposal_id"] == target_id && (user.ckey in proposal["pending_votes"]))
 					proposal["pending_votes"] -= user.ckey
 					proposal["confirmed_votes"] += user.ckey
 					user.playsound_local(user, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
-					SStgui.update_uis(src)
+					update_static_data_for_all_viewers()
 					return
 			return
 
@@ -599,7 +611,7 @@
 			if(!target_id)
 				return
 			var/list/target_proposal
-			for(var/list/proposal in src.casus_belli_proposals)
+			for(var/list/proposal in casus_belli_proposals)
 				if(proposal["proposal_id"] == target_id)
 					target_proposal = proposal
 					break
@@ -609,22 +621,22 @@
 			if(!found_type)
 				return
 			var/was_selected = target_proposal["is_selected"]
-			for(var/list/proposal in src.casus_belli_proposals)
+			for(var/list/proposal in casus_belli_proposals)
 				proposal["is_selected"] = FALSE
-			if(src.casus_belli_selection && was_selected)
-				qdel(src.casus_belli_selection)
-				src.casus_belli_selection = null
+			if(casus_belli_selection && was_selected)
+				qdel(casus_belli_selection)
+				casus_belli_selection = null
 			else
 				target_proposal["is_selected"] = TRUE
-				if(src.casus_belli_selection)
-					qdel(src.casus_belli_selection)
-				src.casus_belli_selection = new found_type()
+				if(casus_belli_selection)
+					qdel(casus_belli_selection)
+				casus_belli_selection = new found_type()
 				var/list/details = target_proposal["term_details"] || list()
-				for(var/datum/treaty/input_field/field in src.casus_belli_selection.input_fields)
+				for(var/datum/treaty/input_field/field in casus_belli_selection.input_fields)
 					if(field.client_only || isnull(details[field.key]))
 						continue
-					src.casus_belli_selection.vars[field.key] = details[field.key]
-			SStgui.update_uis(src)
+					casus_belli_selection.vars[field.key] = details[field.key]
+			update_static_data_for_all_viewers()
 			return
 
 		// view a list of the current laws
@@ -648,12 +660,12 @@
 			var/returned_ally = params["ally"]
 			var/mob/living/carbon/human/matched_vip
 
-			for(var/mob/living/carbon/human/vip in src.importantfigures)
+			for(var/mob/living/carbon/human/vip in importantfigures)
 				if(vip.real_name == returned_vip)
 					matched_vip = vip
 					break
 
-			for(var/mob/living/carbon/human/pal in src.members)
+			for(var/mob/living/carbon/human/pal in members)
 				if(pal.real_name == returned_ally)
 					matched_vip = pal
 					break
@@ -677,3 +689,22 @@
 	if(user)
 		return UI_INTERACTIVE
 	return ..()
+
+/////////////////////////////////////////////
+
+/atom/movable/screen/introtext
+	name = "intro text"
+	icon = 'icons/roguetown/hud/warband/placeholder_intro.dmi'
+	icon_state = "warlordintro_placeholder"
+	screen_loc = "4.3,9"
+	alpha = 0
+
+/atom/movable/screen/introtext/lieutenant
+	icon_state = "lieutenantintro_placeholder"
+	screen_loc = "4.5,9"
+
+/atom/movable/screen/introtext/veteran
+	icon_state = "veteranintro_placeholder"
+
+/atom/movable/screen/introtext/aspirant
+	icon_state = "aspirantintro_placeholder"

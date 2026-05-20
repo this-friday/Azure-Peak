@@ -75,6 +75,7 @@
 	var/title							// name that exclusively appears in class selection
 	var/datum/storytellerlimit			// required storyteller influence for the class to be available
 	var/rarity							// the required number of storyteller influences before a storyteller-limited class is unlocked
+	var/multiclass_capable = FALSE		// When TRUE, this class appears in the subclass panel rather than the primary class panel for multiclass-enabled warbands
 
 /datum/advclass/New()
 	if(ispath(age_mod) && !istype(age_mod))

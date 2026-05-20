@@ -60,12 +60,12 @@
 			spawn_blocker.linked_warband = src
 			spawn_blocker.warband_ID = src.warband_ID
 	for(var/obj/structure/fluff/traveltile/warband/warband_tile in SSwarbands.warband_machines)
-		if(warband_tile.warband_ID == 0 || (warband_tile.warband_ID == src.warband_ID && !warband_tile.linked_warband))
+		if(warband_tile.warband_ID == 0 || (warband_tile.warband_ID == warband_ID && !warband_tile.linked_warband))
 			warband_tile.linked_warband = src
 			warband_tile.warband_ID = src.warband_ID
-		if(warband_tile.type == /obj/structure/fluff/traveltile/warband/camp_to_outskirts && warband_tile.warband_ID == src.warband_ID)
-			warband_tile.aportalid = "camp_[src.warband_ID]"
-			warband_tile.aportalgoesto = "outskirts_[src.warband_ID]"
+		if(warband_tile.type == /obj/structure/fluff/traveltile/warband/camp_to_outskirts && warband_tile.warband_ID == warband_ID)
+			warband_tile.aportalid = "camp_[warband_ID]"
+			warband_tile.aportalgoesto = "outskirts_[warband_ID]"
 
 //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// LINK PORTALS
@@ -74,22 +74,22 @@
 */
 /atom/movable/screen/warband/manager/proc/link_portals()
 	for(var/obj/structure/fluff/traveltile/warband/warband_tile in SSwarbands.warband_machines)
-		if(warband_tile.warband_ID == src.warband_ID)
+		if(warband_tile.warband_ID == warband_ID)
 			if(warband_tile.type == /obj/structure/fluff/traveltile/warband/azure_to_intermission)
-				warband_tile.aportalid = "azureside_[src.warband_ID]"
-				warband_tile.aportalgoesto = "intermission_[src.warband_ID]"
+				warband_tile.aportalid = "azureside_[warband_ID]"
+				warband_tile.aportalgoesto = "intermission_[warband_ID]"
 			if(warband_tile.type == /obj/structure/fluff/traveltile/warband/intermission_to_azure)
-				warband_tile.aportalid = "intermission_[src.warband_ID]"
-				warband_tile.aportalgoesto = "azureside_[src.warband_ID]"
+				warband_tile.aportalid = "intermission_[warband_ID]"
+				warband_tile.aportalgoesto = "azureside_[warband_ID]"
 			if(warband_tile.type == /obj/structure/fluff/traveltile/warband/intermission_to_outskirts)
-				warband_tile.aportalid = "pre_outskirts_[src.warband_ID]"
-				warband_tile.aportalgoesto = "azureside_outskirts_[src.warband_ID]"
+				warband_tile.aportalid = "pre_outskirts_[warband_ID]"
+				warband_tile.aportalgoesto = "azureside_outskirts_[warband_ID]"
 			if(warband_tile.type == /obj/structure/fluff/traveltile/warband/outskirts_to_intermission)
-				warband_tile.aportalid = "azureside_outskirts_[src.warband_ID]"
-				warband_tile.aportalgoesto = "pre_outskirts_[src.warband_ID]"
+				warband_tile.aportalid = "azureside_outskirts_[warband_ID]"
+				warband_tile.aportalgoesto = "pre_outskirts_[warband_ID]"
 			if(warband_tile.type == /obj/structure/fluff/traveltile/warband/outskirts_to_camp)
-				warband_tile.aportalid = "outskirts_[src.warband_ID]"
-				warband_tile.aportalgoesto = "camp_[src.warband_ID]"
+				warband_tile.aportalid = "outskirts_[warband_ID]"
+				warband_tile.aportalgoesto = "camp_[warband_ID]"
 
 //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SET DEFAULT EXIT
@@ -109,7 +109,7 @@
 	var/random_landmark
 
 	var/has_badspawn = FALSE
-	for(var/datum/warbands/aspects/aspect in src.selected_aspects)
+	for(var/datum/warbands/aspects/aspect in selected_aspects)
 		if(istype(aspect, ASPECT_BADSPAWN))
 			has_badspawn = TRUE
 			break
@@ -136,11 +136,11 @@
 		for(var/fallback_spawn_landmark in GLOB.start_landmarks_list)
 			if(istype(fallback_spawn_landmark, /obj/effect/landmark/start/adventurerlate))
 				random_landmark = fallback_spawn_landmark
-				message_admins("Warband [src.warband_ID] couldn't find a default exit landmark. Exit is defaulting to the Adventurer Spawn.")				
+				message_admins("Warband [warband_ID] couldn't find a default exit landmark. Exit is defaulting to the Adventurer Spawn.")				
 				break
 
 	for(var/obj/structure/fluff/traveltile/warband/camp_to_outskirts/exit_tile in SSwarbands.warband_machines)
-		if(exit_tile.warband_ID == src.warband_ID)
+		if(exit_tile.warband_ID == warband_ID)
 			exit_tile.chosen_landmark = random_landmark
 
 //////////////////////////////////////////////
@@ -154,7 +154,7 @@
 	var/datum/map_template/warcamp_template_type
 
 	if(selected_aspects)
-		for(var/datum/warbands/aspects/aspect in src.selected_aspects)
+		for(var/datum/warbands/aspects/aspect in selected_aspects)
 			if(aspect.warcamp)
 				warcamp_template_type = aspect.warcamp
 				break
@@ -180,7 +180,7 @@
 			qdel(warcamp_landmark)
 			return FALSE
 		qdel(warcamp_landmark)
-		src.warcamp_established = TRUE
+		warcamp_established = TRUE
 		break
 
 	if(latespawn == TRUE)
@@ -197,8 +197,8 @@
 */
 /atom/movable/screen/warband/manager/proc/choose_combat_music()
 	var/chosen_combatmusic
-	if(src.selected_aspects)
-		for(var/datum/warbands/aspects/aspect in src.selected_aspects)
+	if(selected_aspects)
+		for(var/datum/warbands/aspects/aspect in selected_aspects)
 			if(aspect.combatmusic.len)
 				chosen_combatmusic = aspect.combatmusic
 				break
@@ -215,7 +215,7 @@
 		return
 
 	if(chosen_combatmusic)
-		src.combatmusic = chosen_combatmusic
+		combatmusic = chosen_combatmusic
 		return
 
 /////////////////////////////////////////////////
@@ -229,7 +229,6 @@
 		choose_map()
 	stop_creation_timer()
 	choose_combat_music()
-	aspect_tweaks(user)
 	for(var/atom/movable/screen/warband/manager/other_manager in SSwarbands.warband_managers)
 		if(other_manager == src)
 			continue
@@ -237,9 +236,9 @@
 			share_cache_with(other_manager)
 			break
 	initialize_outskirts_encounter()
-	src.linked_faction = choose_warband_faction(user)
-	src.linked_faction.member_names += user.real_name
-	src.finalized = TRUE
+	linked_faction = choose_warband_faction(user)
+	linked_faction.member_names += user.real_name
+	finalized = TRUE
 
 /////////////////////////////////////////////////
 /////////////////////////////////// SEND WARNINGS
@@ -257,8 +256,7 @@
 
 */
 /atom/movable/screen/warband/manager/proc/send_warnings()
-	var/atom/movable/screen/warband/manager/incoming_warband = src
-	for(var/datum/warbands/aspects/chosen_aspect in incoming_warband.selected_aspects)
+	for(var/datum/warbands/aspects/chosen_aspect in selected_aspects)
 		if(istype(chosen_aspect, /datum/warbands/aspects/surprise))
 			return // if the incoming warband has the Surprise aspect, no one's getting warned
 
@@ -306,11 +304,11 @@
 		return
 
 	var/final_readout = "Terrible news has been hastily scrawled upon old, torn parchment. It warns...<BR>\n"
-	if(incoming_warband.selected_warband && incoming_warband.selected_warband.warning)
-		final_readout += "<BR>\n[incoming_warband.selected_warband.warning]"
-	if(incoming_warband.selected_subtype && incoming_warband.selected_subtype.warning)
-		final_readout += "<BR>\n[incoming_warband.selected_subtype.warning]"
-	for(var/datum/warbands/aspects/chosenaspect in incoming_warband.selected_aspects)
+	if(selected_warband && selected_warband.warning)
+		final_readout += "<BR>\n[selected_warband.warning]"
+	if(selected_subtype && selected_subtype.warning)
+		final_readout += "<BR>\n[selected_subtype.warning]"
+	for(var/datum/warbands/aspects/chosenaspect in selected_aspects)
 		if(chosenaspect && chosenaspect.warning)
 			final_readout += "<BR>\n[chosenaspect.warning]"
 
@@ -321,4 +319,4 @@
 	recipient.playsound_local(recipient, 'sound/villain/littlescary.ogg', 100, FALSE)
 
 /obj/item/paper/warband_warning
-	name = "hastily-written parchment"
+	name = "hastily-written warning"

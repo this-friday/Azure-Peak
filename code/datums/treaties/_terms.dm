@@ -7,9 +7,11 @@
 	var/desc
 	var/hint						// vague hint shown to non-experts as they view a treaty, rather than the term's actual description
 
+	// target fields
 	var/target						// the "source" / primary target
 	var/receiver					// the "destination", if relevant
-	var/obj_target
+	var/obj_target	
+	var/list/extra = list()			// overflow map for term-specific fields not covered by the standard vars above	
 
 	var/list/authorities = list()	// characters listed here must sign before the term is confirmed
 	var/list/signatures = list()
@@ -23,7 +25,6 @@
 	var/datum/mind/author			// the mind that drafted this term
 
 	var/list/input_fields = list()	// built in build_input_fields()
-	var/list/extra = list()			// overflow map for term-specific fields not covered by the standard vars
 	var/apply_priority = 0			// term-submission priority in treaty_submission
 
 /datum/treaty/terms/New()
@@ -96,7 +97,6 @@
 	for(var/datum/treaty/input_field/field in input_fields)
 		UNTYPED_LIST_ADD(result, field.serialize())
 	return result
-
 
 // returns the display info panels for the Term while it's Active (not in a draft, but in the middle/signing section)
 // override in subtypes to add term-specific details

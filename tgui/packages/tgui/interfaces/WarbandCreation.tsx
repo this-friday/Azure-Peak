@@ -9,6 +9,7 @@ import { ClassesTab } from './warband/WarbandTabClasses';
 import { CreationTab } from './warband/WarbandTabCreation';
 import { FinalizeTab } from './warband/WarbandTabFinalize';
 import { WorldTab } from './warband/WarbandTabWorld';
+import { formatTime } from './warband/WarbandUtils';
 
 const sectionHeaderStyle = `
   .Section__title {
@@ -82,13 +83,6 @@ export const WarbandCreation = () => {
     if (is_warlord && creation_stage === 2) return "STAGE 2: SELECT A CASUS BELLI TO ADVANCE";
     if (is_warlord && creation_stage === 3 && !warlord_spawned) return "STAGE 3: CHOOSE A CLASS | FINALIZE";
     return "";
-  };
-
-  const formatTime = (deciseconds: number) => {
-    const totalSeconds = Math.floor(deciseconds / 10);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const getTimerColor = () => {

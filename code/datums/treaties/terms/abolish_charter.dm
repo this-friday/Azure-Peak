@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// TERM: ABOLISH CHARTER
 /*
-	deactivates a chosen charter (/datum/decree) & permanently bars it from being reactivated
-
+	deactivates a chosen charter (/datum/decree) & semi-permanently bars it from being reactivated
+	seal is lifted after the duke is usurped
 */
 /datum/treaty/terms/abolish_charter
 	name = "Seal Charter"

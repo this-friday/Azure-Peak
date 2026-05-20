@@ -35,7 +35,7 @@
 	new_realm_type = "Dominion"
 	new_realm_type_short = "Dominion"
 	minister_eligibility_hint = "Disciples of Our Lady of Progress, Mages and the Undead may serve as Ministers."
-	reformation_desc = "As surrounded as we are by worshippers of lesser gods, this is almost certain to be suicide. And yet, Progress demands we try. Here upon this Azure Peak, shall we walk in Her footsteps and forge a Work of our own."
+	reformation_desc = "As surrounded as we are by worshippers of lesser gods, this is almost certain to be suicide. And yet, Progress demands we try. Here upon this Azure Peak, shall we walk in Her footsteps to forge a Work of our own."
 
 /// Any mage with T2+ arcyne training, any Zizite follower, or any undead, can invoke.
 /datum/usurpation_rite/progressive_dominion/can_invoke(mob/living/carbon/human/user)

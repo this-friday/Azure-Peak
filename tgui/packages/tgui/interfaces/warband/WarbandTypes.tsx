@@ -11,6 +11,9 @@ export type WarbandType = {
   warlordclasses: string[];
   lieuclasses: string[];
   gruntclasses: string[];
+  multiclass_enabled: boolean;
+  subclass_required: boolean;
+  subclass_label?: string;
 };
 
 export type SubType = {
@@ -49,6 +52,7 @@ export type ClassType = {
   rarity: number;
   slots: number;
   type: string;
+  multiclass_capable: boolean;
 };
 
 export type StorytellerType = {

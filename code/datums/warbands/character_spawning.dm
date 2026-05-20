@@ -3,7 +3,7 @@
 	CHARACTER SPAWNING
 	- everything that happens as a character is spawned from the lobby
 
-	1 - SPAWN CHARACTER			// spawn a character w/the options selected from the warband hud
+	1 - SPAWN CHARACTER			// spawn a character w/the options selected from the lobby
 	2 - EQUIP CHARACTER			// final step of spawning a character | equips them, sets their traits + adds them to the faction			
 	3 - ASSIGN GRUNT			// binds lieutenants to grunts and vice versa	
 	4 - CHANGE CHARACTER		// changes the current character slot
@@ -14,7 +14,6 @@
 	9 - DETERMINE SQUAD SIZE	// decide the size of a character's NPC squad
 
 */
-
 
 ///////////////////////////////////////////////////
 /////////////////////////////////// SPAWN CHARACTER
@@ -28,13 +27,11 @@
 
 */
 /atom/movable/screen/warband/manager/proc/spawn_character(classpath, mob/user, subclasspath, is_leader, is_latespawn = FALSE)
-	// getting the classes provided from the lobby
-	// they're gonna be passed along to equip_character
 	var/datum/advclass/class_path = new classpath()
-	var/datum/advclass/subclass_path
+	var/datum/advclass/subclass_path = subclasspath ? new subclasspath() : null
 
-	if(subclasspath)
-		subclass_path = new subclasspath()
+	var/role = user.mind.special_role
+	var/is_lieutenant = (role == "Lieutenant" || role == "Aspirant Lieutenant")
 
 	if(is_leader)
 		var/turf/warlord_landmark_turf
@@ -43,58 +40,66 @@
 			user.forceMove(warlord_spawn.loc)
 			qdel(warlord_spawn)
 			break
-		
+
+		for(var/datum/warbands/aspects/aspect in selected_aspects)
+			aspect.on_warlord_spawned(user, src)
+		selected_warband?.on_warlord_spawned(user, src)
+		selected_subtype?.on_warlord_spawned(user, src)
+
 		// we mark the nearest rally point to the warlord's spawn as the spawn turf for anyone coming out of the lobby
 		var/obj/structure/fluff/warband/warband_recruit/nearest_rally
 		var/shortest_distance = 99
-		
 		for(var/obj/structure/fluff/warband/warband_recruit/rally in SSwarbands.warband_machines)
-			if(rally.warband_ID == src.warband_ID)
+			if(rally.warband_ID == warband_ID)
 				var/distance = get_dist(user, rally)
 				if(distance < shortest_distance)
 					shortest_distance = distance
 					nearest_rally = rally
 
-		if(nearest_rally)
-			src.warband_spawn_turf = get_turf(nearest_rally)
-		else if(warlord_landmark_turf)
-			src.warband_spawn_turf = warlord_landmark_turf // if we couldn't find one, we'll fall back to where the warlord's landmark was
-	else
-		if(!is_latespawn)
-			user.forceMove(src.warband_spawn_turf)
+		warband_spawn_turf = nearest_rally ? get_turf(nearest_rally) : warlord_landmark_turf
+	else if(!is_latespawn)
+		user.forceMove(warband_spawn_turf)
 
-	for(var/mob/living/carbon/human/important_figure in src.importantfigures)
+	for(var/mob/living/carbon/human/important_figure in importantfigures)
 		user.mind.i_know_person(important_figure.mind)
 
-	for(var/mob/living/carbon/human/pal in src.members)
+	for(var/mob/living/carbon/human/pal in members)
 		user.mind.i_know_person(pal.mind)
 		user.mind.person_knows_me(pal.mind)
 
 	equip_character(class_path, subclass_path, is_leader, user)
-	user.faction |= list("warband_[src.warband_ID]")
-	if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant" || is_leader)
+
+	user.faction |= list("warband_[warband_ID]")
+	user.verbs += /mob/living/carbon/human/proc/shortcut
+	user.verbs += /mob/living/carbon/human/proc/communicate
+	REMOVE_TRAIT(user, TRAIT_FORCED_LOOC, TRAIT_GENERIC)
+	members += user
+	user.nutrition = NUTRITION_LEVEL_FULL
+	user.hydration = HYDRATION_LEVEL_FULL
+
+	if(is_leader || is_lieutenant)
 		user.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/exile)
 		user.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/associate)
 		user.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/grunt_order)
 		addtimer(CALLBACK(src, PROC_REF(give_treaty), user), 10 SECONDS)
-		if(!is_leader)
+		if(is_lieutenant)
 			user.verbs += /mob/living/carbon/human/proc/desert
 			user.verbs += /mob/living/carbon/human/proc/accept_kick
-		else
-			ADD_TRAIT(user, TRAIT_TEMPO, TRAIT_GENERIC)
-	if(user.job == "Prophet")
-		user.verbs += /mob/living/carbon/human/proc/enlighten
-	user.verbs += /mob/living/carbon/human/proc/shortcut
-	user.verbs += /mob/living/carbon/human/proc/communicate
-	REMOVE_TRAIT(user, TRAIT_FORCED_LOOC, TRAIT_GENERIC)
-	src.members += user
-	user.nutrition = NUTRITION_LEVEL_FULL
-	user.hydration = HYDRATION_LEVEL_FULL
-	if(user.mind.special_role == "Grunt")
-		assign_grunt(grunt = user)
-	else if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant")
-		src.spawned_lieutenants++
-		assign_grunt(lieutenant = user)
+
+	switch(role)
+		if("Grunt")
+			assign_grunt(grunt = user)
+			selected_warband?.on_grunt_spawned(user, src)
+			selected_subtype?.on_grunt_spawned(user, src)
+			for(var/datum/warbands/aspects/aspect in selected_aspects)
+				aspect.on_grunt_spawned(user, src)
+		if("Lieutenant", "Aspirant Lieutenant")
+			spawned_lieutenants++
+			assign_grunt(lieutenant = user)
+			selected_warband?.on_lieutenant_spawned(user, src)
+			selected_subtype?.on_lieutenant_spawned(user, src)
+			for(var/datum/warbands/aspects/aspect in selected_aspects)
+				aspect.on_lieutenant_spawned(user, src)
 
 ///////////////////////////////////////////////////
 /////////////////////////////////// EQUIP CHARACTER
@@ -104,72 +109,60 @@
 	makes any aspect tweaks to their stats
 
 */
-/atom/movable/screen/warband/manager/proc/equip_character(datum/advclass/class_path, datum/advclass/subclass_path, isleader, mob/living/carbon/human/user)
-	user.cmode_music_override = src.combatmusic
-	user.advjob = class_path.name
-	class_path.equipme(user)
-	user.job = class_path.name
-	if(subclass_path)
-		subclass_path.equipme(user)
-		user.job = subclass_path.name
+/atom/movable/screen/warband/manager/proc/equip_character(datum/advclass/class, datum/advclass/subclass, isleader, mob/living/carbon/human/user)
+	user.cmode_music_override = combatmusic
+	user.advjob = class.name
+	class.equipme(user)
+	user.job = class.name
+
+	if(subclass)
+		subclass.equipme(user)
+		user.job = subclass.name
+
 	if(isleader)
-		var/is_figurehead = FALSE
-		for(var/datum/warbands/aspects/found_aspect in src.selected_aspects)
-			if(istype(found_aspect, ASPECT_FIGUREHEAD))
-				is_figurehead = TRUE
-				break
-		if(is_figurehead)
-			if(user.mind)
-				for(var/obj/effect/proc_holder/spell/sweep_spell in user.mind.spell_list)
-					if(sweep_spell.name == "Sweep")
-						user.mind.RemoveSpell(sweep_spell)
-				if(user.actions)
-					for(var/datum/action/spell_action/sweepaction in user.actions)
-						if(sweepaction.name == "Sweep")
-							qdel(sweepaction)
-			// STR: 8 | SPD: 10 | CON: 10
-			if(user.STASTR > 8)
-				user.STASTR = 8
-			if(user.STASPD > 10)
-				user.STASPD = 10
-			if(user.STACON > 10)
-				user.STACON = 10
+		selected_warband?.on_warlord_equip(user, src)
+		selected_subtype?.on_warlord_equip(user, src)
+		for(var/datum/warbands/aspects/aspect in selected_aspects)
+			aspect.on_warlord_equip(user, src)
 	else
-		if(src.linked_faction) // if they aren't the warlord we'll need to add them as a member of the linked faction
-			src.linked_faction.member_names += user.real_name
-			if(!(src.linked_faction in user.mind.associated_factions))
-				user.mind.associated_factions += src.linked_faction
-			if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant")// and if they're a lieutenant we also give them one of their own
+		if(linked_faction) // if they aren't the warlord we'll need to add them as a member of the linked faction
+			linked_faction.member_names += user.real_name
+			if(!(linked_faction in user.mind.associated_factions))
+				user.mind.associated_factions += linked_faction
+			if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant") // and if they're a lieutenant we also give them one of their own
 				var/datum/territory_faction/lieu_faction = new /datum/territory_faction()
 				lieu_faction.generate_faction(user, stewardhidden = TRUE)
 				user.mind.associated_factions |= lieu_faction
+
 	user.faction |= list("[user.real_name]_faction")
 	ADD_TRAIT(user, TRAIT_BREADY, TRAIT_GENERIC)
-	ADD_TRAIT(user, TRAIT_NO_XP, TRAIT_GENERIC) // we want them doing Literally Anything Else besides farming for skills | this should actually be the case for everyone but we'll never be ready for that conversation
+	ADD_TRAIT(user, TRAIT_NO_XP, TRAIT_GENERIC) // we want them doing Literally Anything Else besides farming for skills
 	determine_squad_size(user)
 
 //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ASSIGN GRUNT
 /*
-	binds lieutenants to grunts and vice versa, depending on the provided arguments
+	binds lieutenants to grunts and vice versa, depending on who is spawning
 	limit of 2 grunts per lieutenant
 	
 	MODES:
-	1. lieutenant provided: when a lieutenant spawns, collect all unassigned grunts. add them to the mind.subordinates list
-	2. grunt provided: when a grunt spawns, find them a lieutenant. add their name to the grunt's mind.warband_recruiter_name entry, and adds themselves to the lieutenant's mind
+	1. lieutenant provided: when a lieutenant spawns, collect all unassigned grunts. add them to the mind.subordinates list until they hit the cap
+	2. grunt provided: when a grunt spawns, find them a lieutenant. add their name to the grunt's mind.warband_recruiter_name entry, and add themselves to the lieutenant's mind.subordinates
 	
 */
 /atom/movable/screen/warband/manager/proc/assign_grunt(mob/living/carbon/human/lieutenant, mob/living/carbon/human/grunt)
-	// MODE 1: lieutenant spawns
+	var/grunts_per_lt = GRUNTS_PER_LIEUTENANT + max(0, (get_active_player_count() - 40) / 15)
+
+	// MODE 1: a lieutenant spawns
 	if(lieutenant && !grunt)
 		if(!lieutenant.mind)
 			return
-		
+
 		if(lieutenant.mind.special_role != "Lieutenant" && lieutenant.mind.special_role != "Aspirant Lieutenant")
 			return
 
 		var/list/unassigned_grunts = list()
-		for(var/mob/living/carbon/human/member in src.members)
+		for(var/mob/living/carbon/human/member in members)
 			if(!member.mind)
 				continue
 			if(member.mind.special_role == "Grunt" && !member.mind.warband_recruiter_name)
@@ -180,7 +173,7 @@
 		
 		var/assigned_count = 0
 		for(var/mob/living/carbon/human/waiting_grunt in unassigned_grunts)
-			if(assigned_count >= 2)
+			if(assigned_count >= grunts_per_lt)
 				break
 			
 			lieutenant.mind.subordinates += waiting_grunt
@@ -190,16 +183,16 @@
 			assigned_count++
 		return
 	
-	// MODE 2: grunt spawns
+	// MODE 2: a grunt spawns
 	if(grunt && !lieutenant)
 		if(!grunt.mind || grunt.mind.special_role != "Grunt")
 			return
 		var/list/available_lieutenants = list()
-		for(var/mob/living/carbon/human/member in src.members)
+		for(var/mob/living/carbon/human/member in members)
 			if(!member.mind)
 				continue
 			if(member.mind.special_role == "Lieutenant" || member.mind.special_role == "Aspirant Lieutenant")
-				if(member.mind.subordinates.len < 2)
+				if(member.mind.subordinates.len < grunts_per_lt)
 					available_lieutenants += member
 		
 		if(!available_lieutenants.len)
@@ -271,7 +264,7 @@
 	statwipe(target)
 	GLOB.chosen_names += target.real_name
 
-//////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// STAT WIPE
 /*
 	wipes the stats given by preference copying (statpacks, virtue traits, etc)
@@ -286,11 +279,10 @@
 	user.skills.skill_experience = list()
 
 	// traitwipe
-	if(!user.status_traits) 
-		return
-	for(var/trait in user.status_traits)
-		if(trait != "hearing_sensitive") // they can keep their ears. As A Treat
-			user.status_traits -= trait
+	if(user.status_traits) 
+		for(var/trait in user.status_traits)
+			if(trait != "hearing_sensitive")
+				user.status_traits -= trait
 
 	// statwipe
 	user.STASTR = 10
@@ -323,25 +315,7 @@
 	new_treaty.firstparty = linked_faction.name
 	new_treaty.secondparty = "The Crown"
 	new_treaty.add_unique_terms(src)
-	if(src.casus_belli_selection) // add a copy of the warband's chosen casus belli
-		var/datum/treaty/terms/cb_copy = new src.casus_belli_selection.type()
-		if(src.casus_belli_selection.custom_name)
-			cb_copy.custom_name = src.casus_belli_selection.custom_name
-		if(src.casus_belli_selection.text) 
-			cb_copy.text = src.casus_belli_selection.text
-		if(src.casus_belli_selection.number)
-			cb_copy.number = src.casus_belli_selection.number
-		if(src.casus_belli_selection.target)
-			cb_copy.target = src.casus_belli_selection.target
-			// if a faction's a target, we make them the second party
-			// the 'first party' and 'second party' are 100% just flavor, but this is for clarity's sake
-			if(src.casus_belli_selection.target != linked_faction.name)
-				new_treaty.secondparty = src.casus_belli_selection.target 
-		if(src.casus_belli_selection.receiver) 
-			cb_copy.receiver = src.casus_belli_selection.receiver
-		if(src.casus_belli_selection.obj_target)
-			cb_copy.obj_target = src.casus_belli_selection.obj_target
-		new_treaty.active_terms += cb_copy
+	apply_casus_belli_to_treaty(new_treaty)
 
 	to_chat(user, span_notice("I fetch the Treaty from my bag. If I lose it, I can draft spares from the Campaign Planner."))
 	user.playsound_local(src, 'sound/foley/dropsound/gen_drop.ogg', 100, FALSE)
@@ -355,13 +329,10 @@
 
 */
 /atom/movable/screen/warband/manager/proc/determine_squad_size(mob/user)
-	var/calculated_size = 4
+	var/calculated_size = selected_warband?.get_base_squad_size(user) || 4
 
-	if(src.selected_warband && src.selected_warband.name == "Peasant Rebellion")
-		calculated_size = 30 // DELETENOTE: set back to 8
-	else if(user.job == "Rival Lord")
-		calculated_size = 8
-	
+	calculated_size += squad_size_bonus	// applied before doubling so the warlord's multiplier scales it correctly
+ 
 	if(user.mind.special_role == "Warlord")
 		calculated_size *= 2
 
@@ -371,15 +342,12 @@
 ///////////////////////////////////////////////// RANDOM CLASSES
 /*
 	the Random Classes proc for the Wildcard Lieutenant Class
-	this needs to draw on the Warbands list, so we're putting it here
 
 */
 /datum/outfit/job/roguetown/warband/rebellion/lieutenant/wildcard/proc/random_classes()
 	var/list/final_class_list = list()
 	var/list/all_lieutenant_classes = list()
 	var/list/all_warlord_classes = list()
-	// we don't want to draw another wildcard,
-	// nor a mercenary class (which spawns naked as it's a template for its subclass)
 	var/list/excluded_classes = list(
 		/datum/advclass/warband/rebellion/lieutenant/wildcard,
 		/datum/advclass/warband/mercenary
@@ -424,7 +392,7 @@
 
 /datum/outfit/job/roguetown/warband/rebellion/lieutenant/wildcard/pre_equip(mob/living/carbon/human/H)
 	..()
-	var/list/rolled_classes = src.random_classes()
+	var/list/rolled_classes = random_classes()
 	var/datum/advclass/classchoice = input("Choose your class", "WILDCARD") as anything in rolled_classes
 	if(istype(classchoice, /datum/advclass))
 		classchoice.equipme(H)

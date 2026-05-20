@@ -310,9 +310,9 @@
 
 		if((HAS_TRAIT(user, TRAIT_FORMATIONFIGHTER) || user.job == "Councillor") && !istype(src, /mob/living/carbon/human/species/human/northern/goon))
 			if(HAS_TRAIT(src, TRAIT_FORMATIONFIGHTER))
-				var/is_same_warband = (user.mind?.warband_ID == src.mind?.warband_ID && user.mind?.warband_ID != 0)
-				var/is_enemy = (user.mind?.warband_ID && src.mind?.warband_ID && user.mind.warband_ID != 0 && src.mind.warband_ID != 0 && !is_same_warband)
-				
+				var/is_same_warband = (user.mind?.warband_ID == mind?.warband_ID && user.mind?.warband_ID != 0) // matching warband IDs
+				var/is_enemy = (user.mind?.warband_ID && mind?.warband_ID && user.mind.warband_ID != 0 && mind.warband_ID != 0 && !is_same_warband) // in a warband, but not ours
+
 				if(src.mind.special_role == "Warlord")
 					if(is_same_warband)
 						. += span_danger("<b>[m1] our Warlord!</b>")
@@ -321,14 +321,14 @@
 					else
 						. += span_danger("<b>[m1] a foreign Warlord.</b>")
 
-				if(src.mind.special_role == "Lieutenant" || src.mind.special_role == "Aspirant Lieutenant")
+				if(mind.special_role == "Lieutenant" || mind.special_role == "Aspirant Lieutenant")
 					var/show_aspirant = FALSE
 					if(user.mind?.special_role == "Lieutenant" || user.mind?.special_role == "Aspirant Lieutenant")
 						show_aspirant = TRUE
 					var/role_text = "Lieutenant"
-					if(show_aspirant && src.mind.special_role == "Aspirant Lieutenant")
+					if(show_aspirant && mind.special_role == "Aspirant Lieutenant")
 						role_text = "Aspirant Lieutenant"
-					
+
 					if(is_same_warband)
 						. += span_danger("<b>[m1] one of our [role_text]s.</b>")
 					else if(is_enemy)
@@ -336,10 +336,8 @@
 					else
 						. += span_danger("<b>[m1] a foreign [role_text].</b>")
 
-				if(src.mind.special_role == "Grunt")
-					if(user.job == "Councillor" && src.job == "Conspirator") // councilors can't recognize grunts with the 'conspirator' class
-
-					else
+				if(mind.special_role == "Grunt")
+					if(!(user.job == "Councillor" && job == "Conspirator")) // councillors can't recognise grunts with the 'conspirator' class
 						if(is_same_warband)
 							. += span_danger("<b>[m1] one of our Veterans.</b>")
 						else if(is_enemy)
@@ -348,30 +346,44 @@
 							. += span_danger("<b>[m1] a foreign Veteran.</b>")
 
 		// grunts recognizing their lieutenant
-		if(user.mind?.special_role == "Grunt" && src.mind && user.mind.warband_recruiter_name)
-			if(src.real_name == user.mind.warband_recruiter_name)
+		if(user.mind?.special_role == "Grunt" && mind && user.mind.warband_recruiter_name)
+			if(real_name == user.mind.warband_recruiter_name)
 				. += span_notice("<b>[m1] my Lieutenant!</b>")
 
 		// envoys recognizing one another
-		if(user.mind?.special_role == "Warlord's Envoy" && src.mind?.special_role == "Warlord's Envoy")
-			var/is_same_warband_envoy = (user.mind?.warband_ID == src.mind?.warband_ID && user.mind?.warband_ID != 0)
+		if(user.mind?.special_role == "Warlord's Envoy" && mind?.special_role == "Warlord's Envoy")
+			var/is_same_warband_envoy = (user.mind?.warband_ID == mind?.warband_ID && user.mind?.warband_ID != 0)
 			if(is_same_warband_envoy)
-				if(src.mind.original_char)
-					var/original_name = src.mind.original_char.real_name
-					var/original_role = src.mind.original_char.mind?.special_role
+				if(mind.original_char)
+					var/original_name = mind.original_char.real_name
+					var/original_role = mind.original_char.mind?.special_role
 					var/display_role = original_role
 					if(user.mind.original_char?.mind?.special_role == "Warlord" && original_role == "Aspirant Lieutenant")
 						display_role = "Lieutenant"
-					
+					if(original_name && display_role)
+						. += span_notice("[m1] an envoy of [original_name], [display_role == "Warlord" ? "the" : "a"] [display_role].")
+			else
+				. += span_notice("<b>[m1] an Envoy from another warband.</b>")
+
+		// warband members recognizing envoys
+		if(HAS_TRAIT(user, TRAIT_FORMATIONFIGHTER) && mind?.special_role == "Warlord's Envoy")
+			var/is_same_warband_envoy = (user.mind?.warband_ID == mind?.warband_ID && user.mind?.warband_ID != 0)
+			if(is_same_warband_envoy)
+				if(mind.original_char)
+					var/original_name = mind.original_char.real_name
+					var/original_role = mind.original_char.mind?.special_role
+					var/display_role = original_role
+					if(user.mind?.special_role == "Warlord" && original_role == "Aspirant Lieutenant")
+						display_role = "Lieutenant"
 					if(original_name && display_role)
 						. += span_notice("[m1] an envoy of [original_name], [display_role == "Warlord" ? "the" : "a"] [display_role].")
 			else
 				. += span_notice("<b>[m1] an Envoy from another warband.</b>")
 
 		// councillors examining envoys
-		if(user.job == "Councillor" && src.mind?.special_role == "Warlord's Envoy")
-			if(src.mind.original_char?.mind?.special_role)
-				var/original_role = src.mind.original_char.mind.special_role
+		if(user.job == "Councillor" && mind?.special_role == "Warlord's Envoy")
+			if(mind.original_char?.mind?.special_role)
+				var/original_role = mind.original_char.mind.special_role
 				if(original_role == "Aspirant Lieutenant")
 					. += span_notice("[m1] an envoy of a foreign Aspirant Lieutenant.")
 				else if(original_role == "Lieutenant")

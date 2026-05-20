@@ -11,47 +11,46 @@
 
 	var/list/style_options = list()
 	
-	if(src.mind.warband_manager.selected_warband?.title == "SORCERER-KING")
+	if(mind.warband_manager.selected_warband?.title == "SORCERER-KING")
 		style_options += "BLOW UP HEAD"
-	if(src.mind.warband_manager.selected_subtype?.title == "ASCENDANT")
+	if(mind.warband_manager.selected_subtype?.title == "ASCENDANT")
 		style_options += "DEADITE"
 
 	style_options += "POISON TOOTH"
 
 	var/style_choice = input(src, "How should they go out?", "ABANDON SHIP") as null|anything in style_options
 
-
 	switch(style_choice)
 		if("POISON TOOTH")
 			ADD_TRAIT(src, TRAIT_NOSSDINDICATOR, TRAIT_GENERIC) // for immersion's sake
 			ADD_TRAIT(src, TRAIT_DNR, TRAIT_GENERIC) // they get dnr'd either way, so this should be fine ^
-			src.visible_message(span_boldred("[src] suddenly seizes up, blood-laced foam bubbling from the corners of their mouth!"))
-			src.mind.warband_manager.return_envoy(src, abandoned = TRUE)
-			src.adjustOxyLoss(200)
-			src.adjustToxLoss(200)
+			visible_message(span_boldred("[src] suddenly seizes up, blood-laced foam bubbling from the corners of their mouth!"))
+			mind.warband_manager.return_envoy(src, abandoned = TRUE)
+			adjustOxyLoss(200)
+			adjustToxLoss(200)
 			return TRUE
 		if("DEADITE")
 			if(prob(90))
 				ADD_TRAIT(src, TRAIT_NOSSDINDICATOR, TRAIT_GENERIC)
-				src.emote("agony", forced = TRUE)
-				src.visible_message(span_boldred("[src] digs their nails into their flesh. Once they have a solid grip, they yank themselves free!"))
-				src.mind.warband_manager.return_envoy(src, abandoned = TRUE)
+				emote("agony", forced = TRUE)
+				visible_message(span_boldred("[src] digs their nails into their flesh. Once they have a solid grip, they yank themselves free!"))
+				mind.warband_manager.return_envoy(src, abandoned = TRUE)
 				addtimer(CALLBACK(src, PROC_REF(abandon_followup), 1), 3 SECONDS)
 				return TRUE
 			else
 				ADD_TRAIT(src, TRAIT_NOSSDINDICATOR, TRAIT_GENERIC)
-				src.emote("agony", forced = TRUE)
-				src.visible_message(span_boldred("[src] contorts in agony as wisps of a dark, terrible energy rise from their screaming lips and bleeding ears. Something wicked is coming..."))
-				src.mind.warband_manager.return_envoy(src, abandoned = TRUE)
+				emote("agony", forced = TRUE)
+				visible_message(span_boldred("[src] contorts in agony as wisps of a dark, terrible energy rise from their screaming lips and bleeding ears. Something wicked is coming..."))
+				mind.warband_manager.return_envoy(src, abandoned = TRUE)
 				addtimer(CALLBACK(src, PROC_REF(abandon_followup), 2), 3 SECONDS)
 				return TRUE
 
 		if("BLOW UP HEAD")
 			ADD_TRAIT(src, TRAIT_NOSSDINDICATOR, TRAIT_GENERIC)
-			src.visible_message(span_boldred("[src]'s skull hums with a swelling, arcane force! Holy shit! They're gonna blow!"))
-			src.flash_fullscreen("redflash3")
-			src.emote("agony", forced = TRUE)			
-			src.mind.warband_manager.return_envoy(src, abandoned = TRUE)
+			visible_message(span_boldred("[src]'s skull hums with a swelling, arcane force! Holy shit! They're gonna blow!"))
+			flash_fullscreen("redflash3")
+			emote("agony", forced = TRUE)			
+			mind.warband_manager.return_envoy(src, abandoned = TRUE)
 			addtimer(CALLBACK(src, PROC_REF(abandon_followup), 3), 3 SECONDS)
 			return TRUE
 	return TRUE
@@ -60,21 +59,21 @@
 /mob/living/carbon/human/proc/abandon_followup(event)
 	ADD_TRAIT(src, TRAIT_DNR, TRAIT_GENERIC)
 	if(event == 1)
-		var/deathloc = src.loc
+		var/deathloc = loc
 		var/mob/living/carbon/human/species/skeleton/npc/no_equipment/skeleton = new /mob/living/carbon/human/species/skeleton/npc/no_equipment(deathloc)
 		skeleton.emote("laugh", forced = TRUE)
-		src.gib()
+		gib()
 		return TRUE
 
 	if(event == 2)
-		var/deathloc = src.loc
-		src.gib()
+		var/deathloc = loc
+		gib()
 		new /mob/living/simple_animal/hostile/rogue/haunt/omen(deathloc)
 		return TRUE
 
 	if(event == 3)
-		src.mind = null
-		var/obj/item/bodypart/head = src.get_bodypart(BODY_ZONE_HEAD)
+		mind = null
+		var/obj/item/bodypart/head = get_bodypart(BODY_ZONE_HEAD)
 		if(head)
 			explosion(src, light_impact_range = 4,  smoke = TRUE)
 			head.drop_limb()
@@ -91,37 +90,37 @@
 	set category = "Warband"
 	var/list/random_flavortone = list("caw", "weep", "croak", "scream", "gurgle", "sing", "murmur", "wail", "chirp", "babble")
 
-	if(!src.mind.warband_manager)
+	if(!mind.warband_manager)
 		to_chat(src, span_bold("I call, but no Carrier Zad heeds me."))
 		return
 
-	if(src.mind.warband_manager.disorder >= 8 && !src.mind.special_role == "Warlord") // warlord can always use Communicate
+	if(mind.warband_manager.disorder >= 8 && !mind.special_role == "Warlord") // warlord can always use Communicate
 		to_chat(src, span_bold("I call, but no Carrier Zad heeds me. It's likely disturbed by the disorder in our Warband."))
 		return
 
-	if(src.mind.warband_manager.disorder >= 8 && src.mind.special_role == "Warlord")
+	if(mind.warband_manager.disorder >= 8 && mind.special_role == "Warlord")
 		to_chat(src, span_warning("My Carrier Zad arrives, but my Warband's morale is too low for my men to utilize their own. I can still send out a message, but I shouldn't expect a direct response."))
 
-	if(istype(src.loc.loc, /area/rogue/outdoors))
+	if(istype(loc.loc, /area/rogue/outdoors))
 		var/input_text = input(src, "Enter your message", "Message")
 		if(input_text)
 			var/sanitized_text = html_encode(input_text)
-			src.visible_message(span_boldred("[src] begins binding a sealed letter to a zad's leg..."))
+			visible_message(span_boldred("[src] begins binding a sealed letter to a zad's leg..."))
 			if(do_after(src, 100, FALSE, src))
-				if(istype(src.loc.loc, /area/rogue/outdoors)) // another area check, in case someone starts the prompt outside and moves back inside for the doafter
+				if(istype(loc.loc, /area/rogue/outdoors)) // another area check, in case someone starts the prompt outside and moves back inside for the doafter
 					var/random_tone = pick(random_flavortone)
-					src.visible_message(span_boldred("[src] releases a carrier zad!"))
+					visible_message(span_boldred("[src] releases a carrier zad!"))
 					playsound(src, 'sound/vo/mobs/bird/birdfly.ogg', 100, TRUE, -1)
-					for(var/mob/warband_member in src.mind.warband_manager.members)
+					for(var/mob/warband_member in mind.warband_manager.members)
 						if(!warband_member)	// if there's a null in here, we remove them from the member list, call a cleanup, and skip them
-							src.mind.warband_manager.members -= warband_member
-							src.mind.warband_manager.clean_members() // Who Up Cleaning They Members
+							mind.warband_manager.members -= warband_member
+							mind.warband_manager.clean_members() // Who Up Cleaning They Members
 							continue
 						if(!warband_member.loc)
 							continue
 						if(isliving(warband_member))
 							if(istype(warband_member.loc.loc, /area/rogue/outdoors))
-								if(src.mind.special_role == "Warlord")
+								if(mind.special_role == "Warlord")
 									to_chat(warband_member, span_highlight("A carrier zad flutters down and perches nearby. In mimicry of our Warlord, it recites a missive clutched in its talons: <span style='color:#[src.voice_color]'>''[sanitized_text]''</span>"))								
 								else
 									to_chat(warband_member, span_red("A zad-bound message arrives with the seal of the [src.job]: <span style='color:#[src.voice_color]'>''[sanitized_text]''</span> - [src.real_name]"))
@@ -129,207 +128,6 @@
 								to_chat(warband_member, span_warning("Beyond the walls, I faintly hear a carrier zad [random_tone] in mimicry: <span style='color:#[src.voice_color]'>''[sanitized_text]''</span>"))
 	else
 		to_chat(src, span_bold("I'll need to be outside."))
-
-/////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// ABANDON WARBAND
-/*
-	handles both desertions & exiles
-
-	both aspirant & regular lieutenants can do this - aspirant lieutenants just do so to greater effect
-
-	WHO GETS WHAT IN THE DIVORCE:
-		everyone the deserter marked as an ally shifts factions w/them
-		the deserter's subordinates shift factions w/them
-
-	it's possible for both parties to become allies again, but it builds up a ton of Disorder between them when they use Associate
-
-
-*/
-/mob/living/carbon/human/proc/desert()
-	set name = "DESERT WARBAND"
-	set category = "Warband"
-
-	if(src.stat == DEAD)
-		to_chat(src, span_boldred("It's too late..."))
-		return FALSE
-	src.abandon_warband(FALSE, FALSE, FALSE)
-
-
-/mob/living/carbon/human/proc/abandon_warband(kicked = FALSE, grunt_kick = FALSE, autoresolve = FALSE)
-	var/disorder = src.mind.warband_manager.disorder
-	var/initial_ID	= src.mind.warband_ID
-	var/old_faction_string = "warband_[src.mind.warband_ID]"
-
-	var/troops_available = src.mind.warband_manager.spawns
-
-	var/stolen_troop_percentage
-	if(src.mind.special_role == "Aspirant Lieutenant")
-		stolen_troop_percentage = 30
-	else
-		stolen_troop_percentage = 3
-
-	// each point of disorder increases the number of stolen troops by 15%
-	stolen_troop_percentage += (disorder * 15)
-
-	var/stolen_troops = round((troops_available * stolen_troop_percentage) / 100)
-
-	if(grunt_kick) // if a grunt is kicked
-		for(var/mob/living/bossman in src.mind.warband_manager.members)
-			if(isliving(bossman))
-				to_chat(bossman, span_boldred("Word spreads that [src.real_name], our [src.job], has been exiled."))
-				bossman.playsound_local(bossman, 'sound/misc/warband/exile_warhorn_altb.ogg', 80, FALSE, pressure_affected = FALSE)
-			if(bossman.real_name == src.mind.warband_recruiter_name)
-				if(!autoresolve) // if we're autoresolving, their direct boss is the one who exiled them, so we can skip past this as they don't need to be alerted
-					bossman.mind.unresolved_exile_names += src.real_name
-					to_chat(bossman, span_warning("My [src.job] and subordinate, [src.real_name], has been branded an exile by my Warband. I can resolve this (RESOLVE EXILES in the Warband Tab)"))
-		to_chat(src, span_boldred("I have been exiled from the Warband."))
-		src.faction.Remove(old_faction_string)
-		src.faction -= list("warband_[initial_ID]")
-		src.mind.warband_manager.members -= src		
-		src.mind.warband_manager = null		
-		src.mind.warband_ID = 0
-		src.mind.warband_exile_IDs += initial_ID
-		return
-
-	// if they weren't kicked, they're manually deserting
-	if(!kicked) // allows them to Go Out In Style (make an announcement)
-		manual_desertion(stolen_troops, troops_available, old_faction_string, initial_ID)
-
-	else // if they WERE kicked
-		to_chat(src, span_userdanger("I have been declared an exile by my Warband."))
-		src.verbs -= /mob/living/carbon/human/proc/desert
-		src.mind.warband_exile_IDs += initial_ID
-		for(var/mob/warband_member in src.mind.warband_manager.members)
-			if(isliving(warband_member))
-				to_chat(warband_member, span_boldred("Word spreads that [src.real_name], our [src.job], has been exiled. [stolen_troops] of our rank-and-file \
-				have deserted to accompany them."))
-				warband_member.playsound_local(warband_member, 'sound/misc/warband/exile_warhorn_altb.ogg', 100, FALSE, pressure_affected = FALSE)
-		desertion_results(stolen_troops, troops_available, old_faction_string, initial_ID)
-		return
-	return TRUE
-
-// desertion w/announcement
-/mob/living/carbon/human/proc/manual_desertion(stolen_troops, troops_available, old_faction_string, initial_ID)
-	var/calltext = input("You are preparing to DESERT your Warband. This will be a public declaration. What will you say?", "DESERTION") as text|null
-	if(!calltext)
-		return
-	src.visible_message(span_boldred("[src] blows into a warhorn!"))
-	priority_announce("The [src.job] has deserted the [src.mind.warband_manager.selected_warband.name] accompanied by around [stolen_troops] of their rank-and-file. \
-	Their words of departure are rumored to be as follows:\n \n [calltext]", title = "WORD SPREADS OF DESERTION", sound = 'sound/misc/warband/exile_warhorn_altb.ogg', sender = src, receiver = /mob/living/carbon/human)
-	// if this being a round-wide announcement would be too annoying, it could be restricted to only display to warband members
-	// but atm i think it'd be fun to let everyone in on the drama
-
-	if(!src.mind.warband_ID == initial_ID)							// if the initial ID doesn't match, they likely got kicked while they were preparing the message
-		to_chat(src, span_userdanger("I've already been exiled."))	// so we'll skip the desertion results
-		return
-	desertion_results(stolen_troops, troops_available, old_faction_string, initial_ID)
-
-// effects of desertion take place
-/mob/living/carbon/human/proc/desertion_results(stolen_troops, troops_available, old_faction_string, initial_ID)
-	var/extra_item = FALSE	// for schism variants
-	var/datum/component/squad_controller/squad_manager = src.GetComponent(/datum/component/squad_controller)
-	if(!squad_manager)
-		squad_manager = src.AddComponent(/datum/component/squad_controller)
-	troops_available = src.mind.warband_manager.spawns // reaffirm the available troops | could've changed while a manual desertion message was being typed
-	if(stolen_troops > troops_available)
-		stolen_troops = troops_available
-	src.mind.warband_manager.spawns -= stolen_troops
-
-	src.mind.warband_manager.members -= src
-
-	var/atom/movable/screen/warband/manager/new_warband_manager
-	new_warband_manager = new /atom/movable/screen/warband/manager
-	new_warband_manager.schism_level = src.mind.warband_manager.schism_level + 1
-	src.mind.special_role = "Warlord"
-	SSmapping.retainer.warlords |= src.mind	
-	src.mind.warband_ID = SSwarbands.warband_managers.len + 1
-	new_warband_manager.warband_ID = src.mind.warband_ID
-	src.mind.warband_exile_IDs += initial_ID
-	src.mind.warband_manager.disorder ++
-
-	src.faction.Remove(old_faction_string)
-	src.faction |= list("warband_[src.mind.warband_ID]")
-
-	var/datum/territory_faction/personal_faction
-	for(var/datum/territory_faction/faction in src.mind.associated_factions)
-		if(faction.owner == src.real_name)
-			personal_faction = faction
-			break
-
-	if(personal_faction)
-		new_warband_manager.linked_faction = personal_faction
-
-	for(var/mob/living/carbon/human/species/human/northern/goon/goon in squad_manager.members)
-		goon.faction.Remove(old_faction_string)
-		goon.faction |= list("warband_[src.mind.warband_ID]")
-		goon.warband_ID = src.mind.warband_ID
-	
-	new_warband_manager.members += src
-	SSwarbands.warband_managers += new_warband_manager
-
-	switch(src.advjob)
-		if("Preacher") // a preacher in schism creates a faithlocked sect
-			new_warband_manager.selected_warband = new /datum/warbands/sect
-			if(src.patron.type in ALL_DIVINE_PATRONS)
-				new_warband_manager.selected_subtype = new WARBAND_SECT_TEN
-			else if(src.patron.type in ALL_INHUMEN_PATRONS)
-				new_warband_manager.selected_subtype = new WARBAND_SECT_FOUR
-			else if(src.patron.name == "Psydon")
-				new_warband_manager.selected_subtype = new WARBAND_SECT_PSYDON
-			new_warband_manager.faithlocks = list(src.patron)
-			src.verbs += /mob/living/carbon/human/proc/enlighten
-
-		if("Magician") // a magician in schism (potentially) creates a sorcerer-king 
-			if(src.mind.warband_manager.disorder >= 5)
-				for(var/obj/item/equipped_item in get_equipped_items() + held_items)
-					if(istype(equipped_item, /obj/item/rogueweapon/woodstaff/implement/grand))
-						extra_item = TRUE
-			if(extra_item == TRUE)
-				new_warband_manager.selected_warband = new /datum/warbands/storyteller/wizard
-				to_chat(src, span_boldred("I feel a shift in destiny's tides with my declaration. <span style='color:#801d1d'>The Wandering Tower calls to me.</span>"))
-			else
-				new_warband_manager.selected_warband = src.mind.warband_manager.selected_warband
-				new_warband_manager.selected_subtype = src.mind.warband_manager.selected_subtype
-		else
-			new_warband_manager.selected_warband = src.mind.warband_manager.selected_warband
-			new_warband_manager.selected_subtype = src.mind.warband_manager.selected_subtype
-
-	for(var/mob/living/subordinate in src.mind.subordinates) // bring along associated grunts
-		to_chat(subordinate, span_boldred("My Lieutenant has embraced open rebellion. My relations with the [src.mind.warband_manager.selected_warband.name] are in tatters."))
-		subordinate.faction.Remove(old_faction_string)
-		subordinate.faction |= list("warband_[src.mind.warband_ID]")
-		subordinate.mind.warband_manager = new_warband_manager
-		subordinate.mind.warband_ID = new_warband_manager.warband_ID
-		subordinate.mind.warband_exile_IDs += initial_ID
-		src.mind.warband_manager.members -= subordinate
-		new_warband_manager.members += subordinate
-
-	for(var/mob/living/ally in src.mind.warband_manager.allies)	// bring along associated allies
-		if(ally.mind.warband_recruiter_name == src.real_name)
-			if(ally.mind.special_role) // if they were an antagonist, bring their disorder over to the new warband. They're your problem now, Bro.
-				src.mind.warband_manager.disorder --
-				new_warband_manager.disorder ++
-			to_chat(ally, span_boldred("The one who swore I'd be unharmed by the [src.mind.warband_manager.selected_warband.name] has embraced open rebellion. \
-			I should assume my accord with their former allies is to be forgotten."))
-			ally.faction.Remove(old_faction_string)
-			ally.faction |= list("warband_[src.mind.warband_ID]")
-			src.mind.warband_manager.allies -= ally
-			new_warband_manager.allies += ally
-	new_warband_manager.spawns -= WARBAND_BASE_RESPAWNS	// we want their respawns to ONLY!! be drawn from the number of stolen troops
-	new_warband_manager.spawns += stolen_troops
-	new_warband_manager.finalized = TRUE
-	new_warband_manager.creation_stage = 3
-	new_warband_manager.warlord_spawned = TRUE
-	new_warband_manager.stop_creation_timer()
-	if(new_warband_manager.has_compatible_cache(src.mind.warband_manager))
-		new_warband_manager.share_cache_with(src.mind.warband_manager)
-		message_admins("Schism warband [new_warband_manager.warband_ID] will share cache with parent [src.mind.warband_manager.warband_ID]")
-	else
-		message_admins("Schism warband [new_warband_manager.warband_ID] requires separate cache (incompatible grunt types)")
-	src.verbs -= /mob/living/carbon/human/proc/desert
-	src.verbs += /mob/living/carbon/human/proc/connect_warcamp
-	src.mind.warband_manager = new_warband_manager
-	src.mind.warband_manager.determine_squad_size(src)
 
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// TAKE SHORTCUT
@@ -346,12 +144,12 @@
 	set category = "Warband"
 
 	var/can_shortcut = FALSE
-	if(!src.mind.warband_manager)
+	if(!mind.warband_manager)
 		to_chat(src, span_warning("There's nowhere for me to go. I am alone."))
 		return
 
 
-	if(!src.mind.warband_manager.outskirts_established)
+	if(!mind.warband_manager.outskirts_established)
 		to_chat(src, span_bold("Before I can take a shortcut back to the Warcamp, an ENVOY needs to Scout a Path."))
 		return
 
@@ -366,16 +164,14 @@
 
 	if(do_after(src, 100, FALSE, src))
 		for(var/obj/structure/fluff/warband/shortcut/warband_shortcut in SSwarbands.warband_machines)
-			if(warband_shortcut.warband_ID == src.mind.warband_ID)
+			if(warband_shortcut.warband_ID == mind.warband_ID)
 				if(warband_shortcut.disabled)
 					to_chat(src, span_userdanger("Something's wrong. I've been cut off, and I'll need to return through the frontline."))
 				else
-					src.visible_message(span_bold("[src] slips somewhere beyond sight!"))
-					src.loc = warband_shortcut.loc
+					visible_message(span_bold("[src] slips somewhere beyond sight!"))
+					loc = warband_shortcut.loc
 				break 
 		return TRUE
-
-
 
 	return TRUE
 
@@ -399,11 +195,11 @@
 		to_chat(src, span_userdanger("I'll need to wait for a moment."))
 		return
 
-	if(src.mind.warband_manager.outskirts_established == TRUE)
+	if(mind.warband_manager.outskirts_established == TRUE)
 		to_chat(src, span_userdanger("A path has already been scouted."))
 		return
 
-	var/area/zone = src.loc.loc
+	var/area/zone = loc.loc
 
 	var/list/allowed_area_types = list(
 		/area/rogue/under/underdark,
@@ -427,7 +223,13 @@
 			is_allowed = TRUE
 			break
 
-	if(!is_allowed)
+	var/is_blacklisted = FALSE
+	for(var/type_path in blacklisted_area_types)
+		if(istype(zone, type_path))
+			is_blacklisted = TRUE
+			break
+
+	if(!is_allowed || is_blacklisted)
 		to_chat(src, span_danger("This isn't a suitable location. I should go far away from here."))        
 		return
 
@@ -441,7 +243,7 @@
 			to_chat(src, span_userdanger("I'll need to wait for a moment."))
 			return
 
-		if(src.mind.warband_manager.outskirts_established == TRUE)
+		if(mind.warband_manager.outskirts_established == TRUE)
 			to_chat(src, span_userdanger("A path has already been scouted."))
 			return
 
@@ -450,7 +252,7 @@
 				to_chat(src, span_userdanger("I'm too close to an existing path."))				
 				return
 
-		if(!src.mind.warband_manager.warcamp_established) // if this is being done without a warcamp, we check if there's a free space.
+		if(!mind.warband_manager.warcamp_established) // if this is being done without a warcamp, we check if there's a free space.
 			var/obj/effect/landmark/warcamp/found_slot
 			for(var/obj/effect/landmark/warcamp/open_warcamp_slot in GLOB.landmarks_list)
 				found_slot = TRUE
@@ -461,15 +263,15 @@
 					to_chat(src, span_userdanger("I can, however, declare a Recruitment Point to rally my troops..."))
 					if(do_after(src, 90, target = src))
 						var/obj/structure/fluff/warband/warband_recruit/outpost = new /obj/structure/fluff/warband/warband_recruit(src.loc)
-						outpost.warband_ID = src.mind.warband_ID
-						outpost.linked_warband = src.mind.warband_manager						
-						src.mind.warband_manager.warcamp_established = TRUE
-						src.verbs -= /mob/living/carbon/human/proc/connect_warcamp
+						outpost.warband_ID = mind.warband_ID
+						outpost.linked_warband = mind.warband_manager						
+						mind.warband_manager.warcamp_established = TRUE
+						verbs -= /mob/living/carbon/human/proc/connect_warcamp
 				return
 
 		SSwarbands.warband_managers_busy = TRUE
-		src.visible_message(span_notice("[src] begins scouting for a new path..."))
-		var/turf/initial_turf = src.loc
+		visible_message(span_notice("[src] begins scouting for a new path..."))
+		var/turf/initial_turf = loc
 		if(do_after(src, 30, target = src))
 			var/terrain_key
 			
@@ -496,7 +298,7 @@
 				to_chat(src, span_userdanger("Something's wrong. I should attempt this somewhere else."))
 				SSwarbands.warband_managers_busy = FALSE
 				return
-			if(src.mind.warband_manager.outskirts_established == TRUE)
+			if(mind.warband_manager.outskirts_established == TRUE)
 				to_chat(src, span_userdanger("A path has already been scouted."))
 				return
 			var/outskirts_landmark_found = FALSE
@@ -524,10 +326,10 @@
 			// spawns the travel tiles to the intermission
 			// attempts to get the spawned tiles to hug the wall
 			if(outskirts_landmark_found && intermission_landmark_found)
-				src.visible_message(span_info("[src] reveals a path to the Warcamp!"))
-				src.mind.warband_manager.outskirts_established = TRUE
+				visible_message(span_info("[src] reveals a path to the Warcamp!"))
+				mind.warband_manager.outskirts_established = TRUE
 				var/obj/structure/fluff/traveltile/warband/new_path = new /obj/structure/fluff/traveltile/warband/azure_to_intermission(initial_turf)
-				new_path.warband_ID = src.mind.warband_ID
+				new_path.warband_ID = mind.warband_ID
 
 				var/list/spawn_locations = list()
 				var/list/preferred_spawn_locations = list()
@@ -560,18 +362,18 @@
 					var/turf/chosen_turf = final_spawn_locations[i]
 					var/obj/structure/fluff/traveltile/warband/new_tile = new /obj/structure/fluff/traveltile/warband/azure_to_intermission(chosen_turf)
 					new_tile.warband_ID = src.mind.warband_ID
-				src.mind.warband_manager.set_IDs()
-				src.mind.warband_manager.link_portals()
-				src.mind.warband_manager.finalize_outskirts_encounter()
+				mind.warband_manager.set_IDs()
+				mind.warband_manager.link_portals()
+				mind.warband_manager.finalize_outskirts_encounter()
 				SSwarbands.warband_managers_busy = FALSE
 				for(var/obj/effect/solid_invisible_barrier/warband_spawnbarrier/spawn_barrier in SSwarbands.warband_machines)
-					if(spawn_barrier.warband_ID == src.mind.warband_manager.warband_ID)
+					if(spawn_barrier.warband_ID == mind.warband_manager.warband_ID)
 						SSwarbands.warband_machines -= spawn_barrier
 						qdel(spawn_barrier)
 			else
 				return
 		else
-			src.visible_message(span_warning("[src] halts their scouting."))
+			visible_message(span_warning("[src] halts their scouting."))
 			SSwarbands.warband_managers_busy = FALSE
 			return
 	else
@@ -595,8 +397,6 @@
 		the subordinate is removed from their lieutenant's list of subordinates
 		alternatively, they can just directly use the Exile spell on them to the same effect
 
-
-
 */
 /mob/living/carbon/human/proc/accept_kick()
 	set name = "RESOLVE EXILES"
@@ -605,11 +405,11 @@
 	var/mob/living/carbon/human/target
 	var/personal_faction_tag = "[src.real_name]_faction"
 
-	if(!src.mind.unresolved_exile_names.len)
+	if(!mind.unresolved_exile_names.len)
 		to_chat(src, span_warning("There are no decrees I must resolve."))
 		return
 
-	var/exile_choice = input(src, "Who should I settle?", "EXILE") as null|anything in src.mind.unresolved_exile_names
+	var/exile_choice = input(src, "Who should I settle?", "EXILE") as null|anything in mind.unresolved_exile_names
 	if(exile_choice)
 		for(var/mob/living/carbon/human/exile in GLOB.player_list) // get the mob w/the exile's name
 			if(exile.real_name == exile_choice)
@@ -618,14 +418,12 @@
 	else
 		return
 
-
-
 	if(!target)
 		to_chat(src, span_warning("They're gone. I should consider the matter resolved."))
-		src.mind.unresolved_exile_names -= exile_choice
+		mind.unresolved_exile_names -= exile_choice
 		return
 
-	if(!(target.real_name in src.mind.unresolved_exile_names))
+	if(!(target.real_name in mind.unresolved_exile_names))
 		to_chat(src, span_warning("I've already made a decision."))
 		return
 
@@ -633,16 +431,16 @@
 
 	if(!target) // last check, in case they far travel mid deliberation
 		to_chat(src, span_warning("They're gone. I should consider the matter resolved."))
-		src.mind.unresolved_exile_names -= exile_choice
+		mind.unresolved_exile_names -= exile_choice
 		return
 
 	if(readycheck == "Defy Exile (Keep as Personal Associate)")
-		if(target && target.mind.warband_recruiter_name != src.real_name) // if they have a new recruiter, set the recruiter back to us
-			target.mind.warband_recruiter_name = src.real_name
-		for(var/mob/warband_member in src.mind.warband_manager.members)
+		if(target && target.mind.warband_recruiter_name != real_name) // if they have a new recruiter, set the recruiter back to us
+			target.mind.warband_recruiter_name = real_name
+		for(var/mob/warband_member in mind.warband_manager.members)
 			if(isliving(warband_member))
 				to_chat(warband_member, span_warning("A zad arrives with the [src.job]'s seal. They reject the decree of [target.real_name]'s exile, and have ordered their own men to treat [target.real_name] as an associate."))
-		src.mind.unresolved_exile_names -= target.real_name
+		mind.unresolved_exile_names -= target.real_name
 
 	if(readycheck == "Accept (Cut Ties)")
 		if(personal_faction_tag in target.faction)
@@ -651,12 +449,12 @@
 		for(var/mob/warband_member in src.mind.warband_manager.members)
 			if(isliving(warband_member))
 				to_chat(warband_member, span_warning("A zad arrives with the [src.job]'s seal. They have embraced the decree of [target.real_name]'s exile."))
-		if(target && target.mind.warband_recruiter_name != src.real_name) // if they have a new recruiter, another lieutenant stole them, so we stop here
-			src.mind.subordinates -= target
-			src.mind.unresolved_exile_names -= target.real_name			
+		if(target && target.mind.warband_recruiter_name != real_name) // if they have a new recruiter, another lieutenant stole them, so we stop here
+			mind.subordinates -= target
+			mind.unresolved_exile_names -= target.real_name			
 			return
 		
-		src.mind.unresolved_exile_names -= target.real_name
+		mind.unresolved_exile_names -= target.real_name
 
 		target.mind.warband_recruiter_name = null
 
@@ -667,10 +465,10 @@
 ///////////////////////////////////////////////// ENLIGHTEN
 /*
 	allows the Prophet to grant "enlightenment" to another character
-	converts them to the Prophet's patron and grants T4 Cleric powers
+	converts them to the Prophet's patron and grants them T4 Cleric status
 	cannot convert characters who already have devotion
 
-	converts suffer a curse and cannot regain devotion. it's effectively a Temporary Cleric Status
+	converts suffer a curse and cannot regain devotion. it's effectively a Temporary Cleric
 */ 
 /mob/living/carbon/human/proc/enlighten()
 	set name = "ENLIGHTEN"
@@ -702,7 +500,7 @@
 		to_chat(src, span_warning("[chosen_target] has already been enlightened."))
 		return FALSE
 
-	if(chosen_target.devotion)
+	if(chosen_target.devotion) // can't convert someone who's already a cleric
 		to_chat(src, span_warning("A shame. [chosen_target.patron.name] shields them."))
 		return FALSE
 
@@ -710,9 +508,9 @@
 		to_chat(src, span_warning("[chosen_target] has moved away."))
 		return FALSE
 
-	src.visible_message(span_boldwarning("[src] raises a palm toward [chosen_target]'s face..."))
+	visible_message(span_boldwarning("[src] raises a palm toward [chosen_target]'s face..."))
 	to_chat(src, span_warning("I prepare to grant [chosen_target.real_name] enlightenment..."))
-	
+
 	if(!do_after(src, 50, target = chosen_target))
 		to_chat(src, span_warning("The ritual was interrupted."))
 		return FALSE
@@ -728,7 +526,7 @@
 		to_chat(src, span_warning("[chosen_target] has moved away."))
 		return FALSE
 
-	src.visible_message(span_boldwarning("[src] presses their palm against [chosen_target]'s face."))
+	visible_message(span_boldwarning("[src] presses their palm against [chosen_target]'s face."))
 	apply_enlightenment(chosen_target)
 	return TRUE
 
@@ -736,14 +534,14 @@
 	to_chat(target, span_userdanger("Truth floods through me!"))
 	target.visible_message(span_warning("[target] convulses!"))
 	target.electrocute_act(0, src)
-	target.set_patron(src.patron.type)
+	target.set_patron(patron.type)
 	var/datum/devotion/C = new /datum/devotion(target, target.patron)
 	C.grant_miracles(target, cleric_tier = CLERIC_T4, devotion_limit = CLERIC_REQ_4, start_maxed = TRUE)
-	var/new_curse = get_curse_for_patron(src.patron.type)
+	var/new_curse = get_curse_for_patron(patron.type)
 	if(new_curse)
 		target.add_curse(new_curse)
-		to_chat(target, span_userdanger("These miracles are not mine to wield. [src.patron.name]'s curse now weighs upon me."))
-	if(!HAS_TRAIT(target, TRAIT_DNR) && target.patron.type != src.patron.type && src.patron.type != /datum/patron/old_god) // if they had a different patron, they get the DNR trait
+		to_chat(target, span_userdanger("These miracles are not mine to wield. [src.patron.name]'s curse weighs upon me."))
+	if(!HAS_TRAIT(target, TRAIT_DNR) && target.patron.type != patron.type && patron.type != /datum/patron/old_god) // if they had a different patron, they get the DNR trait
 		ADD_TRAIT(target, TRAIT_DNR, TRAIT_GENERIC)
 		target.emote("agony", forced = TRUE)
 		to_chat(target, span_userdanger("In place of my lux lies an agonizing vacancy. It is elsewhere, and it will never be mine again."))

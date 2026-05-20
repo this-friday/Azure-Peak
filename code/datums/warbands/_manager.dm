@@ -25,8 +25,8 @@
 	var/list/last_action_time = list()		// for rate limits	
 	var/spawned_lieutenants = 0				// how many lieutenants have been spawned
 	var/warband_ID = 0						// identifying number for the warband |
-	var/disorder = 1						// multiplies costs from the campaign planner, disables communication options and Outskirts responses, and determines how many spawns an aspirant steals during a schism | increased by other antagonists being marked as allies
-	var/aspirant_chance = 50				// chance that a lieutenant spawns as an aspirant
+	var/disorder = 1						// determines how many spawns an aspirant steals during a schism (cumulative) & disables communication options (at 5+) | increased by other antagonists being marked as allies
+	var/aspirant_chance = ASPIRANT_CHANCE	// chance that a lieutenant spawns as an aspirant
 	var/list/combatmusic = list()			// combat track given to members + people who enter the warcamp/outskirts
 	var/finalized = FALSE					// whether or not a warband is finalized
 	var/creation_stage = 1  				// 1 = warband selection, 2 = casus belli selection, 3 = class selection
@@ -67,6 +67,11 @@
 	var/list/casus_belli_proposals = list()
 	var/datum/treaty/terms/casus_belli_selection
 
+	var/squad_size_bonus = 0			// flat bonus added to base squad size before any multipliers | set by aspects (e.g. CONSCRIPTS)
+	var/marked_assassin_count = 0		// tracks how many grunts have been marked as assassins | (/datum/warbands/aspects/marked)
+
+	var/main_color = "#2b292e"
+	var/secondary_color = "#ffcd43"
 ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// BASE PROCS
 /*
@@ -98,19 +103,15 @@
 
 */
 
-////////////////////////
-//////////////////////////////////////////////// INITIALIZING & REFRESHING
-////////////////////////
-
 /atom/movable/screen/warband/manager/Initialize()
 	..()
-	if(!src.finalized)
-		src.warbands = SSwarbands.cached_warbands.Copy()
-		src.subtypes = SSwarbands.cached_subtypes.Copy()
-		src.aspects = SSwarbands.cached_aspects.Copy()
+	if(!finalized)
+		warbands = SSwarbands.cached_warbands.Copy()
+		subtypes = SSwarbands.cached_subtypes.Copy()
+		aspects = SSwarbands.cached_aspects.Copy()
 		for(var/class_type in SSwarbands.cached_classes)
-			src.classes += SSwarbands.cached_classes[class_type]
-		src.classes = sort_list(src.classes)
+			classes += SSwarbands.cached_classes[class_type]
+		classes = sort_list(classes)
 		storyteller_refresh()
 		figure_refresh()
 
@@ -132,7 +133,7 @@
 	)
 	for(var/mob/living/carbon/human/important_figure in GLOB.player_list)
 		if(important_jobs.Find(important_figure.job_path))
-			src.importantfigures |= important_figure
+			importantfigures |= important_figure
 
 ///////////////////////////////////////////////////////
 /////////////////////////////////// STORYTELLER REFRESH
@@ -144,20 +145,20 @@
 		each prince has a 50% chance to contribute their patron to the storyteller list
 */
 /atom/movable/screen/warband/manager/proc/storyteller_refresh()
-	src.storyinfluence.Cut()
+	storyinfluence.Cut()
 	var/active_storyteller = SSgamemode.current_storyteller
 	var/roundstart_storyteller_string = SSgamemode.selected_storyteller
 	if(active_storyteller)
-		src.storyinfluence += active_storyteller
+		storyinfluence += active_storyteller
 
 	if(roundstart_storyteller_string)
-		src.storyinfluence += new roundstart_storyteller_string()
+		storyinfluence += new roundstart_storyteller_string()
 
-	for(var/mob/living/carbon/human/deadbeat in src.importantfigures)
+	for(var/mob/living/carbon/human/deadbeat in importantfigures)
 		if(deadbeat.job_path == /datum/job/roguetown/prince && deadbeat.patron)
 			if(prob(50))
 				var/datum/patron/prince_patron_datum = deadbeat.patron
-				src.storyinfluence += new prince_patron_datum.storyteller()
+				storyinfluence += new prince_patron_datum.storyteller()
 
 //////////////////////////////////////////////
 /////////////////////////////////// LOCK CHECK
@@ -166,29 +167,29 @@
 	if the given mob doesn't match them, fixes the discrepancy
 */
 /atom/movable/screen/warband/manager/proc/lock_check(mob/living/carbon/human/user)
-	if(src.racelocks && src.racelocks.len)
+	if(racelocks && racelocks.len)
 		var/user_species_type = user.dna?.species?.type
 		var/species_allowed = FALSE
 		
-		for(var/allowed_species in src.racelocks)
+		for(var/allowed_species in racelocks)
 			if(ispath(user_species_type, allowed_species))
 				species_allowed = TRUE
 				break
 		
 		if(!species_allowed)
-			var/new_species = pick(src.racelocks)
+			var/new_species = pick(racelocks)
 			user.set_species(new_species)
 			to_chat(user, span_warning("Your character's species has been adjusted to match the warband's requirements."))
 
-	if(src.faithlocks && src.faithlocks.len)
+	if(faithlocks && faithlocks.len)
 		var/patron_allowed = FALSE
 		if(user.patron)
-			for(var/allowed_patron in src.faithlocks)
+			for(var/allowed_patron in faithlocks)
 				if(ispath(user.patron.type, allowed_patron))
 					patron_allowed = TRUE
 					break
 		if(!patron_allowed)
-			var/new_patron = pick(src.faithlocks)
+			var/new_patron = pick(faithlocks)
 			user.set_patron(new_patron)
 			to_chat(user, span_warning("Your character's patron has been adjusted to match the warband's requirements."))
 		else
@@ -197,7 +198,7 @@
 		user.set_patron(user.patron.type) // no faithlocks, but we'll still want to reapply the current patron to restore any patron-relevant traits after the statwipe
 	return
 
-/////////////////////////////////////////////////
+/////////////////////////////////////////////
 /////////////////////////////////// SET LOCKS
 /*
 	collects all race and faith locks from the selected warband, subtype, and aspects
@@ -206,110 +207,65 @@
 
 */
 /atom/movable/screen/warband/manager/proc/set_race_and_faith_locks()
-	src.racelocks = list()
-	src.faithlocks = list()
+	racelocks = list()
+	faithlocks = list()
 	
-	if(src.selected_warband)
-		if(src.selected_warband.racelock && src.selected_warband.racelock.len)
-			for(var/race in src.selected_warband.racelock)
-				if(!(race in src.racelocks))
-					src.racelocks += race
+	if(selected_warband)
+		if(selected_warband.racelock && selected_warband.racelock.len)
+			for(var/race in selected_warband.racelock)
+				racelocks |= race
 		
-		if(src.selected_warband.faithlock && src.selected_warband.faithlock.len)
-			for(var/faith in src.selected_warband.faithlock)
-				if(!(faith in src.faithlocks))
-					src.faithlocks += faith
+		if(selected_warband.faithlock && selected_warband.faithlock.len)
+			for(var/faith in selected_warband.faithlock)
+				faithlocks |= faith
 	
-	if(src.selected_subtype)
-		if(src.selected_subtype.racelock && src.selected_subtype.racelock.len)
-			for(var/race in src.selected_subtype.racelock)
-				if(!(race in src.racelocks))
-					src.racelocks += race
+	if(selected_subtype)
+		if(selected_subtype.racelock && selected_subtype.racelock.len)
+			for(var/race in selected_subtype.racelock)
+				racelocks |= race
 		
-		if(src.selected_subtype.faithlock && src.selected_subtype.faithlock.len)
-			for(var/faith in src.selected_subtype.faithlock)
-				if(!(faith in src.faithlocks))
-					src.faithlocks += faith
+		if(selected_subtype.faithlock && selected_subtype.faithlock.len)
+			for(var/faith in selected_subtype.faithlock)
+				faithlocks |= faith
 	
-	if(src.selected_aspects.len)
-		for(var/datum/warbands/aspects/aspect in src.selected_aspects)
+	if(selected_aspects.len)
+		for(var/datum/warbands/aspects/aspect in selected_aspects)
 			if(aspect.racelock && aspect.racelock.len)
 				for(var/race in aspect.racelock)
-					if(!(race in src.racelocks))
-						src.racelocks += race
+					racelocks |= race
 			
 			if(aspect.faithlock && aspect.faithlock.len)
 				for(var/faith in aspect.faithlock)
-					if(!(faith in src.faithlocks))
-						src.faithlocks += faith
+					faithlocks |= faith
 	
 	// notify lobby members of any restrictions
-	if(src.racelocks.len || src.faithlocks.len)
+	if(racelocks.len || faithlocks.len)
 		var/lock_message = span_bold("<span style='color:#e8bf67'>WARBAND RESTRICTIONS:</span> ")
 		
-		if(src.racelocks.len)
+		if(racelocks.len)
 			var/list/race_names = list()
-			for(var/race_type in src.racelocks)
+			for(var/race_type in racelocks)
 				var/datum/species/temp_species = new race_type() // initial doesn't work here
 				race_names += temp_species.name
 				qdel(temp_species)
 			
 			lock_message += "Species limited to: [race_names.Join(", ")]"
 		
-		if(src.faithlocks.len)
-			if(src.racelocks.len)
+		if(faithlocks.len)
+			if(racelocks.len)
 				lock_message += " | "
 			
 			var/list/faith_names = list()
-			for(var/faith_type in src.faithlocks)
+			for(var/faith_type in faithlocks)
 				var/datum/patron/temp_patron = new faith_type()
 				faith_names += temp_patron.name
 				qdel(temp_patron)
 			lock_message += "Faith limited to: [faith_names.Join(", ")]"
 		lock_message += ". Your character will be adjusted if necessary."
-		for(var/mob/living/member in src.lobby_members)
+		for(var/mob/living/member in lobby_members)
 			to_chat(member, lock_message)
 			member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
 	
-	return
-
-////////////////////////////////////////////////////////
-/////////////////////////////////// APPLY SECT FAITHLOCK
-/*
-	after a Sect Warlord spawns, updates the faithlock to match the warlord's specific patron
-*/
-/atom/movable/screen/warband/manager/proc/apply_sect_faithlock(mob/living/carbon/human/warlord)
-	if(!istype(src.selected_warband, /datum/warbands/sect))
-		return
-
-	// verify the warlord's patron is within the allowed faithlocks from the subtype
-	var/patron_allowed = FALSE
-	if(src.faithlocks.len)
-		for(var/allowed_patron in src.faithlocks)
-			if(ispath(warlord.patron.type, allowed_patron))
-				patron_allowed = TRUE
-				break
-	
-	if(!patron_allowed && src.faithlocks.len)
-		var/new_patron = pick(src.faithlocks)
-		warlord.set_patron(new_patron)
-		to_chat(warlord, span_warning("Your patron has been adjusted to match the sect's requirements."))
-	
-	src.faithlocks = list(warlord.patron.type)
-	var/patron_name = warlord.patron.name
-	for(var/mob/living/member in src.lobby_members)
-		to_chat(member, span_boldwarning("<span style='color:#e8bf67'>SECT FAITHLOCK APPLIED:</span> All characters are now required to serve <span style='color:#e8bf67'>[patron_name].</span>"))
-		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
-	
-	return
-
-/atom/movable/screen/warband/manager/proc/notify_sect()
-	if(!istype(src.selected_warband, /datum/warbands/sect))
-		return
-
-	for(var/mob/living/member in src.lobby_members)
-		to_chat(member, "<span style='color:#e8bf67'>SECT RESTRICTION:</span> Once the Warlord finalizes, all members will be faithlocked to the Warlord's chosen patron.")
-		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
 	return
 
 //////////////////////////////////////////////////////////////
@@ -317,7 +273,7 @@
 /*
 	returns an envoy's client to their original character
 
-	does via two potential routes
+	done via two potential routes
 	1. USING A STORED CHARACTER
 		we'll do this if:
 		a recruitment point holding a stored character is captured
@@ -337,7 +293,7 @@
 	// requires the recruitment point & the stored/returning character
 	if(returning_character && return_recruitmentpoint)
 		for(var/mob/living/carbon/human/stored_character in return_recruitmentpoint.contents)
-			for(var/mob/living/potential_envoy in src.members)
+			for(var/mob/living/potential_envoy in members)
 				if(potential_envoy.canon_client.key == returning_character.canon_client.key && potential_envoy.mind.special_role == "Warlord's Envoy")
 					potential_envoy.visible_message(span_boldred("[potential_envoy] suddenly collapses. They won't be getting up."))
 					stored_character.forceMove(return_recruitmentpoint.loc)
@@ -355,100 +311,42 @@
 		var/mob/living/carbon/human/target_character = envoy?.mind.original_char
 		target_character.key = envoy.key
 		target_character.forceMove(target_character.loc.loc)
-		src.members -= envoy
+		members -= envoy
 		if(abandoned)
 			return
-		src.spawns++ // if they made it back alive refund the spawn spent on them
+		spawns++ // if they made it back alive refund the spawn spent on them
 		envoy.unequip_everything()
 		qdel(envoy)
 	return
-
-///////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// ASPECT TWEAKS
-/*
-	makes a few final tweaks to a warband's stats based on their aspects
-
-*/
-/atom/movable/screen/warband/manager/proc/aspect_tweaks(mob/living/carbon/human/warlord)
-	if(ASPECT_HOST in src.selected_aspects)
-		src.spawns += 150
-
-/atom/movable/screen/warband/manager/proc/envy_check()
-	var/has_throne_of_envy = FALSE
-	for(var/datum/warbands/aspects/aspect in src.selected_aspects)
-		if(istype(aspect, /datum/warbands/aspects/envy))
-			has_throne_of_envy = TRUE
-			break
-
-	if(!has_throne_of_envy)
-		return
-
-	for(var/mob/living/carbon/human/member in src.lobby_members)
-		if(member.mind.special_role != "Lieutenant" && member.mind.special_role != "Aspirant Lieutenant")
-			continue
-		
-		var/was_already_aspirant = (member.mind.special_role == "Aspirant Lieutenant")
-		member.mind.special_role = "Aspirant Lieutenant"
-		
-		var/datum/antagonist/warlord_lieutenant/lieu_antag
-		for(var/datum/antagonist/antag in member.mind.antag_datums)
-			if(istype(antag, /datum/antagonist/warlord_lieutenant))
-				lieu_antag = antag
-				break
-
-		lieu_antag.aspirant = TRUE
-		var/list/aspirant_objectives = list(
-			/datum/objective/warband/aspirant/wormtongue,
-			/datum/objective/warband/aspirant/disorder,
-			/datum/objective/warband/aspirant/order,
-			/datum/objective/warband/aspirant/standard,
-			/datum/objective/warband/aspirant/coin
-		)
-		if(was_already_aspirant)
-			for(var/datum/objective/existing_obj in lieu_antag.objectives)
-				for(var/obj_type in aspirant_objectives)
-					if(istype(existing_obj, obj_type))
-						aspirant_objectives -= obj_type
-						break
-		var/chosen_type = pick(aspirant_objectives)
-		var/datum/objective/warband/aspirant/new_objective = new chosen_type
-		new_objective.owner = member.mind
-		lieu_antag.objectives += new_objective
-		member.mind.announce_objectives()
-
-		if(was_already_aspirant)
-			to_chat(member, span_userdanger("Throne of Envy has been selected. I have been given an additional objective."))
-		else
-			to_chat(member, span_userdanger("Throne of Envy has been selected. I am now an Aspirant Lieutenant with my own ambitions."))
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////// EXILE
 /*
 	kicks someone out of the warband
-	varies depending on whether or not they were just an ally, or an Actual Member of the warband
+	varies depending on whether or not they were just an ally or an Actual Member of the warband
 
 */
 /atom/movable/screen/warband/manager/proc/exile(mob/initial_target, mob/living/carbon/human/user, menu_name, personal = FALSE)
-	var/faction_tag = "warband_[src.warband_ID]"
+	var/faction_tag = "warband_[warband_ID]"
 	var/personal_faction_tag
 	var/mob/exiled_creecher = initial_target
 	var/datum/component/squad_controller/manager = user.GetComponent(/datum/component/squad_controller)
 	if(!manager)
 		manager = user.AddComponent(/datum/component/squad_controller)
 
-	if(menu_name)	// get the mob w/the name given from the exile menu
-		for(var/mob/living/member in src.members)
+	if(menu_name) // get the mob w/the name given from the exile menu
+		for(var/mob/living/member in members)
 			if(member.real_name == menu_name)
 				exiled_creecher = member
 				break
 	if(user)
 		personal_faction_tag = "[user.real_name]_faction"
 
-	if(exiled_creecher == user) 		// against yourself
+	if(exiled_creecher == user) // against yourself
 		to_chat(user, span_warning("I shouldn't exile myself."))
 		return FALSE
 
-	if(exiled_creecher.stat == DEAD) 	// against a corpse
+	if(exiled_creecher.stat == DEAD) // against a corpse
 		to_chat(user, span_warning("They're dead. That's exile enough."))
 		return
 		
@@ -477,9 +375,8 @@
 
 	// if they're a lieutenant's exiled subordinate, this confirms they want them gone
 	if(exiled_creecher.real_name in user.mind.unresolved_exile_names)
-		if(exiled_creecher.real_name in user.mind.unresolved_exile_names)
-			user.mind.unresolved_exile_names -= exiled_creecher.real_name
-			user.mind.subordinates -= exiled_creecher
+		user.mind.unresolved_exile_names -= exiled_creecher.real_name
+		user.mind.subordinates -= exiled_creecher
 
 	if(istype(exiled_creecher, /mob/living/simple_animal))
 		if(personal_faction_tag in exiled_creecher.faction)
@@ -492,7 +389,7 @@
 		var/mob/living/carbon/human/target = exiled_creecher
 
 		// against allies
-		if(target.mind && (target in src.allies))
+		if(target.mind && (target in allies))
 			if((faction_tag in target.faction))
 				if(personal) // if the exile's being done manually via the spell
 					user.say("Hostis declaratus es.")
@@ -501,20 +398,20 @@
 				if(personal_faction_tag && (personal_faction_tag in target.faction))
 					target.mind.current.faction -= personal_faction_tag
 
-				src.allies -= target
+				allies -= target
 				target.mind.warband_recruiter_name = null
 
 				// if they were an antagonist (and not a warband member), reduce disorder
 				if(target.mind.special_role && target.mind.warband_ID != user.mind.warband_ID)
 					to_chat(user, span_warning("I have exiled [target.name] from our ranks. Some measure of order has been restored."))
-					src.disorder --
+					disorder --
 					return
 				else
 					to_chat(user, span_warning("I have exiled [target.name] from our ranks."))
 					return
 
 		// against other warband members
-		if(target.mind && (target in src.members))
+		if(target.mind && (target in members))
 			if(user.mind.special_role == "Warlord" || (target in user.mind.subordinates))
 				var/readycheck = input(user, "Am I sure I want to exile [target.real_name]? This will be final.") in list("EXILE", "Cancel")
 				if(readycheck == "EXILE")
@@ -534,7 +431,6 @@
 						return
 			else
 				to_chat(user, span_warning("I don't bear the authority to exile the [target.job]."))
-
 
 		if((personal_faction_tag in target.faction)) // you should always be able to remove your personal faction tag from someone
 			target.faction -= personal_faction_tag
@@ -557,22 +453,20 @@
 
 */
 /atom/movable/screen/warband/manager/proc/clean_members()
-	for(var/member in src.members)
-		if(member == null)
-			src.members -= member
-	for(var/ally in src.allies)
-		if(ally == null)
-			src.allies -= ally
+	for(var/member in members)
+		if(!member)
+			members -= member
+	for(var/ally in allies)
+		if(!ally)
+			allies -= ally
 
-// CANCEL LOBBY
 // if the lobby is absolutely Deep Fried, we'll send everyone back as a ghost
 /atom/movable/screen/warband/manager/proc/cancel_lobby(mob/lobby_member)
 	to_chat(lobby_member, span_userdanger("The lobby system failed catastrophically. Go home."))
 	GLOB.chosen_names -= lobby_member.real_name
-	src.lobby_members -= lobby_member
+	lobby_members -= lobby_member
 	lobby_member.ghostize(FALSE)
 
-// INITIALIZE OUTSKIRTS ENCOUNTER
 /atom/movable/screen/warband/manager/proc/initialize_outskirts_encounter()
 	encounter_manager = new /datum/outskirts_encounter()
 	encounter_manager.linked_warband = src
@@ -591,7 +485,7 @@
 /atom/movable/screen/warband/manager/proc/choose_outskirts_wave()
 	var/datum/outskirts_wave/chosen_wave
 	if(selected_aspects)
-		for(var/datum/warbands/aspects/aspect in src.selected_aspects)
+		for(var/datum/warbands/aspects/aspect in selected_aspects)
 			if(aspect.outskirts_wave)
 				chosen_wave = aspect.outskirts_wave
 				return new chosen_wave()
@@ -634,3 +528,23 @@
 	if(user)
 		user.screen -= text
 	qdel(text)
+
+/atom/movable/screen/warband/manager/proc/apply_casus_belli_to_treaty(obj/item/treaty/T)
+	if(!casus_belli_selection || !T)
+		return
+	var/datum/treaty/terms/cb_copy = new casus_belli_selection.type()
+	if(casus_belli_selection.custom_name)
+		cb_copy.custom_name = casus_belli_selection.custom_name
+	if(casus_belli_selection.text)
+		cb_copy.text = casus_belli_selection.text
+	if(casus_belli_selection.number)
+		cb_copy.number = casus_belli_selection.number
+	if(casus_belli_selection.target)
+		cb_copy.target = casus_belli_selection.target
+		if(casus_belli_selection.target != linked_faction.name)
+			T.secondparty = casus_belli_selection.target
+	if(casus_belli_selection.receiver)
+		cb_copy.receiver = casus_belli_selection.receiver
+	if(casus_belli_selection.obj_target)
+		cb_copy.obj_target = casus_belli_selection.obj_target
+	T.active_terms += cb_copy

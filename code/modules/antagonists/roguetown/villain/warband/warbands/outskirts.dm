@@ -1,7 +1,3 @@
-#define DUTY_ATTACK "attack"
-#define DUTY_DEFEND "defend"
-#define DUTY_SIMPLEMOB "simplemob"
-
 ///////////////////////////////////////////////////////////////
 /datum/outskirts_encounter
 	// cranked up for stress testing, set back
