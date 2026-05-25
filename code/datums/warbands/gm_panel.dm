@@ -103,14 +103,22 @@
 
 	event.process_candidate(warlord_mind, "Warlord", /datum/antagonist/warband/warlord, spawn_loc)
 
+	var/expected_warband_id
+	if(!SSwarbands.roundstart_manager_claimed && SSwarbands.roundstart_manager)
+		expected_warband_id = SSwarbands.roundstart_manager.warband_ID
+	else
+		expected_warband_id = SSwarbands.next_warband_id
+
 	var/lt_num = 1
 	for(var/datum/mind/lt_mind in lieutenant_minds)
 		if(lt_mind.current)
+			lt_mind.warband_ID = expected_warband_id
 			event.process_candidate(lt_mind, "Lieutenant", /datum/antagonist/warband/lieutenant, spawn_loc, lt_num++)
 
 	var/grunt_num = 1
 	for(var/datum/mind/grunt_mind in grunt_minds)
 		if(grunt_mind.current)
+			grunt_mind.warband_ID = expected_warband_id
 			event.process_candidate(grunt_mind, "Grunt", /datum/antagonist/warband/grunt, spawn_loc, grunt_num++)
 
 	SSwarbands.warband_managers_busy = FALSE

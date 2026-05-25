@@ -30,12 +30,19 @@ export const WarbandCreation = () => {
     warlordSelectedProposal, warlordCasusBelli,
     factions,
     backend_warband,
+    user_ready,
+    user_race,
+    user_patron,
+    user_race_name,
+    user_patron_name,
   } = useWarbandData();
 
   const {
     selectedWarband, selectedSubtype, selectedAspects,
     selectedClass, selectedSubclass, pointCounter,
+    aspectIntensities, selectionInputStates,
     handleWarbandSelect, handleSubtypeSelect, handleAspectSelect,
+    handleIntensityChange, handleSelectionInputChange,
     handleClassSelect, handleSubclassSelect,
   } = useWarbandSelection();
   
@@ -63,7 +70,7 @@ export const WarbandCreation = () => {
 
   const canInteractCreation = creation_stage === 1;
   const canInteractCasusBelli = creation_stage === 2;
-  const canInteractClasses = creation_stage >= 3 || warlord_spawned;
+  const canInteractClasses = (creation_stage >= 3 || warlord_spawned) && !user_ready;
   const canInteractFinalize = creation_stage >= 3 || warlord_spawned;
 
   const isTabStageFocus = (tab: string) => {
@@ -129,9 +136,11 @@ export const WarbandCreation = () => {
           {makeTabBtn('classes', 'CLASS')}
           {makeTabBtn('goforth', 'FINALIZE')}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', marginLeft: '12px' }}>
-            <span style={{ height: '20px', paddingBottom: '2px' }}>
-              AVAILABLE ASPECT POINTS: <span style={{ color: pointsColor }}>{pointCounter}</span>
-            </span>
+            {canInteractCreation && (
+              <span style={{ height: '20px', paddingBottom: '2px' }}>
+                AVAILABLE ASPECT POINTS: <span style={{ color: pointsColor }}>{pointCounter}</span>
+              </span>
+            )}
             <span style={{ height: '20px', paddingTop: '2px', paddingBottom: '8px', visibility: timer_active ? 'visible' : 'hidden' }}>
               TIME REMAINING: <span style={{ color: getTimerColor() }}>{formatTime(time_remaining)}</span>
             </span>
@@ -151,6 +160,8 @@ export const WarbandCreation = () => {
             selectedSubtype={selectedSubtype} selectedAspects={selectedAspects}
             handleWarbandSelect={handleWarbandSelect} handleSubtypeSelect={handleSubtypeSelect}
             handleAspectSelect={handleAspectSelect} act={act}
+            aspectIntensities={aspectIntensities} selectionInputStates={selectionInputStates}
+            handleIntensityChange={handleIntensityChange} handleSelectionInputChange={handleSelectionInputChange}
             locked={!canInteractCreation} stage1Complete={stage1_complete}
             isStage1={creation_stage === 1} isWarlord={is_warlord} pointCounter={pointCounter}
           />
@@ -182,6 +193,14 @@ export const WarbandCreation = () => {
             selectedSubclass={selectedSubclass} finalize_disabled={finalize_disabled}
             pointCounter={pointCounter} act={act} canFinalize={canFinalize}
             canInteract={canInteractFinalize} isWarlord={is_warlord}
+            alliesList={alliesList} userReady={user_ready} warlordSpawned={warlord_spawned}
+            userRace={user_race} userPatron={user_patron}
+            userRaceName={user_race_name} userPatronName={user_patron_name}
+            selectedWarbandType={selectedWarband?.type}
+            selectedSubtypeType={selectedSubtype?.type}
+            selectedAspectTypes={selectedAspects.map(a => a.type)}
+            selectedClassType={selectedClass?.type}
+            selectedSubclassType={selectedSubclass?.type}
           />
         )}
       </Window.Content>

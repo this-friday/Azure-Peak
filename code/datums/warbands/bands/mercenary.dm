@@ -3,7 +3,7 @@
 	name = "Mercenary Company"
 	treaty_name = "The Company"
 	summary = "So numerous are the potential motives for a band of mercenaries, that the idea \
-	they might be getting paid in mammon becomes a mere afterthought."
+	they're fighting for mammon becomes a mere afterthought."
 	subtyperequired = TRUE
 	subtypes = list(WARBAND_MERCENARIES)
 	aspects = list(ASPECT_SURPRISE, ASPECT_FORT, ASPECT_BATTLETESTED, ASPECT_HOST, ASPECT_ENVY, ASPECT_RANDOM, ASPECT_SCUM, ASPECT_WAR, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED)
@@ -24,10 +24,7 @@
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SUBTYPES
 
-// for mercenaries, something in gruntclasses is ALSO available as a "multiclass" for the lieutenants & the warlord
-// if their own class list is filled, however, anything provided from gruntclasses will be overridden & unselectable 
-
-// also: if you're adding a merc subtype here, don't forget to add it to the WARBAND_MERCENARIES define list
+// if you're adding a merc subtype here, don't forget to add it to the WARBAND_MERCENARIES define list
 
 /datum/warbands/subtypes/northmen
 	title = "NORTHMEN"
@@ -35,7 +32,7 @@
 	lieutenantclasses = list(/datum/advclass/mercenary/atgervi)
 	gruntclasses = list(/datum/advclass/mercenary/gronn)
 	combatmusic = list('sound/music/combat_shaman2.ogg')
-	faithlock = list(ALL_INHUMEN_PATRONS)
+	faithlock = ALL_GRONNIC_PATRONS
 
 /datum/warbands/subtypes/routier
 	title = "OTAVAN ROUTIERS"

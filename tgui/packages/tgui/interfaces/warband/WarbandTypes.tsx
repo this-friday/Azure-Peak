@@ -1,47 +1,42 @@
-export type WarbandType = {
+export type WarbandDatumBase = {
   title: string;
   summary: string;
+  desc?: string;
   storyinfluence?: string;
-  subtyperequired: boolean;
   rarity: number;
-  subtypes: string[][];
-  aspects: string[];
   points: number;
   type: string;
   warlordclasses: string[];
   lieuclasses: string[];
   gruntclasses: string[];
+  faithlock?: string[];
+  faithlock_names?: string[];
+  racelock?: string[];
+  racelock_names?: string[];
+  inputs?: import('./TreatyTypes').InputFieldDescriptor[];
+  selection_inputs?: Record<string, any>;
+};
+
+export type WarbandType = WarbandDatumBase & {
+  subtyperequired: boolean;
+  subtypes: string[][];
+  aspects: string[];
   multiclass_enabled: boolean;
   subclass_required: boolean;
   subclass_label?: string;
 };
 
-export type SubType = {
-  title: string;
-  summary: string;
-  storyinfluence?: string;
-  rarity: number;
+export type SubType = WarbandDatumBase & {
   aspects: string[];
-  points: number;
-  type: string;
   quote?: string;
   quote_followup?: string;
-  warlordclasses: string[];
-  lieuclasses: string[];
-  gruntclasses: string[];
 };
 
-export type AspectType = {
-  title: string;
-  summary: string;
-  storyinfluence?: string;
-  rarity: number;
+export type AspectType = WarbandDatumBase & {
   class: string | null;
-  points: number;
-  type: string;
-  warlordclasses: string[];
-  lieuclasses: string[];
-  gruntclasses: string[];
+  max_intensity?: number;
+  intensity_costs?: number[];
+  intensity?: number;
 };
 
 export type ClassType = {
@@ -66,6 +61,7 @@ export type NobleType = {
   job: string;
   special_role?: string;
   in_lobby?: boolean;
+  is_ready?: boolean;
 };
 
 export type CasusBelliTerm = {
@@ -86,7 +82,7 @@ export type CasusBelliTerm = {
 };
 
 export type CasusBelliProposal = {
-  proposal_id: string; // a proposal's ID is the user ckey's + worldtime
+  proposal_id: string;
   term_type: string;
   term_name: string;
   term_desc: string;
@@ -130,4 +126,9 @@ export type Data = {
   warlord_selected_proposal?: string | null;
   warlord_casus_belli?: CasusBelliTerm | null;
   backend_factions?: any[];
+  user_ready?: boolean;
+  user_race?: string;
+  user_patron?: string;
+  user_race_name?: string;
+  user_patron_name?: string;
 };

@@ -94,7 +94,6 @@
 			for(var/datum/warbands/aspects/aspect in selected_aspects)
 				aspect.on_grunt_spawned(user, src)
 		if("Lieutenant", "Aspirant Lieutenant")
-			spawned_lieutenants++
 			assign_grunt(lieutenant = user)
 			selected_warband?.on_lieutenant_spawned(user, src)
 			selected_subtype?.on_lieutenant_spawned(user, src)
@@ -187,6 +186,8 @@
 	if(grunt && !lieutenant)
 		if(!grunt.mind || grunt.mind.special_role != "Grunt")
 			return
+		if(grunt.mind.warband_latespawn)
+			return // if they're a latespawn, they should already be given subordinate status by the spawn structure
 		var/list/available_lieutenants = list()
 		for(var/mob/living/carbon/human/member in members)
 			if(!member.mind)

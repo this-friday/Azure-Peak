@@ -340,7 +340,7 @@
 /datum/advclass/warband/sect/lieutenant/sentinel
 	title = "SENTINEL"
 	name = "Sentinel"
-	tutorial = "Pity the infidel who dares to cross grounds overseen by the SENTINEL - for any hope of their redemption will be struck down by a single arrow."
+	tutorial = "Pity the infidel who dares to cross grounds overseen by the mighty, all-seeing SENTINEL."
 	outfit = /datum/outfit/job/roguetown/warband/sect/lieutenant/sentinel
 	traits_applied = list(TRAIT_KEENEARS, TRAIT_LAWEXPERT, TRAIT_FORMATIONFIGHTER, TRAIT_HEAVYARMOR)
 	subclass_stats = list(

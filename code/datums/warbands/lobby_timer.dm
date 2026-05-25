@@ -13,6 +13,8 @@
 */
 /atom/movable/screen/warband/manager
 	var/cached_remaining_time = -1
+	var/timer_id_warning
+	var/timer_id_timeout
 
 /atom/movable/screen/warband/manager/proc/start_creation_timer()
 	if(creation_timer_active)
@@ -20,7 +22,7 @@
 	creation_start_time = world.time
 	creation_timer_active = TRUE
 	var/time_until_warning = creation_time_limit - creation_warning_threshold
-	addtimer(CALLBACK(src, PROC_REF(send_warning)), time_until_warning)
+	timer_id_warning = addtimer(CALLBACK(src, PROC_REF(send_warning)), time_until_warning, TIMER_STOPPABLE)
 
 /atom/movable/screen/warband/manager/proc/send_warning()
 	if(!creation_timer_active || finalized)
@@ -30,13 +32,19 @@
 	for(var/mob/living/member in lobby_members)
 		to_chat(member, span_boldwarning("WARBAND CREATION TIME WARNING: [minutes_left] minute(s) remain."))
 		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
-	addtimer(CALLBACK(src, PROC_REF(trigger_timeout)), creation_warning_threshold)
+	timer_id_timeout = addtimer(CALLBACK(src, PROC_REF(trigger_timeout)), creation_warning_threshold, TIMER_STOPPABLE)
 
 /atom/movable/screen/warband/manager/proc/stop_creation_timer()
 	if(!creation_timer_active)
 		return
 	creation_timer_active = FALSE
 	cached_remaining_time = -1
+	if(timer_id_warning)
+		deltimer(timer_id_warning)
+		timer_id_warning = null
+	if(timer_id_timeout)
+		deltimer(timer_id_timeout)
+		timer_id_timeout = null
 	SStgui.update_uis(src)
 
 /atom/movable/screen/warband/manager/proc/trigger_timeout()
@@ -170,31 +178,21 @@
 		else if(selected_subtype && selected_subtype.warlordclasses && selected_subtype.warlordclasses.len > 0)
 			class_path = pick(selected_subtype.warlordclasses)
 
-		if(selected_warband.title == "MERCENARY COMPANY" && selected_subtype)
+		if(selected_warband.multiclass_enabled && selected_subtype)
 			var/list/available_subclasses = list()
-			var/list/subtype_classes
+			var/list/subtype_classes = list()
+
 			if(warlord.mind.special_role == "Warlord")
-				subtype_classes = selected_subtype.warlordclasses
+				subtype_classes = selected_warband.warlordclasses + selected_subtype.warlordclasses
 			else if(warlord.mind.special_role == "Lieutenant" || warlord.mind.special_role == "Aspirant Lieutenant")
-				subtype_classes = selected_subtype.lieutenantclasses
+				subtype_classes = selected_warband.lieutenantclasses + selected_subtype.lieutenantclasses
 			else
-				subtype_classes = selected_subtype.gruntclasses
-			
-			// filter out base classes
+				subtype_classes = selected_warband.gruntclasses + selected_subtype.gruntclasses
+
 			for(var/class_type in subtype_classes)
-				if(warlord.mind.special_role == "Warlord" && class_type == /datum/advclass/warband/mercenary/warlord/captain)
-					continue
-				if(warlord.mind.special_role == "Lieutenant" || warlord.mind.special_role == "Aspirant Lieutenant")
-					if(class_type == /datum/advclass/warband/mercenary/lieutenant/vanguard)
-						continue
-					if(class_type == /datum/advclass/warband/mercenary/lieutenant/tactician)
-						continue
-					if(class_type == /datum/advclass/warband/mercenary/lieutenant/skirmisher)
-						continue
-				if(warlord.mind.special_role == "Grunt" && class_type == /datum/advclass/warband/mercenary/grunt/merc)
-					continue
-				available_subclasses += class_type
-			
+				if(initial(class_type:multiclass_capable))
+					available_subclasses += class_type
+
 			if(available_subclasses.len > 0)
 				subclass_path = pick(available_subclasses)
 		SSwarbands.warband_managers_busy = TRUE
@@ -207,7 +205,6 @@
 		set_IDs()
 		spawn_character(class_path, warlord, subclass_path, is_leader = 1)
 		set_default_exit()
-		selected_subtype?.on_warband_confirmed(src)
 		selected_warband?.on_warlord_spawned(warlord, src)
 		for(var/datum/warbands/aspects/aspect in selected_aspects)
 			aspect.on_warlord_spawned(warlord, src)
@@ -216,6 +213,7 @@
 		finalized = TRUE
 		warlord.mind.warband_manager = src
 		end_intro(warlord)
+		addtimer(CALLBACK(src, PROC_REF(spawn_ready_members)), 30)
 		for(var/mob/living/carbon/human/member in lobby_members)
 			if(member.mind.special_role == "Lieutenant" || member.mind.special_role == "Aspirant Lieutenant" || member.mind.special_role == "Grunt")
 				to_chat(member, span_boldwarning("TIME EXPIRED! The warband has been auto-finalized. You may now create your character."))

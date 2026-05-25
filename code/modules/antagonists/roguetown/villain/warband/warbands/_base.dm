@@ -36,7 +36,7 @@
 ///////////////////////////////////////////////
 /////////////////////////////////// REPLACE MOB
 
-/datum/antagonist/warband/proc/replace_mob(mob/living/new_character)
+/datum/antagonist/warband/proc/replace_mob(mob/new_character)
 	var/mob/living/replacement_mob = SSwarbands.get_lobby_mob()
 	for(var/obj/effect/landmark/start/warlord/warlord_spawn in GLOB.landmarks_list)
 		replacement_mob.forceMove(warlord_spawn.loc)
@@ -63,7 +63,8 @@
 	bankwipe(owner.current)
 	mindwipe(owner)
 	if(!owner.warband_latespawn)
-		owner.current.unequip_everything()
+		if(isliving(owner.current))
+			owner.current.unequip_everything()
 		var/mob/living/newmob = replace_mob(owner.current)
 		newmob.invisibility = INVISIBILITY_MAXIMUM
 		newmob.set_blindness(stun_timer)

@@ -61,7 +61,7 @@ export const useWarbandFilters = (
     return aspectList.filter(aspect => {
       const isTypeAllowed = allowedAspectTypes.has(aspect.type);
       return isTypeAllowed && rarityFilter(aspect, storytellersList);
-    });
+    }).sort((a, b) => b.points - a.points);
   }, [selectedWarband, selectedSubtype, aspectList, storytellersList]);
 
   const filteredClasses = useMemo(() => {

@@ -20,6 +20,8 @@ export const useWarbandSelection = () => {
   const [selectedClass, setSelectedClass] = useState<ClassType | null>(null);
   const [selectedSubclass, setSelectedSubclass] = useState<ClassType | null>(null);
   const [pointCounter, setPointCounter] = useState(0);
+  const [aspectIntensities, setAspectIntensities] = useState<Record<string, number>>({});
+  const [selectionInputStates, setSelectionInputStates] = useState<Record<string, Record<string, any>>>({});
 
   const [lockedWarband, setLockedWarband] = useState<WarbandType | null>(null);
   const [lockedSubtype, setLockedSubtype] = useState<SubType | null>(null);
@@ -44,6 +46,18 @@ export const useWarbandSelection = () => {
       }
       if (backend_aspects.length > 0) {
         setSelectedAspects(backend_aspects);
+        const restoredIntensities: Record<string, number> = {};
+        for (const aspect of backend_aspects) {
+          restoredIntensities[aspect.type] = aspect.intensity ?? 1;
+        }
+        setAspectIntensities(restoredIntensities);
+        const restoredInputs: Record<string, Record<string, any>> = {};
+        if (backend_warband?.selection_inputs) restoredInputs[backend_warband.type] = backend_warband.selection_inputs;
+        if (backend_subtype?.selection_inputs) restoredInputs[backend_subtype.type] = backend_subtype.selection_inputs;
+        for (const aspect of backend_aspects) {
+          if (aspect.selection_inputs) restoredInputs[aspect.type] = aspect.selection_inputs;
+        }
+        setSelectionInputStates(restoredInputs);
         if (finalized_status) {
           setLockedAspects(backend_aspects);
         }
@@ -51,14 +65,18 @@ export const useWarbandSelection = () => {
     }
   }, [finalized_status, backend_warband, backend_subtype, backend_aspects, data?.creation_stage]);
 
-  // aspect points
+  // uses intensity_costs if available, falls back to flat points
   useEffect(() => {
     let totalPoints = 0;
     if (selectedWarband) { totalPoints += selectedWarband.points; }
     if (selectedSubtype) { totalPoints += selectedSubtype.points; }
-    if (selectedAspects.length > 0) { totalPoints += selectedAspects.reduce((sum, aspect) => sum + aspect.points, 0); }
+    for (const aspect of selectedAspects) {
+      const rank = aspectIntensities[aspect.type] ?? 1;
+      const cost = aspect.intensity_costs?.[rank - 1] ?? aspect.points;
+      totalPoints += cost;
+    }
     setPointCounter(totalPoints);
-  }, [selectedWarband, selectedSubtype, selectedAspects, selectedSubclass]);
+  }, [selectedWarband, selectedSubtype, selectedAspects, aspectIntensities, selectedSubclass]);
 
 
   // selection
@@ -67,9 +85,21 @@ export const useWarbandSelection = () => {
     if (selectedWarband?.title === warband.title) { return; }
     const isSubtypeCompatible = selectedSubtype && warband.subtypes?.[0]?.includes(selectedSubtype.type);
     const compatibleAspects = selectedAspects.filter(aspect => warband.aspects.includes(aspect.type));
+    const removedTypes = new Set(selectedAspects.filter(a => !warband.aspects.includes(a.type)).map(a => a.type));
     setSelectedWarband(warband);
     setSelectedSubtype(isSubtypeCompatible ? selectedSubtype : null);
     setSelectedAspects(compatibleAspects);
+    setAspectIntensities(prev => {
+      const next = { ...prev };
+      removedTypes.forEach(t => delete next[t]);
+      return next;
+    });
+    setSelectionInputStates(prev => {
+      const next = { ...prev };
+      if (!isSubtypeCompatible && selectedSubtype) delete next[selectedSubtype.type];
+      removedTypes.forEach(t => delete next[t]);
+      return next;
+    });
     setSelectedClass(null);
     setSelectedSubclass(null);
   };
@@ -78,7 +108,19 @@ export const useWarbandSelection = () => {
     if (lockedSubtype) { return; }
     setSelectedSubtype(subtype);
     const compatibleAspects = selectedAspects.filter(aspect => subtype.aspects.includes(aspect.type));
+    const removedTypes = new Set(selectedAspects.filter(a => !subtype.aspects.includes(a.type)).map(a => a.type));
     setSelectedAspects(compatibleAspects);
+    setAspectIntensities(prev => {
+      const next = { ...prev };
+      removedTypes.forEach(t => delete next[t]);
+      return next;
+    });
+    setSelectionInputStates(prev => {
+      const next = { ...prev };
+      if (selectedSubtype) delete next[selectedSubtype.type];
+      removedTypes.forEach(t => delete next[t]);
+      return next;
+    });
     setSelectedClass(null);
     setSelectedSubclass(null);
   };
@@ -91,6 +133,9 @@ export const useWarbandSelection = () => {
         return prevAspects;
       }
       if (isSelected) {
+        // deselect: clear intensity and input state
+        setAspectIntensities(prev => { const next = { ...prev }; delete next[aspect.type]; return next; });
+        setSelectionInputStates(prev => { const next = { ...prev }; delete next[aspect.type]; return next; });
         return prevAspects.filter(a => a.title !== aspect.title);
       } else {
         const hasConflict = prevAspects.some(a => // we don't want two aspects of the same class being selected (I.E: two map aspects)
@@ -102,11 +147,24 @@ export const useWarbandSelection = () => {
         if (hasConflict) {
           return prevAspects;
         }
+        // initialize intensity to 1 on select, only if it isn't already set by the expand panel
+        setAspectIntensities(prev => ({ ...prev, [aspect.type]: prev[aspect.type] ?? 1 }));
         return [...prevAspects, aspect];
       }
     });
     setSelectedClass(null);
     setSelectedSubclass(null);
+  };
+
+  const handleIntensityChange = (aspectType: string, newRank: number) => {
+    setAspectIntensities(prev => ({ ...prev, [aspectType]: newRank }));
+  };
+
+  const handleSelectionInputChange = (typeKey: string, key: string, val: any) => {
+    setSelectionInputStates(prev => ({
+      ...prev,
+      [typeKey]: { ...(prev[typeKey] ?? {}), [key]: val },
+    }));
   };
 
   const handleClassSelect = (classe: ClassType) => {
@@ -138,9 +196,13 @@ export const useWarbandSelection = () => {
     lockedWarband,
     lockedSubtype,
     lockedAspects,
+    aspectIntensities,
+    selectionInputStates,
     handleWarbandSelect,
     handleSubtypeSelect,
     handleAspectSelect,
+    handleIntensityChange,
+    handleSelectionInputChange,
     handleClassSelect,
     handleSubclassSelect,
   };

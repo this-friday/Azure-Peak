@@ -1,12 +1,10 @@
-// gets the warband associated with the user
-// creates an instance of the BEGIN hud (the thing we're using for warband & character creation)
 /atom/movable/screen/warband/manager/proc/create_HUD_instance(mob/user)
 	for(var/atom/movable/screen/warband/manager/listed_manager in SSwarbands.warband_managers)
 		if(listed_manager.warband_ID == user.mind.warband_ID)
 			user.client.screen += listed_manager
 			animate(listed_manager, alpha = 255, time = 800)
 			break
-			
+
 /atom/movable/screen/warband/manager/Click()
 	ui_interact(usr)
 
@@ -18,35 +16,42 @@
 
 /atom/movable/screen/warband/manager/ui_data(mob/user)
 	var/list/data = ..()
-
 	if(cached_remaining_time >= 0)
 		data["time_remaining"] = cached_remaining_time
 		data["timer_active"] = TRUE
 	else
 		data["time_remaining"] = 0
 		data["timer_active"] = FALSE
-
 	return data
 
 /atom/movable/screen/warband/manager/ui_static_data(mob/user)
 	var/list/data = ..()
-	var/user_role = user.mind.special_role
 	data["creation_stage"] = creation_stage
 	data["warlord_spawned"] = warlord_spawned
-	data["is_warlord"] = (user_role == "Warlord")
-	data["user_role"] = user_role
+	data["is_warlord"] = (user.mind.special_role == "Warlord")
+	data["user_role"] = user.mind.special_role
 	data["finalized_status"] = finalized
+	populate_noble_and_ally_data(user, data)
+	populate_user_data(user, data)
+	populate_casus_belli_data(user, data)
+	populate_faction_data(data)
+	populate_storyteller_data(data)
+	populate_warband_lists(data)
+	populate_class_data(data)
+	populate_terms_data(data)
+	static_data_set = TRUE
+	return data
 
-	// a list of important figures in town | used in the 'know thy enemy' list in the creation menu | helps in plotting an initial gimmick
+
+/atom/movable/screen/warband/manager/proc/populate_noble_and_ally_data(mob/user, list/data)
 	var/list/noble_list = list()
-	for(var/mob/living/carbon/human/quote_importantperson_unquote in importantfigures)
+	for(var/mob/living/carbon/human/vip in importantfigures)
 		UNTYPED_LIST_ADD(noble_list, list(
-			"name" = quote_importantperson_unquote.real_name,
-			"job" = quote_importantperson_unquote.job
+			"name" = vip.real_name,
+			"job" = vip.job
 		))
 	data["nobles"] = noble_list
 
-	// a list of teammates
 	var/list/allies_list = list()
 	for(var/mob/living/carbon/human/buddy in members)
 		var/member_role = buddy.mind?.special_role || "Unknown"
@@ -64,16 +69,32 @@
 		UNTYPED_LIST_ADD(allies_list, list(
 			"name" = char_name,
 			"job" = member_role,
-			"in_lobby" = TRUE
+			"in_lobby" = TRUE,
+			"is_ready" = (lobby_member.ckey in ready_members)
 		))
 	data["allies"] = allies_list
 
-	// casus belli voting state
+/atom/movable/screen/warband/manager/proc/populate_user_data(mob/user, list/data)
+	data["user_ready"] = (user.ckey in ready_members)
+	if(user.client?.prefs)
+		var/datum/species/user_species = user.client.prefs.pref_species
+		var/datum/patron/user_patron_datum = user.client.prefs.selected_patron
+		data["user_race"] = user_species ? "[user_species.type]" : ""
+		data["user_race_name"] = user_species ? user_species.name : ""
+		data["user_patron"] = user_patron_datum ? "[user_patron_datum.type]" : ""
+		data["user_patron_name"] = user_patron_datum ? user_patron_datum.name : ""
+	else
+		data["user_race"] = ""
+		data["user_race_name"] = ""
+		data["user_patron"] = ""
+		data["user_patron_name"] = ""
+
+/atom/movable/screen/warband/manager/proc/populate_casus_belli_data(mob/user, list/data)
 	var/user_ckey = user.ckey
-	var/user_proposal_id_out	// proposal_id of the term the user authored
-	var/user_vote_id_out		// proposal_id of the term the user is voting on
+	var/user_proposal_id_out
+	var/user_vote_id_out
 	var/user_vote_confirmed_flag = FALSE
-	var/warlord_selected_id		// proposal_id the warlord has selected
+	var/warlord_selected_id
 	var/list/proposals_out = list()
 
 	for(var/list/proposal in casus_belli_proposals)
@@ -113,6 +134,7 @@
 			proposal_entry["display_fields"] = display_fields_out
 			qdel(proto)
 		UNTYPED_LIST_ADD(proposals_out, proposal_entry)
+
 	data["casus_belli_proposals"] = proposals_out
 	data["user_proposal"] = user_proposal_id_out
 	data["user_vote"] = user_vote_id_out
@@ -135,127 +157,44 @@
 	else
 		data["warlord_casus_belli"] = null
 
-	var/list/storyteller_list = list()
-	var/list/warbands_list = list()
-	var/list/subtypes_list = list()
-	var/list/aspects_list = list()
-	var/list/class_list = list()
-
-	var/list/backend_warband_list = list()
-	var/list/backend_subtype_list = list()
-	var/list/backend_aspects_list = list()
-
-	if(selected_warband)
-		UNTYPED_LIST_ADD(backend_warband_list, list(
-			"title" = selected_warband.title,
-			"summary" = selected_warband.summary,
-			"storyinfluence" = selected_warband.storytellerlimit,
-			"subtyperequired" = selected_warband.subtyperequired,
-			"rarity" = selected_warband.rarity,
-			"subtypes" = selected_warband.subtypes,
-			"aspects" = selected_warband.aspects,
-			"points" = selected_warband.points,
-			"type" = selected_warband.type,
-			"warlordclasses" = selected_warband.warlordclasses,
-			"lieuclasses" = selected_warband.lieutenantclasses,
-			"gruntclasses" = selected_warband.gruntclasses,
-			"multiclass_enabled" = selected_warband.multiclass_enabled,
-			"subclass_required" = selected_warband.subclass_required,
-			"subclass_label" = selected_warband.subclass_label
-		))
-	data["backend_warband"] = backend_warband_list
-
-	if(selected_subtype)
-		UNTYPED_LIST_ADD(backend_subtype_list, list(
-			"title" = selected_subtype.title,
-			"summary" = selected_subtype.summary,
-			"storyinfluence" = selected_subtype.storytellerlimit,
-			"rarity" = selected_subtype.rarity,
-			"aspects" = selected_subtype.aspects,
-			"points" = selected_subtype.points,
-			"type" = selected_subtype.type,
-			"warlordclasses" = selected_subtype.warlordclasses,
-			"lieuclasses" = selected_subtype.lieutenantclasses,
-			"gruntclasses" = selected_subtype.gruntclasses
-		))
-	data["backend_subtype"] = backend_subtype_list
-
-	for(var/datum/warbands/aspects/selected_aspect in selected_aspects)
-		UNTYPED_LIST_ADD(backend_aspects_list, list(
-			"title" = selected_aspect.title,
-			"summary" = selected_aspect.summary,
-			"storyinfluence" = selected_aspect.storytellerlimit,
-			"rarity" = selected_aspect.rarity,
-			"class" = selected_aspect.asclass,
-			"points" = selected_aspect.points,
-			"type" = selected_aspect.type,
-			"warlordclasses" = selected_aspect.warlordclasses,
-			"lieuclasses" = selected_aspect.lieutenantclasses,
-			"gruntclasses" = selected_aspect.gruntclasses
-		))
-	data["backend_aspects"] = backend_aspects_list
-
-	if(!static_data_set) // we want to be absolutely sure we're only checking storytellers Once
-		for(var/datum/storyteller/storyteller in storyinfluence)
-			UNTYPED_LIST_ADD(storyteller_list, list(
-				"title" = storyteller.name,
-				"summary" = storyteller.desc,
-				"type" = storyteller.type
+/atom/movable/screen/warband/manager/proc/populate_faction_data(list/data)
+	var/list/cb_faction_list = list()
+	for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+		if(faction.type in DEFAULT_TERRITORY_FACTIONS)
+			UNTYPED_LIST_ADD(cb_faction_list, list(
+				"name" = faction.name,
+				"desc" = faction.desc,
+				"vault" = faction.vault,
+				"owner" = faction.owner,
+				"type" = "[faction.type]",
+				"icon" = ""
 			))
+	if(linked_faction)
+		UNTYPED_LIST_ADD(cb_faction_list, list(
+			"name" = linked_faction.name,
+			"desc" = linked_faction.desc,
+			"vault" = linked_faction.vault,
+			"owner" = linked_faction.owner,
+			"type" = "[linked_faction.type]",
+			"icon" = ""
+		))
+	data["backend_factions"] = cb_faction_list
+
+/atom/movable/screen/warband/manager/proc/populate_storyteller_data(list/data)
+	if(static_data_set)
+		data["backendstorytellers"] = list()
+		return
+	var/list/storyteller_list = list()
+	for(var/datum/storyteller/storyteller in storyinfluence)
+		UNTYPED_LIST_ADD(storyteller_list, list(
+			"title" = storyteller.name,
+			"summary" = storyteller.desc,
+			"type" = storyteller.type
+		))
 	data["backendstorytellers"] = storyteller_list
 
-	for(var/datum/warbands/warband in warbands)
-		UNTYPED_LIST_ADD(warbands_list, list(
-			"title" = warband.title,
-			"summary" = warband.summary,
-			"storyinfluence" = warband.storytellerlimit,
-			"subtyperequired" = warband.subtyperequired,
-			"rarity" = warband.rarity,			
-			"subtypes" = warband.subtypes,
-			"aspects" = warband.aspects,
-			"points" = warband.points,
-			"type" = warband.type,
-			"warlordclasses" = warband.warlordclasses,
-			"lieuclasses" = warband.lieutenantclasses,
-			"gruntclasses" = warband.gruntclasses,
-			"multiclass_enabled" = warband.multiclass_enabled,
-			"subclass_required" = warband.subclass_required,
-			"subclass_label" = warband.subclass_label
-		))
-	data["warbands"] = warbands_list
-
-	for(var/datum/warbands/subtypes/subtype in subtypes)
-		UNTYPED_LIST_ADD(subtypes_list, list(
-			"title" = subtype.title,
-			"summary" = subtype.summary,
-			"storyinfluence" = subtype.storytellerlimit,
-			"rarity" = subtype.rarity,
-			"aspects" = subtype.aspects,
-			"points" = subtype.points,
-			"type" = subtype.type,
-			"quote" = subtype.quote,
-			"quote_followup" = subtype.quote_followup,
-			"warlordclasses" = subtype.warlordclasses,
-			"lieuclasses" = subtype.lieutenantclasses,
-			"gruntclasses" = subtype.gruntclasses
-		))
-	data["subtypes"] = subtypes_list
-
-	for(var/datum/warbands/aspects/aspect in aspects)
-		UNTYPED_LIST_ADD(aspects_list, list(
-			"title" = aspect.title,
-			"summary" = aspect.summary,
-			"storyinfluence" = aspect.storytellerlimit,
-			"rarity" = aspect.rarity,
-			"class" = aspect.asclass,
-			"points" = aspect.points,
-			"type" = aspect.type,
-			"warlordclasses" = aspect.warlordclasses,
-			"lieuclasses" = aspect.lieutenantclasses,
-			"gruntclasses" = aspect.gruntclasses
-		))
-	data["aspects"] = aspects_list
-
+/atom/movable/screen/warband/manager/proc/populate_class_data(list/data)
+	var/list/class_list = list()
 	for(var/datum/advclass/class in classes)
 		UNTYPED_LIST_ADD(class_list, list(
 			"name" = class.title,
@@ -268,32 +207,8 @@
 			"multiclass_capable" = class.multiclass_capable
 		))
 	data["classes"] = class_list
-	
-	var/list/cb_faction_list = list()
-	for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
-		if(faction.type in DEFAULT_TERRITORY_FACTIONS)
-			UNTYPED_LIST_ADD(cb_faction_list, list(
-				"name" = faction.name,
-				"desc" = faction.desc,
-				"vault" = faction.vault,
-				"owner" = faction.owner,
-				"type" = "[faction.type]",
-				"icon" = ""
-			))
 
-	if(linked_faction)
-		UNTYPED_LIST_ADD(cb_faction_list, list(
-			"name" = linked_faction.name,
-			"desc" = linked_faction.desc,
-			"vault" = linked_faction.vault,
-			"owner" = linked_faction.owner,
-			"type" = "[linked_faction.type]",
-			"icon" = ""
-		))
-	data["backend_factions"] = cb_faction_list
-
-	// a list of treaty terms for casus belli browsing & proposal
-	// gets rebuilt in stage 2, as the decisions in stage 1 can potentially make more available
+/atom/movable/screen/warband/manager/proc/populate_terms_data(list/data)
 	var/obj/item/treaty/temp_treaty = new /obj/item/treaty()
 	if(creation_stage >= 2 && selected_warband)
 		temp_treaty.add_unique_terms(src)
@@ -310,9 +225,101 @@
 		))
 	qdel(temp_treaty)
 	data["all_terms"] = all_terms_list
-	static_data_set = TRUE
-	return data
 
+/atom/movable/screen/warband/manager/proc/populate_warband_lists(list/data)
+	var/list/warbands_list = list()
+	var/list/subtypes_list = list()
+	var/list/aspects_list = list()
+	var/list/backend_warband_list = list()
+	var/list/backend_subtype_list = list()
+	var/list/backend_aspects_list = list()
+
+	for(var/datum/warbands/warband in warbands)
+		var/list/entry = serialize_warband_datum(warband)
+		entry["subtyperequired"] = warband.subtyperequired
+		entry["subtypes"] = warband.subtypes
+		entry["aspects"] = warband.aspects
+		entry["multiclass_enabled"] = warband.multiclass_enabled
+		entry["subclass_required"] = warband.subclass_required
+		entry["subclass_label"] = warband.subclass_label
+		UNTYPED_LIST_ADD(warbands_list, entry)
+
+	for(var/datum/warbands/subtypes/subtype in subtypes)
+		var/list/entry = serialize_warband_datum(subtype)
+		entry["aspects"] = subtype.aspects
+		entry["quote"] = subtype.quote
+		entry["quote_followup"] = subtype.quote_followup
+		UNTYPED_LIST_ADD(subtypes_list, entry)
+
+	for(var/datum/warbands/aspects/aspect in aspects)
+		var/list/entry = serialize_warband_datum(aspect)
+		entry["class"] = aspect.asclass
+		entry["max_intensity"] = aspect.max_intensity
+		entry["intensity_costs"] = aspect.build_intensity_costs()
+		UNTYPED_LIST_ADD(aspects_list, entry)
+
+	if(selected_warband)
+		var/list/entry = serialize_warband_datum(selected_warband, selection_inputs["[selected_warband.type]"])
+		entry["subtyperequired"] = selected_warband.subtyperequired
+		entry["subtypes"] = selected_warband.subtypes
+		entry["aspects"] = selected_warband.aspects
+		entry["multiclass_enabled"] = selected_warband.multiclass_enabled
+		entry["subclass_required"] = selected_warband.subclass_required
+		entry["subclass_label"] = selected_warband.subclass_label
+		UNTYPED_LIST_ADD(backend_warband_list, entry)
+
+	if(selected_subtype)
+		var/list/entry = serialize_warband_datum(selected_subtype, selection_inputs["[selected_subtype.type]"])
+		entry["aspects"] = selected_subtype.aspects
+		entry["quote"] = selected_subtype.quote
+		entry["quote_followup"] = selected_subtype.quote_followup
+		UNTYPED_LIST_ADD(backend_subtype_list, entry)
+
+	for(var/datum/warbands/aspects/selected_aspect in selected_aspects)
+		var/list/entry = serialize_warband_datum(selected_aspect, selection_inputs["[selected_aspect.type]"])
+		entry["class"] = selected_aspect.asclass
+		entry["max_intensity"] = selected_aspect.max_intensity
+		entry["intensity_costs"] = selected_aspect.build_intensity_costs()
+		entry["intensity"] = (aspect_intensities[selected_aspect.type] || 1)
+		UNTYPED_LIST_ADD(backend_aspects_list, entry)
+
+	data["warbands"] = warbands_list
+	data["subtypes"] = subtypes_list
+	data["aspects"] = aspects_list
+	data["backend_warband"] = backend_warband_list
+	data["backend_subtype"] = backend_subtype_list
+	data["backend_aspects"] = backend_aspects_list
+
+
+// returns a list of readable names for a list of type paths
+/atom/movable/screen/warband/manager/proc/get_lock_names(list/locks)
+	var/list/names = list()
+	for(var/path in locks)
+		names += initial(path:name)
+	return names
+
+// serializes the fields common to all warband datums (warbands, subtypes, aspects)
+/atom/movable/screen/warband/manager/proc/serialize_warband_datum(datum/warbands/W, list/sel_inputs)
+	var/list/entry = list(
+		"title" = W.title,
+		"summary" = W.summary,
+		"desc" = W.desc,
+		"storyinfluence" = W.storytellerlimit,
+		"rarity" = W.rarity,
+		"points" = W.points,
+		"type" = W.type,
+		"warlordclasses" = W.warlordclasses,
+		"lieuclasses" = W.lieutenantclasses,
+		"gruntclasses" = W.gruntclasses,
+		"racelock" = W.racelock.Copy(),
+		"racelock_names" = get_lock_names(W.racelock),
+		"faithlock" = W.faithlock.Copy(),
+		"faithlock_names" = get_lock_names(W.faithlock),
+		"inputs" = W.serialize_input_fields()
+	)
+	if(sel_inputs)
+		entry["selection_inputs"] = sel_inputs
+	return entry
 
 /atom/movable/screen/warband/manager/ui_act(action, params, datum/tgui/ui, datum/ui_state/state)
 	. = ..()
@@ -320,8 +327,7 @@
 
 	var/user_key = user.ckey
 	if(last_action_time[user_key] && world.time < last_action_time[user_key] + 10)
-		return TRUE // slight throttling to all of the UI actions
-	
+		return TRUE
 	last_action_time[user_key] = world.time
 
 	switch(action)
@@ -348,8 +354,7 @@
 				lobby_members -= user
 			load_appearance(user, user)
 			lock_check(user)
-			var/latespawn = user.mind.warband_latespawn
-			spawn_character(class_path, user, subclass_path, is_leader = 0, is_latespawn = latespawn)
+			spawn_character(class_path, user, subclass_path, is_leader = 0, is_latespawn = user.mind.warband_latespawn)
 			end_intro(user)
 			return
 		if("advance_stage")
@@ -357,54 +362,9 @@
 				to_chat(user, span_warning("Only the Warlord can advance stages."))
 				user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 				return
-
-			// stage 1 -> 2: commit the warband selection and move to casus belli phase
-			// the warband's mob cache will start filling up at this point
 			if(creation_stage == 1)
-				var/warband_path = text2path(params["warband"])
-				if(!warband_path || !SSwarbands.warband_lookup[warband_path])
-					to_chat(user, span_warning("Select a valid warband before advancing."))
-					user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
-					return
-				selected_warband = SSwarbands.warband_lookup[warband_path]
-				var/subtype_path = text2path(params["subtype"])
-				if(subtype_path && SSwarbands.subtype_lookup[subtype_path])
-					selected_subtype = SSwarbands.subtype_lookup[subtype_path]
-				var/list/aspect_paths = params["aspects"]
-				for(var/aspect_path in aspect_paths)
-					var/aspect_type = text2path(aspect_path)
-					if(aspect_type && SSwarbands.aspect_lookup[aspect_type])
-						selected_aspects += SSwarbands.aspect_lookup[aspect_type]
-				if(!linked_faction)
-					var/datum/territory_faction/custom/seed_faction = new /datum/territory_faction/custom()
-					SSwarbands.territory_factions += seed_faction	// added first so verify_faction_name sees it
-					seed_faction.name = seed_faction.verify_faction_name("The Warband", null)
-					linked_faction = seed_faction
-				creation_stage = 2
-				selected_subtype?.on_warband_confirmed(src)
-				selected_warband?.on_warband_confirmed(src)
-				for(var/datum/warbands/aspects/aspect in selected_aspects)
-					aspect.on_warband_confirmed(src)
-
-				for(var/mob/living/carbon/human/member in lobby_members)
-					var/warband_info = "<span style='color:#e8bf67'>WARBAND CHOSEN:</span> [selected_warband.title]"
-					if(selected_subtype)
-						warband_info += " ([selected_subtype.title])"
-					if(selected_aspects.len)
-						warband_info += ". <span style='color:#e8bf67'>ASPECTS:</span>"
-						for(var/datum/warbands/aspects/aspect in selected_aspects)
-							warband_info += "<br>- <span style='color:#c9a347'><b>[aspect.title]</b></span>: [aspect.summary]"
-					else
-						warband_info += "."
-					to_chat(member, span_greenteamradio(warband_info))
-					to_chat(member, span_redteamradio("A Warband is chosen. But what are you fighting for? Propose a Casus Belli."))
-				update_static_data_for_all_viewers()
-				set_race_and_faith_locks()
-				send_warnings()	
-				reset_creation_timer()							
+				commit_warband_selection(user, params)
 				return
-
-			// stage 2 -> 3: commit the casus belli and open up class selection & finalization
 			if(creation_stage == 2)
 				if(!casus_belli_selection)
 					to_chat(user, span_warning("A casus belli must be chosen before advancing."))
@@ -412,14 +372,10 @@
 					return
 				creation_stage = 3
 				reset_creation_timer()
-
 				for(var/mob/living/carbon/human/member in lobby_members)
 					to_chat(member, span_greenteamradio("The Warlord has advanced to class selection. You may now choose your class."))
 				update_static_data_for_all_viewers()
 				return
-
-		// warband finalization
-		// spawns the map & the warlord
 		if("create_warband")
 			if(user.mind.special_role != "Warlord")
 				to_chat(user, span_warning("Only the Warlord may finalize the warband."))
@@ -440,7 +396,7 @@
 			if(user in lobby_members)
 				lobby_members -= user
 			load_appearance(user, user)
-			lock_check(user) // checks if the warlord is breaking any faith or species limits, and corrects them if so
+			lock_check(user)
 			selected_warband?.on_warlord_spawned(user, src)
 			selected_subtype?.on_warlord_spawned(user, src)
 			for(var/datum/warbands/aspects/aspect in selected_aspects)
@@ -453,31 +409,47 @@
 			// we use "The Warband" as a placeholder faction for the UI. once we're actually in-game, we need to update it
 			if(casus_belli_selection && linked_faction)
 				var/real_name = linked_faction.name
-				if(casus_belli_selection.target == "The Warband") 
+				if(casus_belli_selection.target == "The Warband")
 					casus_belli_selection.target = real_name
-				if(casus_belli_selection.receiver == "The Warband") 
+				if(casus_belli_selection.receiver == "The Warband")
 					casus_belli_selection.receiver = real_name
-			spawn_character(class_path, user, subclass_path, is_leader = 1)			
+			spawn_character(class_path, user, subclass_path, is_leader = 1)
 			set_default_exit()
-			
 			warlord_spawned = TRUE
 			SSwarbands.warband_managers_busy = FALSE
-			finalized = TRUE
 			user.mind.warband_manager = src
 			end_intro(user)
-			for(var/mob/living/carbon/human/member in lobby_members) 
+			for(var/mob/living/carbon/human/member in lobby_members)
 				if(member.mind.special_role == "Lieutenant" || member.mind.special_role == "Aspirant Lieutenant" || member.mind.special_role == "Grunt")
 					to_chat(member, span_greenteamradio("The Warlord has established the warband. You may now finalize your character."))
 					member.playsound_local(member, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
 			update_static_data_for_all_viewers()
+			addtimer(CALLBACK(src, PROC_REF(spawn_ready_members)), 30)
 			return
-
 		if("interaction_sound")
 			user.playsound_local(user, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 			return
-
-		// submits a term to the list of casus belli proposals
-		// big, but this is rate limited so it should be fine
+		if("toggle_ready")
+			if(user.mind.special_role == "Warlord")
+				return
+			if(creation_stage < 3)
+				return
+			if(user.ckey in ready_members)
+				ready_members -= user.ckey
+				user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
+			else
+				var/class_path_str = params["class"]
+				if(!class_path_str || !text2path(class_path_str))
+					to_chat(user, span_warning("Select a valid class before readying up."))
+					user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
+					return
+				ready_members[user.ckey] = list(
+					"class" = class_path_str,
+					"subclass" = params["subclass"]
+				)
+				user.playsound_local(user, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
+			update_static_data_for_all_viewers()
+			return
 		if("propose_casus_belli")
 			var/term_type_str = params["term_type"]
 			var/term_name = params["term_name"]
@@ -486,7 +458,6 @@
 			var/found_type = text2path(term_type_str)
 			if(!found_type)
 				return
-
 			var/datum/treaty/terms/new_term = new found_type()
 			var/list/term_details = list()
 			for(var/datum/treaty/input_field/field in new_term.input_fields)
@@ -504,8 +475,6 @@
 					val = copytext(raw, 1, MAX_MESSAGE_LEN)
 				term_details[field.key] = val
 				new_term.vars[field.key] = val
-
-			// removes authorship from the previous proposal BEFORE the duplicate check
 			for(var/list/existing in casus_belli_proposals)
 				if(existing["author"] == user.ckey)
 					existing["author"] = null
@@ -514,8 +483,6 @@
 					if(!existing_confirmed.len && !existing_pending.len)
 						casus_belli_proposals -= list(existing)
 					break
-
-			// check for duplicate proposals
 			for(var/list/existing_proposal in casus_belli_proposals)
 				var/existing_type = text2path(existing_proposal["term_type"])
 				if(!existing_type)
@@ -526,25 +493,21 @@
 					if(field.client_only || isnull(ed[field.key]))
 						continue
 					existing_term.vars[field.key] = ed[field.key]
-
 				var/is_dup = new_term.duplicate_check(existing_term)
 				qdel(existing_term)
-
 				if(is_dup)
 					qdel(new_term)
 					to_chat(user, span_warning("An identical proposition already exists. Your proposal was cancelled."))
 					user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 					return
-
 			qdel(new_term)
 			user.playsound_local(user, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 			var/term_desc = ""
 			var/datum/treaty/terms/proto = new found_type()
 			term_desc = proto.desc
 			qdel(proto)
-			var/new_proposal_id = "[user.ckey]_[world.time]"
 			var/list/new_proposal = list(
-				"proposal_id" = new_proposal_id,
+				"proposal_id" = "[user.ckey]_[world.time]",
 				"term_type" = term_type_str,
 				"term_name" = term_name,
 				"term_desc" = term_desc,
@@ -557,26 +520,21 @@
 			casus_belli_proposals += list(new_proposal)
 			update_static_data_for_all_viewers()
 			return
-
-		// vote on a proposal
 		if("vote_casus_belli")
 			if(user.mind.special_role == "Warlord")
 				return
 			var/target_id = params["proposal_id"]
 			if(!target_id)
 				return
-			// if they already have a confirmed vote, cancel it
 			for(var/list/proposal in casus_belli_proposals)
 				if(user.ckey in proposal["confirmed_votes"])
 					return
-			// if they're already pending on the chosen proposal, toggle it off
 			var/already_pending = FALSE
 			for(var/list/proposal in casus_belli_proposals)
 				if(proposal["proposal_id"] == target_id)
 					if(user.ckey in proposal["pending_votes"])
 						already_pending = TRUE
 					break
-			// if they have a vote pending elsewhere, remove them
 			for(var/list/proposal in casus_belli_proposals)
 				proposal["pending_votes"] -= user.ckey
 			if(!already_pending)
@@ -586,8 +544,6 @@
 						break
 			update_static_data_for_all_viewers()
 			return
-
-		// lock in your pending vote
 		if("confirm_casus_belli")
 			if(user.mind.special_role == "Warlord")
 				return
@@ -602,8 +558,6 @@
 					update_static_data_for_all_viewers()
 					return
 			return
-
-		// warlord only | selects a proposal as the warband's casus belli
 		if("select_casus_belli")
 			if(user.mind.special_role != "Warlord")
 				return
@@ -638,38 +592,29 @@
 					casus_belli_selection.vars[field.key] = details[field.key]
 			update_static_data_for_all_viewers()
 			return
-
-		// view a list of the current laws
 		if("view_laws")
 			to_chat(user, span_greenteamradio("AZURIA'S LAWS ARE AS FOLLOWS:"))
 			user.playsound_local(user, 'sound/misc/notice (2).ogg', 100, FALSE)
 			for(var/law in GLOB.laws_of_the_land)
 				to_chat(user, span_memo(law))
 			return
-
-		// view a list of the current decrees
 		if("view_decrees")
 			user.playsound_local(user, 'sound/misc/notice (2).ogg', 100, FALSE)
 			for(var/decree in GLOB.lord_decrees)
 				to_chat(user, span_memo(decree))
 			return
-
-		// view the flavortext of a given character
 		if("view_vip")
 			var/returned_vip = params["enemy"]
 			var/returned_ally = params["ally"]
 			var/mob/living/carbon/human/matched_vip
-
 			for(var/mob/living/carbon/human/vip in importantfigures)
 				if(vip.real_name == returned_vip)
 					matched_vip = vip
 					break
-
 			for(var/mob/living/carbon/human/pal in members)
 				if(pal.real_name == returned_ally)
 					matched_vip = pal
 					break
-
 			if(matched_vip)
 				if(!ismob(usr))
 					return
@@ -679,8 +624,95 @@
 				mob_examine_panel.viewing = usr
 				mob_examine_panel.ui_interact(usr)
 				return
-			else
-				return
+
+// commits warband/subtype/aspect selections and advances to stage 2
+/atom/movable/screen/warband/manager/proc/commit_warband_selection(mob/user, list/params)
+	var/warband_path = text2path(params["warband"])
+	if(!warband_path || !SSwarbands.warband_lookup[warband_path])
+		to_chat(user, span_warning("Select a valid warband before advancing."))
+		user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
+		return
+
+	selected_warband = SSwarbands.warband_lookup[warband_path]
+
+	var/subtype_path = text2path(params["subtype"])
+	if(subtype_path && SSwarbands.subtype_lookup[subtype_path])
+		selected_subtype = SSwarbands.subtype_lookup[subtype_path]
+
+	var/list/aspect_paths = params["aspects"]
+	var/list/incoming_intensities = params["aspect_intensities"] || list()
+	var/list/incoming_selection_inputs = params["selection_inputs"] || list()
+
+	if(selected_warband)
+		selection_inputs["[selected_warband.type]"] = incoming_selection_inputs["[selected_warband.type]"] || list()
+	if(selected_subtype)
+		selection_inputs["[selected_subtype.type]"] = incoming_selection_inputs["[selected_subtype.type]"] || list()
+
+	for(var/aspect_path in aspect_paths)
+		var/aspect_type = text2path(aspect_path)
+		if(aspect_type && SSwarbands.aspect_lookup[aspect_type])
+			selected_aspects += SSwarbands.aspect_lookup[aspect_type]
+			var/incoming_intensity = text2num(incoming_intensities[aspect_path])
+			aspect_intensities["[aspect_type]"] = clamp(incoming_intensity || 1, 1, SSwarbands.aspect_lookup[aspect_type].max_intensity)
+			selection_inputs[aspect_path] = incoming_selection_inputs[aspect_path] || list()
+
+	if(!linked_faction)
+		var/datum/territory_faction/custom/seed_faction = new /datum/territory_faction/custom()
+		SSwarbands.territory_factions += seed_faction
+		seed_faction.name = seed_faction.verify_faction_name("The Warband", null)
+		linked_faction = seed_faction
+
+	creation_stage = 2
+	set_race_and_faith_locks()
+	selected_subtype?.on_warband_confirmed(src)
+	selected_warband?.on_warband_confirmed(src)
+	for(var/datum/warbands/aspects/aspect in selected_aspects)
+		aspect.on_warband_confirmed(src, aspect_intensities["[aspect.type]"] || 1)
+
+	for(var/mob/living/carbon/human/member in lobby_members)
+		var/warband_info = "<span style='color:#e8bf67'>WARBAND CHOSEN:</span> [selected_warband.title]"
+		if(selected_subtype)
+			warband_info += " ([selected_subtype.title])"
+		if(selected_aspects.len)
+			warband_info += "<br><span style='color:#e8bf67'>ASPECTS:</span>"
+			for(var/datum/warbands/aspects/aspect in selected_aspects)
+				warband_info += "<br>- <span style='color:#c9a347'><b>[aspect.title]</b></span>: [aspect.summary]"
+		else
+			warband_info += "."
+		to_chat(member, span_greenteamradio(warband_info))
+		to_chat(member, span_redteamradio("A Warband is chosen. But what are you fighting for? Propose a Casus Belli."))
+
+	update_static_data_for_all_viewers()
+	send_warnings()
+	reset_creation_timer()
+
+
+// spawns every member who readied up during finalization
+/atom/movable/screen/warband/manager/proc/spawn_ready_members()
+	for(var/ckey in ready_members)
+		var/list/stored = ready_members[ckey]
+		var/mob/living/carbon/human/member
+		for(var/mob/living/lobby_mob in lobby_members)
+			if(lobby_mob.ckey == ckey)
+				member = lobby_mob
+				break
+		if(!member || !member.client)
+			continue
+		SStgui.close_user_uis(member)
+		member.mind.warband_manager = src
+		var/class_path = text2path(stored["class"])
+		var/subclass_path = stored["subclass"] ? text2path(stored["subclass"]) : null
+		if(member in lobby_members)
+			lobby_members -= member
+		load_appearance(member, member)
+		lock_check(member)
+		spawn_character(class_path, member, subclass_path)
+		end_intro(member)
+	addtimer(CALLBACK(src, PROC_REF(finalize)), 30) // separated from the main proc, in case someone unreadies mid-finalization
+	ready_members = list()
+
+/atom/movable/screen/warband/manager/proc/finalize()
+	finalized = TRUE
 
 /atom/movable/screen/warband/manager/ui_close(mob/user, datum/tgui/ui)
 	. = ..()

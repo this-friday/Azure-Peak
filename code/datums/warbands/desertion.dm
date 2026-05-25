@@ -129,8 +129,8 @@
 	new_warband_manager.members += src
 	SSwarbands.warband_managers += new_warband_manager
 
-	switch(advjob)
-		if("Preacher") // a preacher in schism creates a faithlocked sect
+	switch(advjob) // ideally it'd be fun to give each Feud lieutenant their own schism path, but we don't have enough bands for this atm
+		if("Preacher") // a preacher in schism creates a sect
 			new_warband_manager.selected_warband = new /datum/warbands/sect
 			if(patron.type in ALL_DIVINE_PATRONS)
 				new_warband_manager.selected_subtype = new WARBAND_SECT_TEN
@@ -185,9 +185,6 @@
 	new_warband_manager.stop_creation_timer()
 	if(new_warband_manager.has_compatible_cache(mind.warband_manager))
 		new_warband_manager.share_cache_with(mind.warband_manager)
-		message_admins("Schism warband [new_warband_manager.warband_ID] will share cache with parent [mind.warband_manager.warband_ID]")
-	else
-		message_admins("Schism warband [new_warband_manager.warband_ID] requires separate cache (incompatible grunt types)")
 	verbs -= /mob/living/carbon/human/proc/desert
 	verbs += /mob/living/carbon/human/proc/connect_warcamp
 	mind.warband_manager = new_warband_manager

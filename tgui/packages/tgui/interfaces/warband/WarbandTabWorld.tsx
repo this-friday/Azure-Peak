@@ -56,6 +56,44 @@ export const WorldTab = ({
     window.addEventListener('mouseup', onUp);
   };
 
+  const confirmed = locked && !!warlordCasusBelli;
+
+  // after the casus belli stage is passed, the entire tab is dedicated to displaying the chosen term
+  if (confirmed) {
+    return (
+      <Stack style={{ flex: 1, flexDirection: 'column', height: '100%' }}>
+        <Stack.Item grow={1} style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+          <CasusBelliPanel
+            proposals={proposals} availableTerms={availableTerms}
+            userProposal={userProposal} userVote={userVote} userVoteConfirmed={userVoteConfirmed}
+            warlordSelectedProposal={warlordSelectedProposal}
+            warlordCasusBelli={warlordCasusBelli}
+            isWarlord={isWarlord} act={act}
+            factions={factions ?? []}
+            locked={locked}
+            lockedWarbandType={lockedWarbandType}
+          />
+        </Stack.Item>
+        <Section style={{ flex: 0, flexBasis: 'auto' }}>
+          <Stack direction="row" justify="center">
+            <Button
+              onClick={() => act('view_laws')}
+              style={{ flex: 1, fontSize: '25px', padding: '25px', display: 'flex', marginBottom: '110px', justifyContent: 'center', alignItems: 'center' }}
+            >
+              VIEW LAWS
+            </Button>
+            <Button
+              onClick={() => act('view_decrees')}
+              style={{ flex: 1, fontSize: '25px', padding: '25px', display: 'flex', marginBottom: '110px', justifyContent: 'center', alignItems: 'center' }}
+            >
+              VIEW DECREES
+            </Button>
+          </Stack>
+        </Section>
+      </Stack>
+    );
+  }
+
   return (
     <Stack style={{ flex: 1, flexDirection: 'column', height: '100%' }}>
       <Stack.Item grow={1} style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>

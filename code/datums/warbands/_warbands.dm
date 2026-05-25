@@ -50,7 +50,7 @@
 	var/icon = 'icons/roguetown/weapons/shields32.dmi'
 	var/icon_state = "ironsh"
 
-	var/desc						// used for extra details
+	var/desc = ""					// used for extra details
 	var/summary						// first description in a warband's info tab | followed up by desc
 	var/warning						// when a warband spawns, someone in the city is sent a warning letter w/details (its warband, aspects, etc)
 	var/datum/map_template/warcamp	// a 45x45 map template
@@ -64,24 +64,40 @@
 	var/list/subtypes = list()
 	var/list/aspects = list()
 
-	var/points = 0					// selection cost in the creation menu
+	var/points = -1					// selection cost in the creation menu | -1 by default, so the warband is forced to pick at least 1 drawback at minimum during selection
 	var/list/warlordclasses = list()
 	var/list/lieutenantclasses = list()
 	var/list/gruntclasses = list()
 	var/spawns						// lost when an NPC is spawned | combined with the baseline spawns (400)
 	var/list/combatmusic = list()
 	var/datum/outskirts_wave/outskirts_wave
-	var/multiclass_enabled = FALSE	// when TRUE, the creation menu shows a second class picker | multiclassing results in both classes getting applied. currently used for Mercenaries
-	var/subclass_required = FALSE	// when TRUE, a subclass/multiclass is required
-	var/subclass_label = "SUBCLASS"	// note: if you want something to properly function as a multiclass option, add multiclass_capable = TRUE to the respective advclass
+	var/multiclass_enabled = FALSE	// When TRUE, the creation menu shows a second class picker | multiclassing results in both classes getting applied. currently used for Mercenaries
+	var/subclass_required = FALSE	// When TRUE, a subclass/multiclass is required
+	var/subclass_label = "SUBCLASS"
+
+	var/list/input_fields = list()
+
+/datum/warbands/New()
+	input_fields = list()
+	build_input_fields()
+
+/datum/warbands/proc/build_input_fields()
+	return
+
+/datum/warbands/proc/serialize_input_fields()
+	var/list/out = list()
+	for(var/datum/treaty/input_field/field in input_fields)
+		out += list(field.serialize())
+	return out
 
 /datum/warbands/subtypes
 	points = 0
-	var/quote				// small flavortext for the creation menu
+	var/quote				// flavortext sent to all members when the warlord spawns
 	var/quote_followup		// as above
 
 /datum/warbands/aspects
 	var/asclass				// aspects of the same class can't be selected simultaneously (i.e: two map aspects)
+	var/max_intensity = 1	// 1 = no intensity scale (just selected/not) | higher values unlock intensity ranks
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////// WARBAND HOOKS
@@ -95,8 +111,14 @@
 /datum/warbands/proc/get_base_squad_size(mob/user)
 	return 4
 
-// called when the final warband/subtype/aspects selections are confirmed by the warlord (stage 1 -> 2)
-/datum/warbands/proc/on_warband_confirmed(atom/movable/screen/warband/manager/manager)
+// called by set_race_and_faith_locks() after locks are built
+// the standard restriction message fires at the end if nothing returns TRUE
+/datum/warbands/proc/on_locks_applied(atom/movable/screen/warband/manager/manager)
+	return FALSE
+
+// called when the warband is confirmed by the warlord (stage 1 -> 2)
+// intensity: the selected intensity rank for this aspect (1 if not intensity-capable)
+/datum/warbands/proc/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
 	return
 
 // called from equip_character after the warlord has been fully equipped and all stats applied
@@ -114,3 +136,24 @@
 // as above, but for lieutenants
 /datum/warbands/proc/on_lieutenant_spawned(mob/living/carbon/human/lieutenant, atom/movable/screen/warband/manager/manager)
 	return
+
+// returns the selection point cost at a given intensity rank
+// override in intensity-capable aspects to return the correct cost per rank
+/datum/warbands/aspects/proc/get_points_at_intensity(intensity)
+	return points
+
+// builds a list of costs indexed by rank for serialization
+/datum/warbands/aspects/proc/build_intensity_costs()
+	var/list/costs = list()
+	for(var/i = 1 to max_intensity)
+		costs += get_points_at_intensity(i)
+	return costs
+
+// sends quote and quote_followup to all lobby members when the warlord spawns
+/datum/warbands/subtypes/on_warlord_spawned(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
+	if(quote)
+		for(var/mob/living/member in manager.lobby_members)
+			to_chat(member, "<span style='color:#7a2525'><i>[quote]</i></span>")
+	if(quote_followup)
+		for(var/mob/living/member in manager.lobby_members)
+			to_chat(member, "<span style='color:#582424'><b>[quote_followup]</b></span>")

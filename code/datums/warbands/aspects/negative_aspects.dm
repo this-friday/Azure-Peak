@@ -2,11 +2,12 @@
 // if they were already an aspirant, they get an additional objective
 /datum/warbands/aspects/envy
 	title = "THRONE OF ENVY"
-	summary = "All Lieutenants are guaranteed to be Aspirants."
+	summary = "We are unified by circumstance, and circumstance alone."
+	desc = "All Lieutenants are guaranteed to be Aspirants."
 	warning = "...of an inner retinue of backstabbing scum."
 	points = 1
 
-/datum/warbands/aspects/envy/on_warband_confirmed(atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/envy/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
 	for(var/mob/living/carbon/human/member in manager.lobby_members)
 		if(member.mind.special_role != "Lieutenant" && member.mind.special_role != "Aspirant Lieutenant")
 			continue
@@ -52,12 +53,12 @@
 
 /datum/warbands/aspects/splintered
 	title = "SPLINTERED"
-	asclass = "Morale"
-	summary = "Old grievances and competing ambitions have already fractured the warband's chain of command."
+	summary = "Old grievances have already fractured the warband's chain of command."
+	desc = "Begin with +4 Disorder."
 	warning = "...of a warband in open disarray. It's a miracle they got here at all."
 	points = 1
  
-/datum/warbands/aspects/splintered/on_warband_confirmed(atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/splintered/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
 	manager.disorder += 4
 
 ////////////////////////////////////////////////////////////
@@ -69,6 +70,7 @@
 /datum/warbands/aspects/badexit
 	title = "BAD TRIP"
 	summary = "Fate denied an easy path into the Duchy. The Warcamp's initial exit will be someplace awful."
+	desc = "By default, the Warband's initial exit is based off of quest markers. BAD TRIP forcibly elects a Hard quest marker."
 	warning = "...taking an obscure route into the Duchy."
 	points = 1
 
@@ -79,12 +81,19 @@
 /datum/warbands/aspects/marked
 	title = "MARKED"
 	summary = "Assassins lurk in the Warband's ranks. Their sole mission is to murder the Warlord."
+	desc = "Up to 2 grunts are given an objective to kill the Warlord. Each rank of intensity allows an additional 2 assassins."
 	warning = "...of a plot to kill their own Warlord."
-	points = 2
- 
+	points = 1
+	max_intensity = 3
+
+/datum/warbands/aspects/marked/get_points_at_intensity(intensity)
+	return 1 + intensity
+
 /datum/warbands/aspects/marked/on_grunt_spawned(mob/living/carbon/human/grunt, atom/movable/screen/warband/manager/manager)
-	if(manager.marked_assassin_count >= 2 && prob(50))
-		return // until we reach the marked_assassin_count, there's a 50% chance that a spawning Grunt becomes an assassin
+	var/max_assassins = manager.aspect_intensities["/datum/warbands/aspects/marked"] || 1
+	max_assassins = 2 + (max_assassins - 1) * 2
+	if(manager.marked_assassin_count >= max_assassins && prob(50))
+		return // until we reach the assassin cap, there's a 50% chance that a spawning Grunt becomes an assassin
 
 	var/mob/living/carbon/human/warlord
 	for(var/mob/living/carbon/human/member in manager.members)
@@ -122,6 +131,7 @@
 	title = "FIGUREHEAD"
 	summary = "The Warlord's selfless devotion to his Warband has shaped it into a force to be reckoned with. \
 	In comparison - and as a single combatant - the Warlord himself is rather weak."
+	desc = "The Warlord's STR is capped to 8, and his SPD and CON to 10. On top of that, he loses the Sweep action."
 	warning = "...of a driven, beloved leader."
 	points = 1
 
@@ -142,7 +152,7 @@
 	if(warlord.STACON > 10)
 		warlord.STACON = 10
 
-/datum/warbands/aspects/figurehead/on_warband_confirmed(atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/figurehead/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
 	manager.disorder -= 1
 
 ////////////////////////////////////////////////////////////
@@ -152,11 +162,12 @@
 
 /datum/warbands/aspects/fated_suffering
 	title = "FATED SUFFERING"
-	summary = "A negative aspect is chosen at random."
+	summary = "There's nothing we can do."
+	desc = "A negative aspect is chosen at random."
 	warning = "...of an ill-omen hanging over a wretched, pathetic lot."
-	points = 3 // large point yield, to make this an Actual Choice
+	points = 2 // larger point yield, to make this an Actual Choice
 
-/datum/warbands/aspects/fated_suffering/on_warband_confirmed(atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/fated_suffering/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
 	var/list/selected_types = list()
 	var/list/selected_asclasses = list()
 	for(var/datum/warbands/aspects/picked in manager.selected_aspects)
@@ -188,7 +199,7 @@
 	chosen.on_warband_confirmed(manager) // fire the chosen aspect's own confirmation hook
 
 	for(var/mob/living/member in manager.lobby_members)
-		to_chat(member, span_redteamradio("Fated Suffering has selected [chosen.title]. [chosen.summary]"))
+		to_chat(member, span_redteamradio("Fated Suffering has selected [chosen.title]."))
 
 
 ////////////////////////////////////////////////////////////
@@ -199,7 +210,8 @@
 
 /datum/warbands/aspects/outlaw
 	title = "SCUM"
-	summary = "A single Lieutenant is wanted by the Azurian Justiciary. To say this will strain negotiations is an understatement."
+	summary = "A Lieutenant is wanted by the Azurian Justiciary. To say this will strain negotiations is an understatement."
+	desc = "A Lieutenant is a wanted criminal. Their presence incurs a tiny (1) Disorder bump, as if a Wretch were recruited."
 	warning = "...of a known, wanted man accompanying the enemy host."
 	points = 1
 

@@ -142,6 +142,100 @@ export const CasusBelliPanel = ({
     setView('browse');
   };
 
+  // confirmed casus belli
+  if (locked && warlordCasusBelli) {
+    const term = warlordCasusBelli;
+    const displayName = term.custom_name || term.name;
+
+    const divider = (
+      <div style={{ borderBottom: '1px solid #2a4a2a', margin: '10px 0' }} />
+    );
+
+    const fieldBox = (label: string, val: string | number) => (
+      <Box key={label} mb={1}>
+        <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#4a8a4a' }}>
+          {label}
+        </Box>
+        <Box mt={0.5} p={0.5} style={{
+          backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word', fontSize: '0.9em', color: '#c9a060',
+        }}>
+          {val}
+        </Box>
+      </Box>
+    );
+
+    // gather info blocks from the term's display sections (e.g. charter effects)
+    const infoBlocks: Array<{ label: string; text: string }> = [];
+    for (const input of term.inputs ?? []) {
+      const inp = input as any;
+      if (!inp.content_map || !inp.display_key) continue;
+      const driverVal = (term as any)[inp.display_key] as string | undefined;
+      if (!driverVal) continue;
+      const blocks = inp.content_map[driverVal] as Array<{ label: string; text: string }> | undefined;
+      if (blocks?.length) infoBlocks.push(...blocks);
+    }
+
+    return (
+      <Section
+        title={<span style={{ color: '#4db84d' }}>🔒 CHOSEN CASUS BELLI</span>}
+        fill scrollable
+      >
+        <Box mb={1}>
+          <Box bold style={{ fontSize: '20px', color: '#7fc97f', marginBottom: '6px' }}>
+            {displayName}
+          </Box>
+          <Box style={{ fontSize: '13px', color: '#b1a390', lineHeight: '1.6' }}>
+            {term.desc}
+          </Box>
+          {term.hint && (
+            <Box mt={0.5} style={{ fontSize: '12px', color: '#8a8070', fontStyle: 'italic' }}>
+              {term.hint}
+            </Box>
+          )}
+        </Box>
+
+        {(term.display_fields?.length || term.text || term.target || term.receiver || term.obj_target || term.number || infoBlocks.length) && (
+          <>
+            {divider}
+            {term.display_fields?.length ? (
+              term.display_fields.map((field) => {
+                const val = (term as any)[field.key];
+                if (!val) return null;
+                return fieldBox(field.label.toUpperCase(), val);
+              })
+            ) : (
+              <>
+                {!!term.number && term.number > 0 && fieldBox('NUMBER', term.number)}
+                {!!term.target && fieldBox('TARGET', term.target)}
+                {!!term.receiver && fieldBox('RECIPIENT', term.receiver)}
+                {!!term.obj_target && fieldBox('TERRITORY', term.obj_target)}
+              </>
+            )}
+
+            {!!term.text && !term.display_fields?.some(f => f.key === 'text') && (
+              fieldBox('TEXT', term.text)
+            )}
+
+            {infoBlocks.map((block, i) => (
+              <Box key={i} mb={1}>
+                <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#4a8a4a' }}>
+                  {block.label.toUpperCase()}
+                </Box>
+                <Box mt={0.5} p={0.5} style={{
+                  backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word', fontSize: '0.9em', color: '#c9a060',
+                }}>
+                  {block.text}
+                </Box>
+              </Box>
+            ))}
+          </>
+        )}
+      </Section>
+    );
+  }
+
   // browse view
   if (view === 'browse') {
     // filter out warband-specific terms unless the locked warband matches
@@ -305,43 +399,76 @@ export const CasusBelliPanel = ({
 
                       <span style={{ fontSize: '12px', color: '#b1a390' }}>{proposal.term_desc}</span>
 
-                      {!!proposal.term_text && (
-                        <Box mt={0.5} p={0.5} style={{
-                          backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
-                          wordBreak: 'break-word', fontSize: '0.85em', color: '#c8bfb0',
-                        }}>
-                          {proposal.term_text}
-                        </Box>
-                      )}
                       {(() => {
-                        const displayFields = (proposal as any).display_fields as { key: string; label: string }[] | undefined;
-                        if (displayFields?.length) {
-                          return displayFields.map((field) => {
-                            const val = (proposal as any)[`term_${field.key}`];
-                            if (!val) return null;
-                            return (
-                              <span key={field.key} style={detailStyle}>
-                                {field.label}: {val}
-                              </span>
-                            );
-                          });
+                        const term = availableTerms.find(t => t.type === proposal.term_type);
+                        const displayFields = term?.display_fields;
+                        const textCoveredByFields = displayFields?.some(f => f.key === 'text');
+
+                        const infoBlocks: Array<{ label: string; text: string }> = [];
+                        for (const input of term?.inputs ?? []) {
+                          const inp = input as any;
+                          if (!inp.content_map || !inp.display_key) continue;
+                          const driverVal = (proposal as any)[`term_${inp.display_key}`] as string | undefined;
+                          if (!driverVal) continue;
+                          const blocks = inp.content_map[driverVal] as Array<{ label: string; text: string }> | undefined;
+                          if (blocks?.length) infoBlocks.push(...blocks);
                         }
-                        // a fallback for proposals missing display_fields (e.g. older data)
+
+                        const fieldBox = (label: string, val: string | number, key: string) => (
+                          <Box key={key} mt={0.5}>
+                            <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#7a5525' }}>
+                              {label}
+                            </Box>
+                            <Box mt={0.5} p={0.5} style={{
+                              backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
+                              wordBreak: 'break-word', fontSize: '0.85em', color: '#c9a060',
+                            }}>
+                              {val}
+                            </Box>
+                          </Box>
+                        );
+
                         return (
-                          <>
-                            {!!proposal.term_number && proposal.term_number > 0 && (
-                              <span style={detailStyle}>Number: {proposal.term_number}</span>
+                          <Box mt={0.5}>
+                            {!!proposal.term_text && !textCoveredByFields && (
+                              <Box p={0.5} style={{
+                                backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word', fontSize: '0.85em', color: '#c9a060',
+                              }}>
+                                {proposal.term_text}
+                              </Box>
                             )}
-                            {!!proposal.term_target && (
-                              <span style={detailStyle}>Target: {proposal.term_target}</span>
+
+                            {displayFields?.length ? (
+                              displayFields.map((field) => {
+                                const val = (proposal as any)[`term_${field.key}`];
+                                if (!val) return null;
+                                return fieldBox(field.label.toUpperCase(), val, field.key);
+                              })
+                            ) : (
+                              // fallback for proposals with no term definition available
+                              <>
+                                {!!proposal.term_number && proposal.term_number > 0 && fieldBox('NUMBER', proposal.term_number, 'number')}
+                                {!!proposal.term_target && fieldBox('TARGET', proposal.term_target, 'target')}
+                                {!!proposal.term_receiver && fieldBox('RECIPIENT', proposal.term_receiver, 'receiver')}
+                                {!!proposal.term_obj_target && fieldBox('TERRITORY', proposal.term_obj_target, 'obj_target')}
+                              </>
                             )}
-                            {!!proposal.term_receiver && (
-                              <span style={detailStyle}>Recipient: {proposal.term_receiver}</span>
-                            )}
-                            {!!proposal.term_obj_target && (
-                              <span style={detailStyle}>Territory: {proposal.term_obj_target}</span>
-                            )}
-                          </>
+
+                            {infoBlocks.map((block, i) => (
+                              <Box key={i} mt={0.5}>
+                                <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#7a5525' }}>
+                                  {block.label.toUpperCase()}
+                                </Box>
+                                <Box mt={0.5} p={0.5} style={{
+                                  backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
+                                  wordBreak: 'break-word', fontSize: '0.85em', color: '#c9a060',
+                                }}>
+                                  {block.text}
+                                </Box>
+                              </Box>
+                            ))}
+                          </Box>
                         );
                       })()}
 

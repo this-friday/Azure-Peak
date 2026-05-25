@@ -220,7 +220,6 @@
 	target.key = candidate.key
 	SSjob.AssignRole(target, "Warlord's Lieutenant")
 	target.mind.add_antag_datum(/datum/antagonist/warband/lieutenant)
-	linked_warband.spawned_lieutenants++
 	linked_warband.spawns--
 	linked_warband.busy_summoning = FALSE
 	return TRUE

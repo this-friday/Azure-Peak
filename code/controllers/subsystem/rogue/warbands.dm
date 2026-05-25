@@ -49,9 +49,9 @@ SUBSYSTEM_DEF(warbands)
 	var/list/cached_aspects = list()
 	var/list/cached_classes = list()
 
-	var/list/warband_lookup = list()
-	var/list/subtype_lookup = list()
-	var/list/aspect_lookup = list()	
+	var/list/datum/warbands/warband_lookup = list()
+	var/list/datum/warbands/subtype_lookup = list()
+	var/list/datum/warbands/aspect_lookup = list()	
 
 /datum/controller/subsystem/warbands/New()
 	..()
@@ -402,4 +402,4 @@ SUBSYSTEM_DEF(warbands)
 	for(var/i = 1 to max_unassigned_cache)
 		var/mob/living/carbon/human/species/human/northern/goon/cached_grunt = new()
 		unassigned_mob_cache += cached_grunt
-		cached_grunt.ai_controller?.set_ai_status(AI_STATUS_OFF)
+		cached_grunt?.ai_controller?.set_ai_status(AI_STATUS_OFF)

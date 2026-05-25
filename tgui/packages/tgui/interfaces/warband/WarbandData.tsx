@@ -12,6 +12,11 @@ export const useWarbandData = () => {
   const creation_stage = data?.creation_stage || 1;
   const warlord_spawned = data?.warlord_spawned || false;
   const is_warlord = data?.is_warlord || false;
+  const user_ready = data?.user_ready || false;
+  const user_race = data?.user_race || '';
+  const user_patron = data?.user_patron || '';
+  const user_race_name = data?.user_race_name || '';
+  const user_patron_name = data?.user_patron_name || '';
   
   const time_remaining = data?.time_remaining || 0;
   const timer_active = data?.timer_active || false;
@@ -49,6 +54,11 @@ export const useWarbandData = () => {
     creation_stage,
     warlord_spawned,
     is_warlord,
+    user_ready,
+    user_race,
+    user_patron,
+    user_race_name,
+    user_patron_name,
     time_remaining,
     timer_active,
     allTerms,

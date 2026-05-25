@@ -23,10 +23,15 @@
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 
-
-/datum/warbands/sect/on_warband_confirmed(atom/movable/screen/warband/manager/manager)
+/datum/warbands/sect/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+	var/patron_name = "the chosen patron"
+	if(manager.faithlocks.len)
+		var/patron_type = manager.faithlocks[1]
+		var/datum/patron/temp_patron = new patron_type()
+		patron_name = temp_patron.name
+		qdel(temp_patron)
 	for(var/mob/living/member in manager.lobby_members)
-		to_chat(member, "<span style='color:#e8bf67'>SECT RESTRICTION:</span> Once the Warlord finalizes, all members will be faithlocked to the Warlord's chosen patron.")
+		to_chat(member, "<span style='color:#e8bf67'>SECT RESTRICTION:</span> The Sect is in service to <span style='color:#e8bf67'>[patron_name]</span>. Your character must serve them.")
 		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
 
 /datum/warbands/sect/on_warlord_equip(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
@@ -57,6 +62,10 @@
 
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SUBTYPES
+
+////////////////////////////////////////////////
+//////////////////////////////////////////// TEN
+
 /datum/warbands/subtypes/ten
 	title = "TEN"
 	quote = "''TEN ANGELS descended from on-high, slaughtering heretic and undeath alike. For us, TEN ANGELS sacrificed their holiest of creations.''"
@@ -66,20 +75,78 @@
 	faithlock = list(ALL_DIVINE_PATRONS)
 	combatmusic = list('sound/music/combat_holy.ogg')
 
-// side note while we're here: antagonists that can't be negotiated with are generally off-theme for Warbands
-// if you absolutely need to add one, please leave them at a high rarity
+/datum/warbands/subtypes/ten/build_input_fields()
+	var/datum/treaty/input_field/option_dropdown/patron_field = new()
+	patron_field.key = "patron"
+	patron_field.label = "Chosen Patron"
+	patron_field.placeholder = "Select a Patron..."
+	patron_field.options = list("Astrata", "Noc", "Dendor", "Abyssor", "Ravox", "Necra", "Xylix", "Pestra", "Malum", "Eora")
+	input_fields += patron_field
+
+/datum/warbands/subtypes/ten/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+	var/list/patron_name_to_type = list(
+		"Astrata" = /datum/patron/divine/astrata,
+		"Noc" = /datum/patron/divine/noc,
+		"Dendor" = /datum/patron/divine/dendor,
+		"Abyssor" = /datum/patron/divine/abyssor,
+		"Ravox" = /datum/patron/divine/ravox,
+		"Necra" = /datum/patron/divine/necra,
+		"Xylix" = /datum/patron/divine/xylix,
+		"Pestra" = /datum/patron/divine/pestra,
+		"Malum" = /datum/patron/divine/malum,
+		"Eora" = /datum/patron/divine/eora
+	)
+	var/list/my_inputs = manager.selection_inputs["[src.type]"]
+	var/patron_name = my_inputs ? my_inputs["patron"] : null
+	if(!patron_name || !(patron_name in patron_name_to_type))
+		patron_name = pick(patron_name_to_type) // in absence of a choice (such as during a timeout), we pick a random one
+	manager.faithlocks = list(patron_name_to_type[patron_name])
+
+/datum/warbands/subtypes/ten/on_locks_applied(atom/movable/screen/warband/manager/manager)
+	return TRUE // sect sends its own message in on_warband_confirmed
+
+//////////////////////////////////////////////////////
+//////////////////////////////////////////// ASCENDANT
+
 /datum/warbands/subtypes/ascendant
 	rarity = 2	// an ascendant sect treads on narrative ground covered by a ton of other antagonists, so we'll make them uncommon
 	storytellerlimit = /datum/storyteller/graggar // by well-tread narrative ground i'm referring to a massacre
 	title = "ASCENDANT"
 	treaty_name = "The Holy Ecclesial"
-	quote = "''Shine thy fury upon me, oh Dark Star! I sing thy slaughter's psalm, and thy word is sweet!''"
+	quote = "''Shine thy fury upon me, oh Dark Star! I sing slaughter's psalm, and thy word is sweet!''"
 	quote_followup = "- A posthumous translation of a serial butcher's words - which were otherwise unintelligible."
 	warning = "...of devotion to the Four."
 	warcamp = /datum/map_template/warcamp_standard
 	faithlock = list(ALL_INHUMEN_PATRONS)
 	combatmusic = list('sound/music/combat2.ogg')
 	outskirts_wave = /datum/outskirts_wave/ascendant
+
+/datum/warbands/subtypes/ascendant/build_input_fields()
+	var/datum/treaty/input_field/option_dropdown/patron_field = new()
+	patron_field.key = "patron"
+	patron_field.label = "Chosen Patron"
+	patron_field.placeholder = "Select a Patron..."
+	patron_field.options = list("Zizo", "Graggar", "Matthios", "Baotha")
+	input_fields += patron_field
+
+/datum/warbands/subtypes/ascendant/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+	var/list/patron_name_to_type = list(
+		"Zizo" = /datum/patron/inhumen/zizo,
+		"Graggar" = /datum/patron/inhumen/graggar,
+		"Matthios" = /datum/patron/inhumen/matthios,
+		"Baotha" = /datum/patron/inhumen/baotha
+	)
+	var/list/my_inputs = manager.selection_inputs["[src.type]"]
+	var/patron_name = my_inputs ? my_inputs["patron"] : null
+	if(!patron_name || !(patron_name in patron_name_to_type))
+		patron_name = pick(patron_name_to_type)
+	manager.faithlocks = list(patron_name_to_type[patron_name])
+
+/datum/warbands/subtypes/ascendant/on_locks_applied(atom/movable/screen/warband/manager/manager)
+	return TRUE // sect sends its own message in on_warband_confirmed
+
+///////////////////////////////////////////////////
+//////////////////////////////////////////// PSYDON
 
 /datum/warbands/subtypes/psydon
 	title = "OLD GOD"
@@ -91,6 +158,20 @@
 	warcamp = /datum/map_template/warcamp_standard
 	faithlock = list(/datum/patron/old_god)
 	combatmusic = list('sound/music/combat_inqordinator.ogg')
+
+/datum/warbands/subtypes/psydon/build_input_fields()
+	var/datum/treaty/input_field/option_dropdown/patron_field = new()
+	patron_field.key = "patron"
+	patron_field.label = "Chosen Patron"
+	patron_field.placeholder = "Select a Patron..."
+	patron_field.options = list("Psydon")
+	input_fields += patron_field
+
+/datum/warbands/subtypes/psydon/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+	manager.faithlocks = list(/datum/patron/old_god)
+
+/datum/warbands/subtypes/psydon/on_locks_applied(atom/movable/screen/warband/manager/manager)
+	return TRUE // sect sends its own message in on_warband_confirmed
 
 /datum/warbands/subtypes/psydon/New()
 	..()

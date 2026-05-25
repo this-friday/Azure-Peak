@@ -13,17 +13,18 @@
 	var/list/classes = list()				// all warband classes
 
 	var/datum/warbands/selected_warband
-	var/datum/warbands/selected_subtype
+	var/datum/warbands/subtypes/selected_subtype
 	var/list/datum/warbands/aspects/selected_aspects = list()
 
 	var/list/members = list()				// players in the warband
 	var/list/lobby_members = list()			// players viewing the warband's lobby
+	var/list/ready_members = list()			// list of lobby_members who are readied up | includes their class
 	var/list/allies = list()				// players marked as allies
 	var/list/importantfigures = list()		// important figures in town | used in the 'know thy enemy' list in the creation menu | helps in plotting an initial gimmick
 
 	var/busy_summoning = FALSE				// active while the warband is polling for ghosts
 	var/list/last_action_time = list()		// for rate limits	
-	var/spawned_lieutenants = 0				// how many lieutenants have been spawned
+	var/spawned_lieutenants = 0				// how many lieutenants have joined the lobby
 	var/warband_ID = 0						// identifying number for the warband |
 	var/disorder = 1						// determines how many spawns an aspirant steals during a schism (cumulative) & disables communication options (at 5+) | increased by other antagonists being marked as allies
 	var/aspirant_chance = ASPIRANT_CHANCE	// chance that a lieutenant spawns as an aspirant
@@ -69,6 +70,8 @@
 
 	var/squad_size_bonus = 0			// flat bonus added to base squad size before any multipliers | set by aspects (e.g. CONSCRIPTS)
 	var/marked_assassin_count = 0		// tracks how many grunts have been marked as assassins | (/datum/warbands/aspects/marked)
+	var/list/aspect_intensities = list()	// assoc list: aspect type path (as string) -> selected intensity rank
+	var/list/selection_inputs = list()		// assoc list: type path string -> assoc list of field key -> value, for warbands/subtypes/aspects with inputs
 
 	var/main_color = "#2b292e"
 	var/secondary_color = "#ffcd43"
@@ -203,7 +206,6 @@
 /*
 	collects all race and faith locks from the selected warband, subtype, and aspects
 	stores them in the manager's racelocks and faithlocks lists
-	called long before any characters are actually spawned
 
 */
 /atom/movable/screen/warband/manager/proc/set_race_and_faith_locks()
@@ -238,34 +240,44 @@
 				for(var/faith in aspect.faithlock)
 					faithlocks |= faith
 	
-	// notify lobby members of any restrictions
-	if(racelocks.len || faithlocks.len)
-		var/lock_message = span_bold("<span style='color:#e8bf67'>WARBAND RESTRICTIONS:</span> ")
+	// aspects take priority, then the subtype, then the warband
+	// something returning TRUE prevents the default message from being sent
+	for(var/datum/warbands/aspects/aspect in selected_aspects)
+		if(aspect.on_locks_applied(src))
+			return
+	if(selected_subtype?.on_locks_applied(src))
+		return
+	if(selected_warband?.on_locks_applied(src))
+		return
 		
+	if(!racelocks.len && !faithlocks.len)
+		return
+
+	var/lock_message = span_bold("<span style='color:#e8bf67'>WARBAND RESTRICTIONS:</span> ")
+
+	if(racelocks.len)
+		var/list/race_names = list()
+		for(var/race_type in racelocks)
+			var/datum/species/temp_species = new race_type()
+			race_names += temp_species.name
+			qdel(temp_species)
+		lock_message += "Species limited to: [race_names.Join(", ")]"
+
+	if(faithlocks.len)
 		if(racelocks.len)
-			var/list/race_names = list()
-			for(var/race_type in racelocks)
-				var/datum/species/temp_species = new race_type() // initial doesn't work here
-				race_names += temp_species.name
-				qdel(temp_species)
-			
-			lock_message += "Species limited to: [race_names.Join(", ")]"
-		
-		if(faithlocks.len)
-			if(racelocks.len)
-				lock_message += " | "
-			
-			var/list/faith_names = list()
-			for(var/faith_type in faithlocks)
-				var/datum/patron/temp_patron = new faith_type()
-				faith_names += temp_patron.name
-				qdel(temp_patron)
-			lock_message += "Faith limited to: [faith_names.Join(", ")]"
-		lock_message += ". Your character will be adjusted if necessary."
-		for(var/mob/living/member in lobby_members)
-			to_chat(member, lock_message)
-			member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
-	
+			lock_message += " | "
+		var/list/faith_names = list()
+		for(var/faith_type in faithlocks)
+			var/datum/patron/temp_patron = new faith_type()
+			faith_names += temp_patron.name
+			qdel(temp_patron)
+		lock_message += "Faith limited to: [faith_names.Join(", ")]"
+
+	lock_message += ". Your character will be adjusted if necessary."
+	for(var/mob/living/member in lobby_members)
+		to_chat(member, lock_message)
+		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
+
 	return
 
 //////////////////////////////////////////////////////////////

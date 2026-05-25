@@ -149,6 +149,7 @@
 		adjust_component.toggle_open(src)
 
 /obj/item/clothing/head/roguetown/helmet/heavy/sheriff/prophet
+	armor_class = ARMOR_CLASS_LIGHT // For the Fashion
 	color = "#a3b3c2"
 
 /obj/item/clothing/cloak/matron/prophet

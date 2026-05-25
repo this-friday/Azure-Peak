@@ -17,7 +17,7 @@
 		STATKEY_INT = 3,
 	)
 	subclass_skills = list(
-		/datum/skill/magic/holy = SKILL_LEVEL_MASTER,
+		/datum/skill/magic/holy = SKILL_LEVEL_LEGENDARY,
 		/datum/skill/combat/polearms = SKILL_LEVEL_MASTER,
 		/datum/skill/combat/wrestling = SKILL_LEVEL_MASTER,
 		/datum/skill/combat/unarmed = SKILL_LEVEL_MASTER,
@@ -106,5 +106,4 @@
 		head = /obj/item/clothing/head/roguetown/roguehood/shalal/hijab/prophet
 	var/datum/devotion/C = new /datum/devotion(H, H.patron)
 	C.grant_miracles(H, cleric_tier = CLERIC_T4, passive_gain = CLERIC_REGEN_MAJOR, start_maxed = TRUE)
-	H.mind?.AddSpell(new /obj/effect/proc_holder/spell/invoked/revive)
 	H.mind?.AddSpell(new /obj/effect/proc_holder/spell/invoked/sweep)
