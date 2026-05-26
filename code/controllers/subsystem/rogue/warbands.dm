@@ -386,8 +386,7 @@ SUBSYSTEM_DEF(warbands)
 	for(var/i = 1 to cache_size)
 		var/mob/living/carbon/human/species/human/northern/cached_mob = new()
 		lobby_mob_cache += cached_mob
-		cached_mob.ai_controller?.set_ai_status(AI_STATUS_OFF)
-
+		
 /datum/controller/subsystem/warbands/proc/get_lobby_mob()
 	if(lobby_mob_cache.len)
 		var/mob/living/carbon/human/cached_mob = lobby_mob_cache[1]

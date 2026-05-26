@@ -58,6 +58,7 @@
 
 /datum/warbands/subtypes/raneshen
 	title = "DESERT RIDERS"
+	aspects = list(ASPECT_CAVALRY)
 	warlordclasses = list(/datum/advclass/mercenary/desert_rider)
 	lieutenantclasses = list(/datum/advclass/mercenary/desert_rider)
 	gruntclasses = list(/datum/advclass/mercenary/desert_rider_sahir, /datum/advclass/mercenary/desert_rider_almah, /datum/advclass/mercenary/desert_rider_zeybek)
@@ -82,6 +83,7 @@
 
 /datum/warbands/subtypes/steppesman
 	title = "STEPPESMEN"
+	aspects = list(ASPECT_CAVALRY)
 	gruntclasses = list(/datum/advclass/mercenary/steppesman)
 	combatmusic = list('sound/music/combat_steppe.ogg')
 
@@ -114,6 +116,7 @@
 
 /datum/warbands/subtypes/vaquero
 	title = "VAQUERO"
+	aspects = list(ASPECT_CAVALRY)
 	treaty_name = "The Posse"
 	gruntclasses = list(/datum/advclass/mercenary/vaquero)
 	combatmusic = list('sound/music/combat_vaquero.ogg')
@@ -422,3 +425,27 @@
 
 	else // if there isn't an available subtype loadout for whatever reason, we just use the grunts from Feud
 		H.equipOutfit(new /datum/outfit/job/roguetown/human/species/human/northern/goon)
+
+/obj/item/clothing/head/roguetown/helmet/kettle/jingasa/npc
+	detail_color = CLOTHING_RED
+
+/obj/item/clothing/suit/roguetown/armor/brigandine/haraate/npc
+	detail_color = CLOTHING_RED
+
+/obj/item/clothing/gloves/roguetown/plate/kote/npc
+	detail_color = CLOTHING_RED
+
+/obj/item/clothing/under/roguetown/heavy_leather_pants/kazengun/npc
+	color = CLOTHING_RED
+
+/obj/item/clothing/shoes/roguetown/boots/leather/reinforced/kazengun/npc
+	detail_color = CLOTHING_RED
+
+/obj/item/clothing/head/roguetown/roguehood/shalal/hijab/npc
+	color = CLOTHING_BLACK
+
+/obj/item/clothing/under/roguetown/trou/leather/pontifex/npc
+	color = CLOTHING_BLACK
+
+/obj/item/clothing/wrists/roguetown/allwrappings/npc
+	color = CLOTHING_BLACK

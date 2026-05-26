@@ -68,6 +68,7 @@
 #define WARBAND_UNTAGGED_SUBTYPES	list()
 
 // ASPECTS
+#define ASPECT_RANDOM			/datum/warbands/aspects/fated_suffering
 #define ASPECT_SURPRISE			/datum/warbands/aspects/surprise
 #define ASPECT_FORT				/datum/warbands/aspects/fort
 #define ASPECT_HOST				/datum/warbands/aspects/extraspawns
@@ -81,12 +82,13 @@
 #define ASPECT_MORALE			/datum/warbands/aspects/morale
 #define ASPECT_WAR				/datum/warbands/aspects/war
 #define ASPECT_SCUM				/datum/warbands/aspects/outlaw
-#define ASPECT_RANDOM			/datum/warbands/aspects/fated_suffering
+#define ASPECT_CAVALRY			/datum/warbands/aspects/cavalry
 // don't forget to add it to the list below, too
 
 #define ASPECTS	 list(ASPECT_FORT, ASPECT_SURPRISE, ASPECT_HOST, ASPECT_SCUM, ASPECT_MARKED, \
 					ASPECT_MORALE, ASPECT_WAR, ASPECT_RANDOM, ASPECT_SPLINTERED, ASPECT_HORDE, \
-					ASPECT_FIGUREHEAD, ASPECT_ENVY, ASPECT_BATTLETESTED, ASPECT_BADSPAWN)
+					ASPECT_FIGUREHEAD, ASPECT_ENVY, ASPECT_BATTLETESTED, ASPECT_BADSPAWN, \
+					ASPECT_CAVALRY)
 
 // TREATIES
 // terms in this list are given to EVERY treaty | exclude unique terms (such as /datum/treaty/terms/unique/wizard)

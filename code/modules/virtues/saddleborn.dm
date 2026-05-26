@@ -108,7 +108,8 @@ GLOBAL_LIST_INIT(virtue_mount_choices_anthrax, (list(
 		the_real_honse = new our_chosen_honse(user.loc, fogbeast_color_choice)
 	else
 		the_real_honse = new our_chosen_honse(user.loc)
-	the_real_honse.AddComponent(/datum/component/precious_creature, user)
+	if(user.mind && user.mind.warband_ID == 0) // warband characters are Evil & Cruel & don't pet their fogbeast | aka: they're not at risk of the mood hit
+		the_real_honse.AddComponent(/datum/component/precious_creature, user)
 	user.saddleborn_mount = WEAKREF(the_real_honse)
 	if(istype(the_real_honse, /mob/living/simple_animal/hostile))
 		var/mob/living/simple_animal/hostile/friendly_horse = the_real_honse

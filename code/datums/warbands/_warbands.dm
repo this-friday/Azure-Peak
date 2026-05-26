@@ -41,6 +41,7 @@
 ////////////////////////																			////////////////////////
 */
 /datum/warbands
+	var/points = -1					// selection cost in the creation menu | -1 by default, so the warband is forced to pick at least 1 drawback at minimum during selection
 	var/title						// name used in the creation menu
 	var/name = "Warband"			// name used outside the creation menu and during desertions
 
@@ -64,7 +65,6 @@
 	var/list/subtypes = list()
 	var/list/aspects = list()
 
-	var/points = -1					// selection cost in the creation menu | -1 by default, so the warband is forced to pick at least 1 drawback at minimum during selection
 	var/list/warlordclasses = list()
 	var/list/lieutenantclasses = list()
 	var/list/gruntclasses = list()
@@ -76,6 +76,7 @@
 	var/subclass_label = "SUBCLASS"
 
 	var/list/input_fields = list()
+	var/max_intensity = 1	// 1 = no intensity scale (just selected/not) | higher values unlock intensity ranks	
 
 /datum/warbands/New()
 	input_fields = list()
@@ -97,7 +98,6 @@
 
 /datum/warbands/aspects
 	var/asclass				// aspects of the same class can't be selected simultaneously (i.e: two map aspects)
-	var/max_intensity = 1	// 1 = no intensity scale (just selected/not) | higher values unlock intensity ranks
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////// WARBAND HOOKS

@@ -10,8 +10,7 @@
 	5 - LOAD CHARACTER			// loads the current character slot
 	6 - STAT WIPE				// performs a full stat & trait wipe on the target mob
 	7 - GIVE TREATY				// hands out a treaty item to a Warlord or Lieutenant on spawn
-	8 - RANDOM CLASSES			// generates 3 random classes for the Wildcard class
-	9 - DETERMINE SQUAD SIZE	// decide the size of a character's NPC squad
+	8 - DETERMINE SQUAD SIZE	// decide the size of a character's NPC squad
 
 */
 
@@ -338,62 +337,3 @@
 		calculated_size *= 2
 
 	user.mind.squad_size = calculated_size
-
-////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// RANDOM CLASSES
-/*
-	the Random Classes proc for the Wildcard Lieutenant Class
-
-*/
-/datum/outfit/job/roguetown/warband/rebellion/lieutenant/wildcard/proc/random_classes()
-	var/list/final_class_list = list()
-	var/list/all_lieutenant_classes = list()
-	var/list/all_warlord_classes = list()
-	var/list/excluded_classes = list(
-		/datum/advclass/warband/rebellion/lieutenant/wildcard,
-		/datum/advclass/warband/mercenary
-	)
-
-	for(var/warband_type in WARBANDS)
-		var/datum/warbands/warband = new warband_type()
-		if(!warband)
-			continue
-
-		for(var/lieutenant_type in warband.lieutenantclasses)
-			var/excluded = FALSE
-			for(var/path in excluded_classes)
-				if(ispath(lieutenant_type, path))
-					excluded = TRUE
-					break
-			if(!excluded)
-				all_lieutenant_classes += new lieutenant_type
-		
-		for(var/warlord_type in warband.warlordclasses)
-			var/excluded = FALSE
-			for(var/path in excluded_classes)
-				if(ispath(warlord_type, path))
-					excluded = TRUE
-					break
-			if(!excluded)
-				all_warlord_classes += new warlord_type
-		
-		qdel(warband)
-
-	// roll 3 classes
-	// 90% chance for a lieutenant class, 10% for a warlord class
-	for(var/i in 1 to 3)
-		if(prob(90))
-			if(all_lieutenant_classes.len)
-				final_class_list += pick(all_lieutenant_classes)
-		else
-			if(all_warlord_classes.len)
-				final_class_list += pick(all_warlord_classes)
-
-	return final_class_list
-
-/datum/outfit/job/roguetown/warband/rebellion/lieutenant/wildcard/pre_equip(mob/living/carbon/human/H)
-	..()
-	var/list/rolled_classes = random_classes()
-	var/datum/advclass/classchoice = input("Choose your class", "WILDCARD") as anything in rolled_classes
-	if(istype(classchoice, /datum/advclass))
-		classchoice.equipme(H)
