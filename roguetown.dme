@@ -1097,6 +1097,7 @@
 #include "code\datums\warbands\aspects\positive\horde.dm"
 #include "code\datums\warbands\aspects\positive\hyperwar.dm"
 #include "code\datums\warbands\aspects\positive\morale.dm"
+#include "code\datums\warbands\aspects\positive\supply.dm"
 #include "code\datums\warbands\aspects\positive\surprise.dm"
 #include "code\datums\warbands\bands\basic.dm"
 #include "code\datums\warbands\bands\mercenary.dm"

@@ -11,7 +11,7 @@
 	max_intensity = 3
 
 /datum/warbands/aspects/marked/get_points_at_intensity(intensity)
-	return 1 + intensity
+	return intensity
 
 /datum/warbands/aspects/marked/on_grunt_spawned(mob/living/carbon/human/grunt, atom/movable/screen/warband/manager/manager)
 	var/max_assassins = manager.aspect_intensities["/datum/warbands/aspects/marked"] || 1

@@ -5,7 +5,7 @@
 	But great men cannot settle. Honor demands apologies to be signed in blood and thousands of cattle to fall before spear-point."
 	warning = "...a foreign Banner on the march towards the capital."
 	combatmusic = list('sound/music/combat_squire.ogg')
-	aspects = list(ASPECT_FORT, ASPECT_SURPRISE, ASPECT_BATTLETESTED, ASPECT_HOST, ASPECT_FIGUREHEAD, ASPECT_SCUM, ASPECT_WAR, ASPECT_ENVY, ASPECT_RANDOM, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED, ASPECT_CAVALRY)
+	aspects = list(ASPECT_FORT, ASPECT_SURPRISE, ASPECT_BATTLETESTED, ASPECT_HOST, ASPECT_FIGUREHEAD, ASPECT_SCUM, ASPECT_WAR, ASPECT_ENVY, ASPECT_RANDOM, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED, ASPECT_CAVALRY, ASPECT_SUPPLIES)
 	spawns = RESPAWNS_MEDIUM
 	warcamp = /datum/map_template/warcamp_standard
 

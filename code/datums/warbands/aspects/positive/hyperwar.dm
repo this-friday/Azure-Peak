@@ -5,7 +5,7 @@
 // storyteller-limited to Ravox & currently only given to Feud
 
 /datum/warbands/aspects/war
-	title = "TOTAL WAR"
+	title = "WAR FOREVER"
 	storytellerlimit = /datum/storyteller/ravox
 	rarity = 2
 	summary = "We arrive with one of the largest armies yet assembled. Proper cohesion, however, is nearly impossible."

@@ -5,7 +5,7 @@
 	warning = "...of single-minded fanaticism and ritual."
 	subtyperequired = TRUE
 	subtypes = list(WARBAND_SECTS)
-	aspects = list(ASPECT_SURPRISE, ASPECT_FORT, ASPECT_HOST, ASPECT_FIGUREHEAD, ASPECT_BATTLETESTED, ASPECT_SCUM, ASPECT_WAR, ASPECT_RANDOM, ASPECT_ENVY, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED)
+	aspects = list(ASPECT_SURPRISE, ASPECT_FORT, ASPECT_HOST, ASPECT_FIGUREHEAD, ASPECT_BATTLETESTED, ASPECT_SCUM, ASPECT_WAR, ASPECT_RANDOM, ASPECT_ENVY, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED, ASPECT_SUPPLIES)
 	spawns = RESPAWNS_MEDIUM
 	combatmusic = list('sound/music/cmode/antag/combat_thewall.ogg')
 
@@ -72,7 +72,6 @@
 	quote_followup = "DAWN: UNDIVIDED - 2:4"
 	warcamp = /datum/map_template/warcamp_standard
 	warning = "...of devotion to the Ten."
-	faithlock = list(ALL_DIVINE_PATRONS)
 	combatmusic = list('sound/music/combat_holy.ogg')
 
 /datum/warbands/subtypes/ten/build_input_fields()
@@ -117,7 +116,6 @@
 	quote_followup = "- A posthumous translation of a serial butcher's words - which were otherwise unintelligible."
 	warning = "...of devotion to the Four."
 	warcamp = /datum/map_template/warcamp_standard
-	faithlock = list(ALL_INHUMEN_PATRONS)
 	combatmusic = list('sound/music/combat2.ogg')
 	outskirts_wave = /datum/outskirts_wave/ascendant
 
@@ -156,7 +154,6 @@
 	quote_followup = "- Excerpt from The Apostate, Unknown Author"
 	warning = "...of devotion to the Old God."
 	warcamp = /datum/map_template/warcamp_standard
-	faithlock = list(/datum/patron/old_god)
 	combatmusic = list('sound/music/combat_inqordinator.ogg')
 
 /datum/warbands/subtypes/psydon/build_input_fields()

@@ -675,7 +675,11 @@ export const CreationTab = ({
                         )}
                         <ExpandedPanel
                           desc={aspect.desc}
-                          inputs={aspect.inputs}
+                          inputs={
+                            aspect.inputs?.length === (aspect.max_intensity ?? 1) // when an aspect has as many Inputs as it has Intensity Stages, we progressively reveal the inputs with each stage
+                              ? aspect.inputs.slice(0, rank)
+                              : aspect.inputs
+                          }
                           inputState={selectionInputStates[aspect.type] ?? {}}
                           onInputChange={(key, val) => handleSelectionInputChange(aspect.type, key, val)}
                           isSelected={isSelected}

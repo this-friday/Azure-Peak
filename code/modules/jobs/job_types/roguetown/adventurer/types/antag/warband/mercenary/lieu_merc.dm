@@ -16,7 +16,8 @@
 	H.change_stat(STATKEY_WIL, 3)
 	H.change_stat(STATKEY_STR, 3)
 	H.change_stat(STATKEY_CON, 3)
-	H.change_stat(STATKEY_INT, -2)
+	H.change_stat(STATKEY_INT, -3)
+	H.change_stat(STATKEY_SPD, -3)
 
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
@@ -34,11 +35,11 @@
 /datum/advclass/warband/mercenary/lieutenant/tactician/equipme(mob/living/carbon/human/H, dummy)
 	. = ..()
 	H.mind?.AddSpell(new /obj/effect/proc_holder/spell/invoked/sweep)
-	H.change_stat(STATKEY_LCK, 2)
+	H.change_stat(STATKEY_LCK, 3)
 	H.change_stat(STATKEY_PER, 3)
-	H.change_stat(STATKEY_SPD, -1)
+	H.change_stat(STATKEY_SPD, -2)
 	H.change_stat(STATKEY_STR, -2)
-	H.change_stat(STATKEY_CON, -1)
+	H.change_stat(STATKEY_CON, -2)
 	H.change_stat(STATKEY_INT, 3)
 
 ////////////////////////////////////////////////////////////
@@ -49,15 +50,6 @@
 	name = "Skirmisher"
 	tutorial = "The SKIRMISHER is the epitome of mercenary philosophy: Fight when it's easy, and live long enough to get paid."
 	traits_applied = list(TRAIT_LAWEXPERT, TRAIT_FORMATIONFIGHTER)
-	subclass_stats = list(
-		STATKEY_LCK = 2,
-		STATKEY_WIL = -2,
-		STATKEY_PER = 3,
-		STATKEY_SPD = 3,
-		STATKEY_STR = -3,
-		STATKEY_CON = -2,
-		STATKEY_INT = 1,
-	)
 	subclass_skills = list(
 		/datum/skill/misc/athletics = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/misc/reading = SKILL_LEVEL_NOVICE,		
@@ -66,10 +58,8 @@
 /datum/advclass/warband/mercenary/lieutenant/skirmisher/equipme(mob/living/carbon/human/H, dummy)
 	. = ..()
 	H.mind?.AddSpell(new /obj/effect/proc_holder/spell/invoked/sweep)
-	H.change_stat(STATKEY_LCK, 2)
-	H.change_stat(STATKEY_WIL, -2)
+	H.change_stat(STATKEY_WIL, -3)
 	H.change_stat(STATKEY_PER, 3)
 	H.change_stat(STATKEY_SPD, 3)
-	H.change_stat(STATKEY_STR, -2)
-	H.change_stat(STATKEY_CON, -2)
-	H.change_stat(STATKEY_INT, 1)
+	H.change_stat(STATKEY_STR, -3)
+	H.change_stat(STATKEY_CON, -3)

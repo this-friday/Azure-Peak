@@ -73,8 +73,6 @@
 	var/list/aspect_intensities = list()	// assoc list: aspect type path (as string) -> selected intensity rank
 	var/list/selection_inputs = list()		// assoc list: type path string -> assoc list of field key -> value, for warbands/subtypes/aspects with inputs
 
-	var/main_color = "#2b292e"
-	var/secondary_color = "#ffcd43"
 ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// BASE PROCS
 /*

@@ -23,7 +23,7 @@
 /datum/outfit/job/roguetown/warband/rebellion/grunt/conspirator/pre_equip(mob/living/carbon/human/H)
 	..()
 
-	var/coverclass = list("Servant","Sexton","Guildsman","Farmer","Surgeon")
+	var/coverclass = list("Servant","Sexton","Guildsman","Farmer","Apothecary")
 	var/coverclass_choice = input("Before I was inspired to join the Rebellion, I was an unremarkable...", "I REMEMBER") as anything in coverclass
 	switch(coverclass_choice)
 		if("Servant")

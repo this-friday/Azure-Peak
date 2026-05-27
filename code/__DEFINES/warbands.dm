@@ -83,15 +83,16 @@
 #define ASPECT_WAR				/datum/warbands/aspects/war
 #define ASPECT_SCUM				/datum/warbands/aspects/outlaw
 #define ASPECT_CAVALRY			/datum/warbands/aspects/cavalry
+#define ASPECT_SUPPLIES			/datum/warbands/aspects/supplies
 // don't forget to add it to the list below, too
 
 #define ASPECTS	 list(ASPECT_FORT, ASPECT_SURPRISE, ASPECT_HOST, ASPECT_SCUM, ASPECT_MARKED, \
 					ASPECT_MORALE, ASPECT_WAR, ASPECT_RANDOM, ASPECT_SPLINTERED, ASPECT_HORDE, \
 					ASPECT_FIGUREHEAD, ASPECT_ENVY, ASPECT_BATTLETESTED, ASPECT_BADSPAWN, \
-					ASPECT_CAVALRY)
+					ASPECT_CAVALRY, ASPECT_SUPPLIES)
 
 // TREATIES
-// terms in this list are given to EVERY treaty | exclude unique terms (such as /datum/treaty/terms/unique/wizard)
+// terms in this list are given to EVERY treaty | exclude unique terms from here (such as /datum/treaty/terms/unique/wizard)
 #define WARBAND_TERMS list(/datum/treaty/terms/regime_change, /datum/treaty/terms/codify_law, /datum/treaty/terms/remove_law, /datum/treaty/terms/freeze_laws, \
 						/datum/treaty/terms/abolish_charter, /datum/treaty/terms/seal_grave, /datum/treaty/terms/exile, /datum/treaty/terms/blood_pact, \
 						/datum/treaty/terms/attainder, /datum/treaty/terms/peace, /datum/treaty/terms/freeform)

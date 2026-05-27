@@ -7,7 +7,7 @@
 	summary = "Atop a great tower of stone is a perversion of the Divine Right. Within lies a man without history, without blood, yet as wrathful as any true king."
 	warning = "...of a terrible, twisted citadel carried upon stormclouds. They say it fell as lightning, and stuck itself within the earth."
 	warcamp = /datum/map_template/warcamp_wizard
-	aspects = list(ASPECT_SURPRISE, ASPECT_HOST, ASPECT_ENVY, ASPECT_FIGUREHEAD, ASPECT_SCUM, ASPECT_WAR, ASPECT_BADSPAWN, ASPECT_RANDOM, ASPECT_SPLINTERED, ASPECT_MARKED) // conscripts intentionally absent here
+	aspects = list(ASPECT_SURPRISE, ASPECT_HOST, ASPECT_ENVY, ASPECT_FIGUREHEAD, ASPECT_SCUM, ASPECT_WAR, ASPECT_BADSPAWN, ASPECT_RANDOM, ASPECT_SPLINTERED, ASPECT_MARKED, ASPECT_SUPPLIES) // conscripts intentionally absent here
 	spawns = RESPAWNS_LOW
 	combatmusic = list('sound/music/cmode/nobility/combat_courtmage.ogg')
 

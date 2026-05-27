@@ -30,7 +30,7 @@
 	H.change_stat(STATKEY_LCK, 2)
 	H.change_stat(STATKEY_WIL, 2)
 	H.change_stat(STATKEY_PER, 2)
-	H.change_stat(STATKEY_SPD, 1)
+	H.change_stat(STATKEY_SPD, 2)
 	H.change_stat(STATKEY_STR, 2)
 	H.change_stat(STATKEY_CON, 2)
 	H.change_stat(STATKEY_INT, 2)

@@ -12,6 +12,7 @@
 	subclass_skills = list(
 		/datum/skill/misc/music = SKILL_LEVEL_MASTER,
 		/datum/skill/combat/polearms = SKILL_LEVEL_MASTER,
+		/datum/skill/combat/staves = SKILL_LEVEL_MASTER,
 		/datum/skill/combat/maces = SKILL_LEVEL_EXPERT,
 		/datum/skill/misc/reading = SKILL_LEVEL_MASTER,
 		/datum/skill/combat/swords = SKILL_LEVEL_APPRENTICE,

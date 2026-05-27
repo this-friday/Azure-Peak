@@ -12,6 +12,10 @@
 
 /datum/warbands/aspects/outlaw/on_lieutenant_spawned(mob/living/carbon/human/lieutenant, atom/movable/screen/warband/manager/manager)
 	manager.disorder++
+	addtimer(CALLBACK(src, PROC_REF(spawn_followup), lieutenant, manager), 5 SECONDS)
+
+// separated from the initial spawn proc, to prevent it from blocking the menus from fading out
+/datum/warbands/aspects/outlaw/proc/spawn_followup(mob/living/carbon/human/lieutenant, atom/movable/screen/warband/manager/manager)
 	var/my_crime = tgui_input_text(lieutenant, "What is your crime?", "Crime")
 
 	if(!my_crime)

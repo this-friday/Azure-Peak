@@ -6,7 +6,7 @@
 /datum/warbands/aspects/envy
 	title = "THRONE OF ENVY"
 	summary = "We are unified by circumstance, and circumstance alone."
-	desc = "All Lieutenants are guaranteed to be Aspirants."
+	desc = "All Lieutenants are guaranteed to be Aspirants. If someone was already an Aspirant, they gain an additional objective."
 	warning = "...of an inner retinue of backstabbing scum."
 	points = 1
 
