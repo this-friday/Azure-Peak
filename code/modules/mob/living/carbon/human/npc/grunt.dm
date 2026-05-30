@@ -22,6 +22,9 @@
 	var/saved_shoes
 	var/saved_mouth
 
+/mob/living/carbon/human/species/human/northern/goon/is_hostile_mouseover(mob/viewer)
+	return TRUE
+
 // used when a grunt squad is cleared out
 /mob/living/carbon/human/species/human/northern/goon/proc/abandonevent()
 	if(stat == CONSCIOUS || stat == SOFT_CRIT || stat == UNCONSCIOUS)
@@ -157,7 +160,6 @@
 
 /mob/living/carbon/human/species/human/northern/goon/after_creation()
 	..()
-	AddComponent(/datum/component/ai_aggro_system)
 	job = "Goon"
 	ADD_TRAIT(src, TRAIT_NOMOOD, TRAIT_GENERIC)
 	ADD_TRAIT(src, TRAIT_NOHUNGER, TRAIT_GENERIC)
@@ -186,6 +188,8 @@
 	saved_shoes = shoes?.type
 	for(var/obj/item/equipped_item in get_equipped_items() + held_items)
 		ADD_TRAIT(equipped_item, TRAIT_NODROP, TRAIT_GENERIC)
+	if(!GetComponent(/datum/component/ai_aggro_system)) // here rather than in after_creation
+		AddComponent(/datum/component/ai_aggro_system)
 	return
 
 /mob/living/carbon/human/species/human/northern/goon/proc/apply_appearance()

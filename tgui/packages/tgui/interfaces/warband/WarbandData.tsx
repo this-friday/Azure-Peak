@@ -17,6 +17,10 @@ export const useWarbandData = () => {
   const user_patron = data?.user_patron || '';
   const user_race_name = data?.user_race_name || '';
   const user_patron_name = data?.user_patron_name || '';
+  const manager_faithlocks = data?.manager_faithlocks || [];
+  const manager_faithlock_names = data?.manager_faithlock_names || [];
+  const manager_racelocks = data?.manager_racelocks || [];
+  const manager_racelock_names = data?.manager_racelock_names || [];
   
   const time_remaining = data?.time_remaining || 0;
   const timer_active = data?.timer_active || false;
@@ -59,6 +63,10 @@ export const useWarbandData = () => {
     user_patron,
     user_race_name,
     user_patron_name,
+    manager_faithlocks,
+    manager_faithlock_names,
+    manager_racelocks,
+    manager_racelock_names,
     time_remaining,
     timer_active,
     allTerms,

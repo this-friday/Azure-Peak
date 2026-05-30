@@ -19,7 +19,7 @@
 
 	// note: this draws from the ENTIRE pool of aspects, not just those that are ordinarily assigned to the warband's current selections
 	var/list/available = list()
-	for(var/datum/warbands/aspects/candidate in manager.aspects)
+	for(var/datum/warbands/aspects/candidate in SSwarbands.cached_aspects)
 		if(istype(candidate, /datum/warbands/aspects/fated_suffering))
 			continue
 		if(candidate.points <= 0)

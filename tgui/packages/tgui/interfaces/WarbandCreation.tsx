@@ -35,6 +35,10 @@ export const WarbandCreation = () => {
     user_patron,
     user_race_name,
     user_patron_name,
+    manager_faithlocks,
+    manager_faithlock_names,
+    manager_racelocks,
+    manager_racelock_names,
   } = useWarbandData();
 
   const {
@@ -201,6 +205,10 @@ export const WarbandCreation = () => {
             selectedAspectTypes={selectedAspects.map(a => a.type)}
             selectedClassType={selectedClass?.type}
             selectedSubclassType={selectedSubclass?.type}
+            managerFaithlocks={manager_faithlocks}
+            managerFaithNames={manager_faithlock_names}
+            managerRacelocks={manager_racelocks}
+            managerRaceNames={manager_racelock_names}
           />
         )}
       </Window.Content>

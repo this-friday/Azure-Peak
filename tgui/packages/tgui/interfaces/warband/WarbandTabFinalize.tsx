@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Button, Section, Stack } from 'tgui-core/components';
 
-import { AspectType, ClassType, NobleType, SubType, WarbandDatumBase, WarbandType } from './WarbandTypes';
+import { AspectType, ClassType, NobleType, SubType, WarbandType } from './WarbandTypes';
 
 type FinalizeTabProps = {
   selectedWarband: WarbandType | null;
@@ -27,6 +27,10 @@ type FinalizeTabProps = {
   selectedAspectTypes?: string[];
   selectedClassType?: string;
   selectedSubclassType?: string;
+  managerFaithlocks?: string[];
+  managerFaithNames?: string[];
+  managerRacelocks?: string[];
+  managerRaceNames?: string[];
 };
 
 export const FinalizeTab = ({
@@ -53,6 +57,10 @@ export const FinalizeTab = ({
   selectedAspectTypes = [],
   selectedClassType,
   selectedSubclassType,
+  managerFaithlocks = [],
+  managerFaithNames = [],
+  managerRacelocks = [],
+  managerRaceNames = [],
 }: FinalizeTabProps) => {
 
   const [lockWarnings, setLockWarnings] = useState<string[]>([]);
@@ -73,19 +81,17 @@ export const FinalizeTab = ({
 
   const buildLockWarnings = (): string[] => {
     const warnings: string[] = [];
-    const itemsToCheck = ([
-      selectedWarband,
-      selectedSubtype,
-      ...selectedAspects,
-    ] as (WarbandDatumBase | null)[]).filter((item): item is WarbandDatumBase => item !== null);
 
-    for (const item of itemsToCheck) {
-      if ((item.racelock?.length ?? 0) > 0 && userRace && !item.racelock!.some(r => r === userRace)) {
-        warnings.push(`Your race (${userRaceName}) does not meet ${item.title}'s race requirement. Required: ${item.racelock_names?.join(', ')}.`);
-      }
-      if ((item.faithlock?.length ?? 0) > 0 && userPatron && !item.faithlock!.some(f => f === userPatron)) {
-        warnings.push(`Your patron (${userPatronName}) does not meet ${item.title}'s faith requirement. Required: ${item.faithlock_names?.join(', ')}.`);
-      }
+    if (managerFaithlocks.length > 0 && userPatron && !managerFaithlocks.some(f => f === userPatron)) {
+      warnings.push(
+        `Your patron (${userPatronName}) does not meet the warband's faith requirement. Required: ${managerFaithNames.join(', ') || 'unknown'}.`
+      );
+    }
+
+    if (managerRacelocks.length > 0 && userRace && !managerRacelocks.some(r => r === userRace)) {
+      warnings.push(
+        `Your race (${userRaceName}) does not meet the warband's race requirement. Required: ${managerRaceNames.join(', ') || 'unknown'}.`
+      );
     }
     return warnings;
   };

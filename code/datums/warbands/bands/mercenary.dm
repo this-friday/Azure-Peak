@@ -401,7 +401,7 @@
 					QDEL_NULL(frills)
 				frills = new /obj/item/organ/frills()
 				frills.set_accessory_type(pick(/datum/sprite_accessory/frills/simple, /datum/sprite_accessory/frills/short, /datum/sprite_accessory/frills/aquatic), body_color)
-				frills.accessory_colors = "#4a5e3d"
+				frills.accessory_colors = body_color
 				frills.Insert(H)
 
 				var/obj/item/organ/horns/horns = H.getorgan(/obj/item/organ/horns)

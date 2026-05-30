@@ -176,6 +176,12 @@
 		p.client.screen |= p.client.mouseovertext
 	return TRUE
 
+// when we want to make it absolutely, unambiguously clear that a mob is hostile, we make this return TRUE
+// this makes their name border/shadow appear red
+// exists primarily for human npcs that could be mistaken as players
+/mob/proc/is_hostile_mouseover(mob/viewer)
+	return FALSE
+
 /mob/handle_mouseover(mob/user, params)
 	var/mob/p = user || usr
 	if(QDELETED(src))
@@ -202,7 +208,14 @@
 			if(H.voice_color && H.show_descriptors)
 				if(H.name == H.real_name)
 					mousecolor = "#[H.voice_color]"
-		p.client.mouseovertext.maptext = {"<span style='font-size:8pt;font-family:"Pterra";color:[mousecolor];text-shadow:0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073, 0 0 40px #e60073, 0 0 50px #e60073, 0 0 60px #e60073, 0 0 70px #e60073;' class='center maptext '>[name]"}
+		var/textshadow
+		if(is_hostile_mouseover(src)) // hostile NPCs: red name + a fully red border/drop shadow
+			mousecolor = "#ff4444"
+			textshadow = "0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #e60000, 0 0 40px #e60000, 0 0 50px #c80000, 0 0 60px #c80000, 0 0 70px #c80000"
+		else
+			textshadow = "0 0 10px #fff, 0 0 20px #fff, 0 0 30px #e60073, 0 0 40px #e60073, 0 0 50px #e60073, 0 0 60px #e60073, 0 0 70px #e60073"
+
+		p.client.mouseovertext.maptext = {"<span style='font-size:8pt;font-family:"Pterra";color:[mousecolor];text-shadow:[textshadow];' class='center maptext '>[name]"}
 		p.client.mouseovertext.movethis(PM)
 		p.client.screen |= p.client.mouseovertext
 	return TRUE

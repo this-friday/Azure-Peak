@@ -151,7 +151,7 @@
 
 */
 /atom/movable/screen/warband/manager/proc/choose_map(latespawn = FALSE)
-	var/datum/map_template/warcamp_template_type
+	var/warcamp_template_type
 
 	if(selected_aspects)
 		for(var/datum/warbands/aspects/aspect in selected_aspects)
@@ -163,19 +163,16 @@
 	if(!warcamp_template_type && selected_warband && selected_warband.warcamp)
 		warcamp_template_type = selected_warband.warcamp
 
-	var/warcamp_key = SSwarbands.get_warcamp(warcamp_template_type)
-
-	if(!warcamp_key)
+	if(!warcamp_template_type)
 		return FALSE
-		
-	var/datum/map_template/chosenmap = SSwarbands.get_cached_template(TEMPLATE_WARCAMP, warcamp_key)
-	
+
+	var/datum/map_template/chosenmap = new warcamp_template_type()
+
 	if(!chosenmap)
 		return FALSE
 
 	for(var/obj/effect/landmark/warcamp/warcamp_landmark in GLOB.landmarks_list)
 		var/list/bounds = chosenmap.load(warcamp_landmark.loc, centered = TRUE)
-		
 		if(!bounds)
 			qdel(warcamp_landmark)
 			return FALSE

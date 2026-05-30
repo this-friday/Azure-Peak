@@ -195,7 +195,8 @@
 
 /atom/movable/screen/warband/manager/proc/populate_class_data(list/data)
 	var/list/class_list = list()
-	for(var/datum/advclass/class in classes)
+	for(var/class_type in SSwarbands.cached_classes)
+		var/datum/advclass/class = SSwarbands.cached_classes[class_type]
 		UNTYPED_LIST_ADD(class_list, list(
 			"name" = class.title,
 			"desc" = class.tutorial,
@@ -234,7 +235,7 @@
 	var/list/backend_subtype_list = list()
 	var/list/backend_aspects_list = list()
 
-	for(var/datum/warbands/warband in warbands)
+	for(var/datum/warbands/warband in SSwarbands.cached_warbands)
 		var/list/entry = serialize_warband_datum(warband)
 		entry["subtyperequired"] = warband.subtyperequired
 		entry["subtypes"] = warband.subtypes
@@ -244,14 +245,14 @@
 		entry["subclass_label"] = warband.subclass_label
 		UNTYPED_LIST_ADD(warbands_list, entry)
 
-	for(var/datum/warbands/subtypes/subtype in subtypes)
+	for(var/datum/warbands/subtypes/subtype in SSwarbands.cached_subtypes)
 		var/list/entry = serialize_warband_datum(subtype)
 		entry["aspects"] = subtype.aspects
 		entry["quote"] = subtype.quote
 		entry["quote_followup"] = subtype.quote_followup
 		UNTYPED_LIST_ADD(subtypes_list, entry)
 
-	for(var/datum/warbands/aspects/aspect in aspects)
+	for(var/datum/warbands/aspects/aspect in SSwarbands.cached_aspects)
 		var/list/entry = serialize_warband_datum(aspect)
 		entry["class"] = aspect.asclass
 		entry["max_intensity"] = aspect.max_intensity
@@ -289,6 +290,10 @@
 	data["backend_warband"] = backend_warband_list
 	data["backend_subtype"] = backend_subtype_list
 	data["backend_aspects"] = backend_aspects_list
+	data["manager_faithlocks"] = faithlocks.Copy()
+	data["manager_faithlock_names"] = get_lock_names(faithlocks)
+	data["manager_racelocks"] = racelocks.Copy()
+	data["manager_racelock_names"] = get_lock_names(racelocks)
 
 
 // returns a list of readable names for a list of type paths

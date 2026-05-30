@@ -40,7 +40,7 @@
 	grunts_per_lt = min(grunts_per_lt, GRUNTS_PER_LIEUTENANT_MAX)
 	return 1 + LIEUTENANTS_PER_WARLORD + (LIEUTENANTS_PER_WARLORD * grunts_per_lt)
 
-// when we grab mobs to serve as antagonists at roundstart, soilson & warden have instantaneous, uninterruptable input() dialog boxes that aren't behind class selection (which we CAN interrupt)
+// when we grab mobs to serve as antagonists at roundstart, soilson & warden have instantaneous, uninterruptable input() dialog boxes that aren't behind class selection (which we otherwise COULD interrupt)
 // this gives us runtimes, so we're just excluding them for now
 /datum/round_event_control/antagonist/solo/warlord/New()
 	..()
@@ -65,7 +65,7 @@
 	// in their absence we'll allow anyone
 	var/list/preferred = list()
 	for(var/datum/mind/M in setup_minds)
-		if(get_playerquality(M.key) > 10)
+		if(get_playerquality(M.key) > WARLORD_PQ)
 			preferred += M
 	var/list/warlord_pool = preferred.len ? preferred : setup_minds
 	warlord_mind = pick(warlord_pool)

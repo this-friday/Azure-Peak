@@ -19,11 +19,6 @@ SUBSYSTEM_DEF(warbands)
 	var/list/name_to_faction_cache = list() 	 
 	var/list/job_to_faction_cache = list()
 
-	var/list/cached_warcamp_templates = list()
-	var/list/cached_outskirts_templates = list()
-	var/list/cached_intermission_templates = list()
-	var/templates_initialized = FALSE
-
 	var/classes_initialized = FALSE
 
 	var/list/currentrun_encounters = list()
@@ -61,7 +56,6 @@ SUBSYSTEM_DEF(warbands)
 		territory_factions += new territory_faction_path
 	create_name_cache()
 	initialize_class_cache()
-	initialize_template_cache()
 	initialize_grunt_mob_cache()
 	initialize_lobby_mob_cache()	
 	roundstart_manager = new /atom/movable/screen/warband/manager()
@@ -147,91 +141,20 @@ SUBSYSTEM_DEF(warbands)
 		else
 			process_slowmode()
 
-// if you're adding maps, add warcamps here AND in the proc below this one
-/datum/controller/subsystem/warbands/proc/get_warcamp(datum/map_template/template_type)
-	switch(template_type)
-		if(/datum/map_template/warcamp_standard)
-			return "standard"
-		if(/datum/map_template/warcamp_standard_fort)
-			return "standard_fort"
-		if(/datum/map_template/warcamp_peasant)
-			return "peasant"
-		if(/datum/map_template/warcamp_wizard)
-			return "wizard"
-	return
-	
-/datum/controller/subsystem/warbands/proc/initialize_template_cache()
-	// add warcamps here
-	cached_warcamp_templates["standard"] = new /datum/map_template/warcamp_standard(null, null, TRUE)
-	cached_warcamp_templates["standard_fort"] = new /datum/map_template/warcamp_standard_fort(null, null, TRUE)
-	cached_warcamp_templates["peasant"] = new /datum/map_template/warcamp_peasant(null, null, TRUE)
-	cached_warcamp_templates["wizard"] = new /datum/map_template/warcamp_wizard(null, null, TRUE)
-	
-	// add outskirts templates to these lists
-	var/list/all_outskirts_templates = list(
-		"cave" = list(/datum/map_template/outskirts/cave_a),
-		"mountains" = list(/datum/map_template/outskirts/mountains_a),
-		"coast" = list(/datum/map_template/outskirts/coast_a),
-		"woods" = list(/datum/map_template/outskirts/river_a),
-		"bog" = list(/datum/map_template/outskirts/bog_a)
-	)
-
-	// add intermission templates to these lists
-	var/list/all_intermission_templates = list(
-		"cave" = list(/datum/map_template/intermission/cave_a),
-		"mountains" = list(/datum/map_template/intermission/mountains_a),
-		"coast" = list(/datum/map_template/intermission/coast_a),
-		"woods" = list(/datum/map_template/intermission/woods_a),
-		"bog" = list(/datum/map_template/intermission/bog_a)
-	)
-	
-	// randomly pick up to 2 templates per terrain type for outskirts & intermissions
-	// the winners are Actually Cached
-	for(var/terrain_key in all_outskirts_templates)
-		var/list/available_templates = all_outskirts_templates[terrain_key]
-		var/list/chosen_templates = list()
-		var/picks_to_make = min(2, available_templates.len)
-		var/list/shuffled = available_templates.Copy()
-		for(var/i = 1 to picks_to_make)
-			var/chosen = pick(shuffled)
-			chosen_templates += new chosen(cache = TRUE)
-			shuffled -= chosen
-		
-		cached_outskirts_templates[terrain_key] = chosen_templates
-
-	for(var/terrain_key in all_intermission_templates)
-		var/list/available_templates = all_intermission_templates[terrain_key]
-		var/list/chosen_templates = list()
-		var/picks_to_make = min(2, available_templates.len)
-		var/list/shuffled = available_templates.Copy()
-		for(var/i = 1 to picks_to_make)
-			var/chosen = pick(shuffled)
-			chosen_templates += new chosen(cache = TRUE)
-			shuffled -= chosen
-		
-		cached_intermission_templates[terrain_key] = chosen_templates
-	
-	templates_initialized = TRUE
-
-/datum/controller/subsystem/warbands/proc/get_cached_template(template_type, key)
-	var/list/list/cache
+/datum/controller/subsystem/warbands/proc/get_template(template_type, key)
 	switch(template_type)
 		if(TEMPLATE_OUTSKIRTS)
-			cache = cached_outskirts_templates
+			var/list/options = OUTSKIRTS_TEMPLATE_TYPES[key]
+			if(!options)
+				return
+			var/chosen_type = options[rand(1, length(options))]
+			return new chosen_type()
 		if(TEMPLATE_INTERMISSION)
-			cache = cached_intermission_templates
-		if(TEMPLATE_WARCAMP)
-			cache = cached_warcamp_templates
-		else
-			return
-
-	if(!cache || !cache[key])
-		return
-
-	var/entry = cache[key]
-	if(islist(entry))
-		return entry[rand(1, length(entry))]
-	return entry
+			var/list/options = INTERMISSION_TEMPLATE_TYPES[key]
+			if(!options)
+				return
+			var/chosen_type = options[rand(1, length(options))]
+			return new chosen_type()
 
 /datum/controller/subsystem/warbands/proc/process_encounters()
 	var/list/current = currentrun_encounters

@@ -199,7 +199,7 @@
 		to_chat(src, span_userdanger("A path has already been scouted."))
 		return
 
-	var/area/zone = loc.loc
+	var/area/zone = get_area(src)
 
 	var/list/allowed_area_types = list(
 		/area/rogue/under/underdark,
@@ -291,8 +291,8 @@
 				SSwarbands.warband_managers_busy = FALSE
 				return
 
-			var/datum/map_template/chosen_outskirts_map = SSwarbands.get_cached_template(TEMPLATE_OUTSKIRTS, terrain_key)
-			var/datum/map_template/chosen_intermission_map = SSwarbands.get_cached_template(TEMPLATE_INTERMISSION, terrain_key)
+			var/datum/map_template/chosen_outskirts_map = SSwarbands.get_template(TEMPLATE_OUTSKIRTS, terrain_key)
+			var/datum/map_template/chosen_intermission_map = SSwarbands.get_template(TEMPLATE_INTERMISSION, terrain_key)
 
 			if(!chosen_outskirts_map || !chosen_intermission_map)
 				to_chat(src, span_userdanger("Something's wrong. I should attempt this somewhere else."))

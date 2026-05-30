@@ -131,4 +131,8 @@ export type Data = {
   user_patron?: string;
   user_race_name?: string;
   user_patron_name?: string;
+  manager_faithlocks?: string[];
+  manager_faithlock_names?: string[];
+  manager_racelocks?: string[];
+  manager_racelock_names?: string[];
 };

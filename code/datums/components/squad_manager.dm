@@ -31,13 +31,8 @@
 	followers |= new_member	// mark them as an active waypoint follower
 	new_member.squad_leader = parent
 	RegisterSignal(new_member, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(remove_follower))
-
-	var/mob/living/carbon/human/leader = parent
-	var/distance = get_dist(new_member, leader)
-
-	if(distance > 2) // if they're initially far away, we turn on the AI for a brief second so they can get closer
-		new_member.ai_controller?.set_blackboard_key(BB_TRAVEL_DESTINATION, get_turf(leader))
-		new_member.ai_controller?.CancelActions()
+	new_member.ai_controller?.CancelActions()
+	new_member.ai_controller?.set_ai_status(AI_STATUS_OFF)
 
 	return
 
@@ -51,7 +46,6 @@
 	UnregisterSignal(member, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(remove_follower))
 	member.ai_controller?.clear_blackboard_key(BB_TRAVEL_DESTINATION)
 	member.ai_controller?.set_ai_status(AI_STATUS_ON)
-	member.ai_controller?.CancelActions()
 
 /datum/component/squad_controller/proc/clear_followers()
 	for(var/mob/living/carbon/human/M in followers)
@@ -71,7 +65,6 @@
 	sorted_followers = sortTim(sorted_followers, GLOBAL_PROC_REF(cmp_dist_to_atom_dsc), leader)
 
 	for(var/mob/living/carbon/human/species/human/northern/goon/goon in sorted_followers)
-		goon.ai_controller?.CancelActions()
 		var/turf/target_waypoint = next_best_waypoint(goon)
 		
 		if(!target_waypoint)

@@ -113,4 +113,7 @@
 
 /datum/component/connect_range/proc/on_moved(atom/movable/movable, atom/old_loc)
 	SIGNAL_HANDLER
+	if(QDELETED(parent)) // there's sometimes a case where our parent vanishes mid-movement, which results in us attempting a runtime-inducing update_signals
+		qdel(src)
+		return
 	update_signals(movable, old_loc)

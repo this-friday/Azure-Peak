@@ -109,7 +109,7 @@
 
 // returns the base squad size
 /datum/warbands/proc/get_base_squad_size(mob/user)
-	return 4
+	return ALLIED_NPC_MINIMUM // 4
 
 // called by set_race_and_faith_locks() after locks are built
 // the standard restriction message fires at the end if nothing returns TRUE

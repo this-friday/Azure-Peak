@@ -14,7 +14,10 @@
 #define WARBAND_NPC_INT 10
 #define WARBAND_NPC_PER 10
 
-// the respawn pool/'tickets' for a warband's Goon NPCs
+// the default squad size for Goons
+#define ALLIED_NPC_MINIMUM 4
+
+// the respawn pool/tickets for a warband's Goon NPCs
 #define WARBAND_BASE_RESPAWNS 400 // the initial minimum | the final total is combined with another RESPAWNS_ define, based on the chosen Warband
 #define RESPAWNS_MINIMAL 25
 #define RESPAWNS_LOW 50
@@ -23,8 +26,29 @@
 #define RESPAWNS_HORDE 500
 
 // percent chance that a Lieutenant is chosen to be an Aspirant
-// should remain high, as the main balancing factor for warbands is their inclination to Implode & Kill Each Other
-#define ASPIRANT_CHANCE 70
+#define ASPIRANT_CHANCE 65 // should remain high, as the main balancing factor for warbands is their inclination to Implode & Kill Each Other
+
+// we'd like our warlord candidates to present evidence of basic sentience (10+ PQ), as they're gonna have a lot on their plate
+#define WARLORD_PQ 10 // in their absence we'll allow anyone
+
+//////////////////////////////////////////////////////
+///////////////////////////////////////////////// MAPS
+
+#define OUTSKIRTS_TEMPLATE_TYPES list(\
+	"cave"		= list(/datum/map_template/outskirts/cave_a), \
+	"mountains"	= list(/datum/map_template/outskirts/mountains_a), \
+	"coast"		= list(/datum/map_template/outskirts/coast_a), \
+	"woods"		= list(/datum/map_template/outskirts/river_a), \
+	"bog"		= list(/datum/map_template/outskirts/bog_a) \
+)
+
+#define INTERMISSION_TEMPLATE_TYPES list(\
+	"cave"		= list(/datum/map_template/intermission/cave_a), \
+	"mountains"	= list(/datum/map_template/intermission/mountains_a), \
+	"coast"		= list(/datum/map_template/intermission/coast_a), \
+	"woods"		= list(/datum/map_template/intermission/woods_a), \
+	"bog"		= list(/datum/map_template/intermission/bog_a) \
+)
 
 ////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// DATUMS
@@ -65,6 +89,7 @@
 #define WARBAND_SECTS	list(WARBAND_SECT_TEN, WARBAND_SECT_FOUR, WARBAND_SECT_PSYDON)
 
 // SUBTYPES (OTHER)
+// if you're creating an entirely new subtype for something (unrelated to Mercs or Sects, for example) put it in here
 #define WARBAND_UNTAGGED_SUBTYPES	list()
 
 // ASPECTS
@@ -111,4 +136,3 @@
 
 #define TEMPLATE_OUTSKIRTS 1
 #define TEMPLATE_INTERMISSION 2
-#define TEMPLATE_WARCAMP 3

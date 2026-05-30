@@ -7,11 +7,6 @@
 	screen_loc = "7.3,8"
 	var/list/storyinfluence = list()		// storyteller influences | decides what options are available
 
-	var/list/warbands = list()				// all warbands
-	var/list/subtypes = list()				// all subtypes
-	var/list/aspects = list()				// all aspects
-	var/list/classes = list()				// all warband classes
-
 	var/datum/warbands/selected_warband
 	var/datum/warbands/subtypes/selected_subtype
 	var/list/datum/warbands/aspects/selected_aspects = list()
@@ -107,12 +102,6 @@
 /atom/movable/screen/warband/manager/Initialize()
 	..()
 	if(!finalized)
-		warbands = SSwarbands.cached_warbands.Copy()
-		subtypes = SSwarbands.cached_subtypes.Copy()
-		aspects = SSwarbands.cached_aspects.Copy()
-		for(var/class_type in SSwarbands.cached_classes)
-			classes += SSwarbands.cached_classes[class_type]
-		classes = sort_list(classes)
 		storyteller_refresh()
 		figure_refresh()
 

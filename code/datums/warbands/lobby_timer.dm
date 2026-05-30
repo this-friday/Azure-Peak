@@ -86,19 +86,19 @@
 	if(creation_stage == 1)
 		to_chat(warlord, span_warning("Selecting random warband configuration..."))
 		
-		if(!warbands.len)
+		if(!SSwarbands.cached_warbands.len)
 			for(var/mob/living/member in lobby_members)
 				cancel_lobby(member)
 			return
 		
-		var/datum/warbands/random_warband = pick(warbands)
+		var/datum/warbands/random_warband = pick(SSwarbands.cached_warbands)
 		selected_warband = random_warband
 		to_chat(warlord, span_notice("Warband: [random_warband.title]"))
 
 		if(random_warband.subtypes && random_warband.subtypes.len > 0)
 			var/list/available_subtypes = list()
 			var/list/compatible_types = random_warband.subtypes[1]
-			for(var/datum/warbands/subtypes/potential_subtype in subtypes)
+			for(var/datum/warbands/subtypes/potential_subtype in SSwarbands.cached_subtypes)
 				if(potential_subtype.type in compatible_types)
 					available_subtypes += potential_subtype
 
@@ -112,7 +112,7 @@
 		var/list/negative_aspects = list()
 		var/list/positive_aspects = list()
 
-		for(var/datum/warbands/aspects/potential_aspect in aspects)
+		for(var/datum/warbands/aspects/potential_aspect in SSwarbands.cached_aspects)
 			var/is_compatible = random_warband.aspects.Find(potential_aspect.type)
 			if(selected_subtype?.aspects)
 				if(selected_subtype.aspects.Find(potential_aspect.type))
@@ -162,8 +162,8 @@
 	
 	if(creation_stage >= 2)
 		if(!selected_warband)
-			if(warbands.len > 0)
-				selected_warband = pick(warbands)
+			if(SSwarbands.cached_warbands.len > 0)
+				selected_warband = pick(SSwarbands.cached_warbands)
 			else
 				for(var/mob/living/carbon/human/member in lobby_members)
 					cancel_lobby(member)
