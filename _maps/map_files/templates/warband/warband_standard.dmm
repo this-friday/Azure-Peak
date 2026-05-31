@@ -1412,9 +1412,9 @@
 /obj/structure/table/wood{
 	icon_state = "tablewood1"
 	},
-/obj/item/clothing/suit/roguetown/armor/plate/half,
-/obj/item/clothing/suit/roguetown/armor/plate/half,
-/obj/item/clothing/suit/roguetown/armor/plate/half,
+/obj/item/clothing/suit/roguetown/armor/plate/cuirass,
+/obj/item/clothing/suit/roguetown/armor/plate/cuirass,
+/obj/item/clothing/suit/roguetown/armor/plate/cuirass,
 /obj/item/clothing/neck/roguetown/gorget/steel,
 /obj/item/clothing/neck/roguetown/gorget/steel,
 /obj/item/clothing/neck/roguetown/gorget/steel,

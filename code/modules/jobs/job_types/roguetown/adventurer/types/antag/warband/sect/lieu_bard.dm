@@ -5,8 +5,7 @@
 	outfit = /datum/outfit/job/roguetown/warband/sect/lieutenant/versekeeper
 	traits_applied = list(TRAIT_SENTINELOFWITS, TRAIT_DODGEEXPERT, TRAIT_FORMATIONFIGHTER, TRAIT_LAWEXPERT)
 	subclass_stats = list(
-		STATKEY_INT = 7,		
-		STATKEY_SPD = -3,
+		STATKEY_INT = 7,
 		STATKEY_WIL = 6,
 	)
 	subclass_skills = list(

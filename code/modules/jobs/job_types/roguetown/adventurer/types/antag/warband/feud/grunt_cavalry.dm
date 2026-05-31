@@ -4,12 +4,11 @@
 	tutorial = "Together, the RIDER and his war-saiga form a single, inseparable instrument. Skulls shall burst before the man's lance, and formations shall crumble beneath the beast's hooves."
 	traits_applied = list(TRAIT_MEDIUMARMOR, TRAIT_STEELHEARTED)
 	subclass_stats = list(
-		STATKEY_STR = 1,
-		STATKEY_SPD = 1,
-		STATKEY_CON = 2,
+		STATKEY_STR = 3,
+		STATKEY_SPD = -3,
+		STATKEY_CON = 3,
 		STATKEY_WIL = 3,
-		STATKEY_INT = 1,
-		STATKEY_PER = 2,
+		STATKEY_PER = 3,
 	)
 	subclass_skills = list(
 		/datum/skill/misc/riding = SKILL_LEVEL_MASTER,

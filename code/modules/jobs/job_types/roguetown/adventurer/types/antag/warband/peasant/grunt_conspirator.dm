@@ -6,7 +6,7 @@
 	traits_applied = list(TRAIT_DODGEEXPERT, TRAIT_LIGHT_STEP, TRAIT_KEENEARS)
 	subclass_stats = list(
 		STATKEY_SPD = 4,
-		STATKEY_CON = -2,
+		STATKEY_CON = -3,
 		STATKEY_INT = 1,
 	)
 	subclass_skills = list(

@@ -4,9 +4,8 @@
 	tutorial = "The SCOUT relies on a swift pair of legs and keen eyes. Should they find themselves cornered into a proper fight, they'll have hell to pay."
 	traits_applied = list(TRAIT_STEELHEARTED, TRAIT_MEDIUMARMOR, TRAIT_WOODWALKER, TRAIT_LONGSTRIDER, TRAIT_FORMATIONFIGHTER, TRAIT_KEENEARS)
 	subclass_stats = list(
-		STATKEY_SPD = 3,
+		STATKEY_SPD = 4,
 		STATKEY_CON = -4,
-		STATKEY_WIL = 2,
 		STATKEY_PER = 6,
 	)
 	subclass_skills = list(

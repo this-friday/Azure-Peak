@@ -4,7 +4,7 @@
 	tutorial = "Wheresoever the weakest of the Warband's foes lurk, so too shall the STALKER - hidden beneath Noc's cloak with hooked blades at the ready."
 	traits_applied = list(TRAIT_STEELHEARTED, TRAIT_FORMATIONFIGHTER, TRAIT_LIGHT_STEP, TRAIT_DUALWIELDER)
 	subclass_stats = list(
-		STATKEY_STR = -2,
+		STATKEY_STR = -4,
 		STATKEY_SPD = 5,
 		STATKEY_CON = -4,
 		STATKEY_WIL = 3,
@@ -30,8 +30,8 @@
 	outfit = /datum/outfit/job/roguetown/warband/wizard/grunt/stalker
 
 /datum/outfit/job/roguetown/warband/wizard/grunt/stalker/pre_equip(mob/living/carbon/human/H)
-	mask = /obj/item/clothing/head/roguetown/roguehood/shalal/thrall
-	head = /obj/item/clothing/mask/rogue/facemask/goldmask/layman
+	head = /obj/item/clothing/head/roguetown/roguehood/shalal/thrall
+	mask = /obj/item/clothing/mask/rogue/facemask/bronze/classic
 	cloak = /obj/item/clothing/cloak/thrall
 	armor = /obj/item/clothing/suit/roguetown/armor/leather/cuirass/stalker
 	wrists = /obj/item/clothing/wrists/roguetown/bracers/leather/heavy
@@ -43,9 +43,12 @@
 	r_hand = /obj/item/rogueweapon/sword/sabre/hook
 	l_hand = /obj/item/rogueweapon/sword/sabre/hook
 	if(H.mind)
-		H.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/invisibility)
-		H.mind.AddSpell(new	/obj/effect/proc_holder/spell/invoked/invisibility)
-		H.mind.AddSpell(new	/datum/action/cooldown/spell/blink)
+		var/datum/magic_aspect/illusion/illusion = new() // 2 castings of every Illusion spell (currently just Invisibility)
+		var/datum/action/cooldown/spell/blink/blink = new() // 2 castings of Blink	
+		blink.set_bonus_castings(1)			
+		illusion.grant_all_spells(H.mind, bonus_castings = 1)
+		qdel(illusion)
+		H.mind.AddSpell(blink)
 		H.mind.AddSpell(new /datum/action/cooldown/spell/projectile/fetch)
 		H.mind.AddSpell(new	/datum/action/cooldown/spell/nondetection)
 		H.mind.AddSpell(new /datum/action/cooldown/spell/mirror_transform)

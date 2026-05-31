@@ -8,11 +8,11 @@
 		STATKEY_SPD = -1,
 		STATKEY_CON = 2,
 		STATKEY_WIL = 4,
-		STATKEY_INT = -1,
+		STATKEY_INT = -2,
 		STATKEY_PER = 2,
 	)
 	subclass_skills = list(
-		/datum/skill/combat/maces = SKILL_LEVEL_EXPERT,
+		/datum/skill/combat/swords = SKILL_LEVEL_EXPERT,
 		/datum/skill/misc/climbing = SKILL_LEVEL_EXPERT,
 		/datum/skill/craft/carpentry = SKILL_LEVEL_EXPERT,
 		/datum/skill/craft/crafting = SKILL_LEVEL_EXPERT,
@@ -20,7 +20,6 @@
 		/datum/skill/combat/shields = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/misc/athletics = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/combat/polearms = SKILL_LEVEL_APPRENTICE,
-		/datum/skill/combat/swords = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/combat/unarmed = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/craft/alchemy = SKILL_LEVEL_NOVICE,
 		/datum/skill/magic/arcane = SKILL_LEVEL_NOVICE,
@@ -28,20 +27,21 @@
 	)
 
 /datum/outfit/job/roguetown/warband/wizard/grunt/layman/pre_equip(mob/living/carbon/human/H)
-	r_hand = /obj/item/rogueweapon/mace/goden/steel
+	r_hand = /obj/item/rogueweapon/sword/long/broadsword/bronze
 	cloak = /obj/item/clothing/cloak/thrall
 	beltr = /obj/item/reagent_containers/glass/bottle/rogue/manapot
 	belt = /obj/item/storage/belt/rogue/leather/black
 	backl = /obj/item/storage/backpack/rogue/satchel
-	head = /obj/item/clothing/mask/rogue/facemask/goldmask/layman/alt
+	head = /obj/item/clothing/head/roguetown/helmet/bronzegladiator
 	mask = /obj/item/clothing/head/roguetown/roguehood/shalal/thrall
-	armor = /obj/item/clothing/suit/roguetown/armor/plate/half/iron/layman
-	wrists = /obj/item/clothing/wrists/roguetown/bracers/iron/layman
+	armor = /obj/item/clothing/suit/roguetown/armor/plate/full/bronze
+	wrists = /obj/item/clothing/wrists/roguetown/bracers/bronze
 	shirt = /obj/item/clothing/suit/roguetown/shirt/undershirt/priest/thrall
 	pants = /obj/item/clothing/under/roguetown/heavy_leather_pants/bronzeskirt
-	neck = /obj/item/clothing/neck/roguetown/bevor/iron/layman
+	neck = /obj/item/clothing/neck/roguetown/bevor/bronze
 	gloves = /obj/item/clothing/gloves/roguetown/plate/iron/layman
-	shoes = /obj/item/clothing/shoes/roguetown/boots/armor/iron/layman
+	shoes = /obj/item/clothing/shoes/roguetown/boots/armor/bronze
+	id = /obj/item/clothing/neck/roguetown/psicross/noc/bronze
 	backpack_contents = list(
 		/obj/item/flashlight/flare/torch/lantern/prelit = 1,
 		/obj/item/rogueweapon/scabbard/sheath = 1,
@@ -68,44 +68,9 @@
 			if("Haste")
 				H.mind.AddSpell(new /datum/action/cooldown/spell/haste)
 
-/obj/item/clothing/shoes/roguetown/boots/armor/iron/layman
-	desc = ""
-	color = "#f7bf6e"
-
-/obj/item/clothing/mask/rogue/facemask/goldmask/layman
-	name = "layman's mask"
-	color = "#dddddd"
-	armor = ARMOR_PLATE
-	max_integrity = ARMOR_INT_HELMET_IRON
-	alternate_worn_layer = UNDER_CLOAK_LAYER
-	slot_flags = ITEM_SLOT_HEAD	
-	flags_inv = HIDEFACE|HIDESNOUT|HIDEHAIR
-	flags_cover = HEADCOVERSEYES
-	body_parts_covered = HEAD|EARS|HAIR|NOSE|EYES
-
-/obj/item/clothing/mask/rogue/facemask/goldmask/layman/alt
-	color = "#808080"
-
-
-/obj/item/clothing/suit/roguetown/armor/plate/half/iron/layman
-	name = "bronze breastplate"
-	desc = ""
-	color = "#f7bf6e"
-
-/obj/item/clothing/wrists/roguetown/bracers/iron/layman
-	name = "bronze bracers"
-	desc = ""
-	color = "#f7bf6e"
-
 /obj/item/clothing/gloves/roguetown/plate/iron/layman
 	name = "bronze gauntlets"
 	desc = ""
-	color = "#f7bf6e"
-
-/obj/item/clothing/neck/roguetown/bevor/iron/layman
-	name = "bronze bevor"
-	desc = ""
-	alternate_worn_layer = 32
 	color = "#f7bf6e"
 
 /obj/item/clothing/head/roguetown/roguehood/shalal/thrall

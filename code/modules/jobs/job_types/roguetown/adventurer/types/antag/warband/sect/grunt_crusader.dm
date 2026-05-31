@@ -6,7 +6,7 @@
 	traits_applied = list(TRAIT_HEAVYARMOR, TRAIT_STEELHEARTED, TRAIT_FORMATIONFIGHTER)
 	subclass_stats = list(
 		STATKEY_STR = 4,
-		STATKEY_INT = -2,
+		STATKEY_INT = -4,
 		STATKEY_CON = 4,
 		STATKEY_WIL = 4,
 		STATKEY_SPD = -3,

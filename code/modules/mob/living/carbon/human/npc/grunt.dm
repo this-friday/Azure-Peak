@@ -262,6 +262,7 @@
 		H.real_name = pick(world.file2list("strings/rt/names/human/humsoum.txt"))
 	else
 		H.real_name = pick(world.file2list("strings/rt/names/human/humnorm.txt"))
+	H.name = H.real_name
 	H.adjust_skillrank(/datum/skill/combat/polearms, 3, TRUE)
 	H.adjust_skillrank(/datum/skill/combat/staves, 3, TRUE)
 	H.adjust_skillrank(/datum/skill/combat/swords, 3, TRUE)
