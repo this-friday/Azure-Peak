@@ -50,6 +50,33 @@
 		granted += new_spell
 	return granted
 
+// grants EVERY spell an aspect defines (fixed, choice, pointbuy, and every variant)
+// used as a debug proc & a class gimmick in the Sorcerer-King warband (Stalkers, Magi, Warlocks)
+/datum/magic_aspect/proc/grant_all_spells(datum/mind/target, bonus_castings = 0)
+	if(!target)
+		return
+	var/list/all_paths = list()
+	all_paths |= fixed_spells
+	all_paths |= choice_spells
+	all_paths |= pointbuy_spells
+	for(var/variant_name in variants)
+		var/list/swaps = variants[variant_name]
+		for(var/base_path in swaps)
+			if(base_path != VARIANT_ADDITIVE)
+				all_paths |= base_path
+			all_paths |= swaps[base_path] // the replacement / added spell
+	for(var/spell_path in all_paths)
+		if(!spell_path)
+			continue
+		if(target.has_spell(spell_path))
+			continue
+		var/datum/new_spell = new spell_path
+		mark_aspect_spell(new_spell)
+		if(istype(new_spell, /datum/action/cooldown/spell))
+			var/datum/action/cooldown/spell/cooldown_spell = new_spell
+			cooldown_spell.set_bonus_castings(bonus_castings)
+		target.AddSpell(new_spell)
+
 /// Apply a named variant's spell swaps. T4 casters automatically get "mastery".
 /datum/magic_aspect/proc/apply_variant(datum/mind/target, variant_name)
 	if(!variant_name || !length(variants) || !(variant_name in variants))

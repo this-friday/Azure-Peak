@@ -84,6 +84,10 @@
 	/// Projectile spells auto-display from the projectile type.
 	var/displayed_damage = 0
 
+	var/max_castings = 1 // total number of times this spell can be cast before it actually goes on cooldown | 1 = cast once then recharge (default). values beyond 1 are "bonus castings"
+	var/castings_available = 1 // castings currently available to fire
+	var/mutable_appearance/casting_count_overlay // an overlay over the top-right of a spell's icon | displays the count of extra castings, only IF there are extra castings available
+
 	/// The sound played on cast.
 	var/sound = 'sound/magic/whiteflame.ogg'
 
@@ -208,6 +212,8 @@
 		R.icon_state = button_icon_state
 		mob_charge_effect = R
 
+	castings_available = max_castings
+
 	if(!charge_required)
 		return
 	if(charge_time <= 0)
@@ -237,6 +243,13 @@
 
 /datum/action/cooldown/spell/process()
 	if(!currently_charging)
+		// when the recharge timer elapses and we still owe castings, restore one and reset the timer for the next one
+		if(castings_available < max_castings && next_use_time <= world.time)
+			castings_available++
+			if(castings_available < max_castings)
+				next_use_time = world.time + get_adjusted_cooldown() // we're setting next_use_time ourselves rather than calling StartCooldown again, to avoid stacking extra retrigger/CooldownEnded timers
+				START_PROCESSING(SSfastprocess, src) // keep the maptext ticking for the next casting's recharge
+			build_all_button_icons(UPDATE_BUTTON_STATUS)
 		return ..() // Parent handles cooldown icon updates
 
 	if(!owner)
@@ -317,7 +330,48 @@
 	return ..()
 
 /datum/action/cooldown/spell/IsAvailable(feedback = FALSE)
-	return ..() && can_cast_spell(feedback = feedback)
+	if(!can_cast_spell(feedback = feedback))
+		return FALSE
+	if(castings_available > 0 && next_use_time > world.time) // we have a stored casting while the recharge timer is still running
+		// bypasses ONLY the cooldown gate, and preserves every base action check (conscious, hands, etc) by briefly clearing next_use_time
+		var/saved_use_time = next_use_time
+		next_use_time = 0
+		. = ..()
+		next_use_time = saved_use_time
+		return .
+	return ..()
+
+// configures how many bonus castings a spell has | bonus = 0 leaves the default single casting, bonus = 1 means two castings before cooldown, etc.
+/datum/action/cooldown/spell/proc/set_bonus_castings(bonus = 0)
+	max_castings = 1 + max(bonus, 0)
+	castings_available = max_castings
+
+// spend one casting on a successful cast, and start the recharge if a recharge isn't already running
+/datum/action/cooldown/spell/proc/consume_casting()
+	castings_available = max(castings_available - 1, 0)
+	if(next_use_time <= world.time)
+		StartCooldown(get_adjusted_cooldown())
+	else // if a recharge timer is already running, we start_processing again, otherwise the timer's visual gets stuck
+		build_all_button_icons(UPDATE_BUTTON_STATUS)
+		START_PROCESSING(SSfastprocess, src)
+
+// an additional casting-count indicator in the top right of a spell's icon
+// only appears if there's actually more than 1
+/datum/action/cooldown/spell/update_button_status(atom/movable/screen/movable/action_button/current_button, force = FALSE)
+	. = ..()
+	if(casting_count_overlay)
+		current_button.cut_overlay(casting_count_overlay)
+		casting_count_overlay = null
+	if(max_castings <= 1)
+		return
+	var/mutable_appearance/count = mutable_appearance()
+	count.maptext = MAPTEXT("<span style='font-size:6pt;text-align:right'><b>[castings_available]</b></span>")
+	count.maptext_x = 18
+	count.maptext_y = 18
+	count.maptext_width = 14
+	count.maptext_height = 12
+	casting_count_overlay = count
+	current_button.add_overlay(casting_count_overlay)
 
 /datum/action/cooldown/spell/Trigger(trigger_flags, atom/target)
 	// We implement this can_cast_spell check before the parent call of Trigger()
@@ -747,8 +801,8 @@
 		spell_feedback(owner)
 
 	if(!(precast_result & SPELL_NO_IMMEDIATE_COOLDOWN))
-		// The entire spell is done, start the actual cooldown at its adjusted duration
-		StartCooldown(get_adjusted_cooldown())
+		// The entire spell is done. Spend a casting, and start the cooldown at its adjusted duration
+		consume_casting()
 
 	var/spent = 0
 	if(!(precast_result & SPELL_NO_IMMEDIATE_COST))
@@ -1013,8 +1067,11 @@
 	if(owner?.channeling_spell == src && !charged)
 		owner.channeling_spell = null
 	STOP_PROCESSING(SSfastprocess, src)
+	if(castings_available < max_castings) // restart the recharge loop if charging stopped it while a casting was still owed
+		if(next_use_time <= world.time)
+			next_use_time = world.time + get_adjusted_cooldown()
+		START_PROCESSING(SSfastprocess, src)
 	build_all_button_icons(UPDATE_BUTTON_STATUS|UPDATE_BUTTON_BACKGROUND)
-
 	if(!owner)
 		return
 
