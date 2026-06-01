@@ -30,6 +30,7 @@ export const WarbandCreation = () => {
     warlordSelectedProposal, warlordCasusBelli,
     factions,
     backend_warband,
+    bypass_rarity,
     user_ready,
     user_race,
     user_patron,
@@ -52,7 +53,8 @@ export const WarbandCreation = () => {
   
   const { filteredWarbands, filteredSubtypes, filteredAspects, availableClasses, filteredSubclasses } = useWarbandFilters(
     user_role, selectedWarband, selectedSubtype,
-    warbandList, subtypeList, aspectList, classList, storytellersList
+    warbandList, subtypeList, aspectList, classList, storytellersList,
+    bypass_rarity,
   );
 
   const [activeTab, setActiveTab] = useState('creation');

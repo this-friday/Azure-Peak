@@ -14,12 +14,11 @@ const ROLE_COLOR = {
 
 export const WarbandDebug = (props) => {
   const { act, data } = useBackend();
-  const { members = [], active_ckeys = [] } = data as any;
+  const { members = [], active_ckeys = [], bypass_rarity: bypassRarity = false } = data as any;
 
   const [selectedCkey, setSelectedCkey] = useState('');
   const [ckeyFilter, setCkeyFilter] = useState('');
   const [role, setRole] = useState('Grunt');
-  const [bypassRarity, setBypassRarity] = useState(false);
 
   const addedCkeys = new Set(members.map((m) => m.ckey));
   const availableCkeys = active_ckeys.filter((ck) => !addedCkeys.has(ck));
@@ -122,7 +121,7 @@ export const WarbandDebug = (props) => {
               fluid
               icon={bypassRarity ? 'unlock' : 'lock'}
               color={bypassRarity ? 'average' : 'transparent'}
-              onClick={() => setBypassRarity((prev) => !prev)}
+              onClick={() => act('toggle_bypass_rarity')}
               tooltip="When enabled, the created warband ignores storyteller rarity requirements."
             >
               {bypassRarity ? 'RARITY BYPASS: ON' : 'RARITY BYPASS: OFF'}
@@ -136,7 +135,7 @@ export const WarbandDebug = (props) => {
               icon="flag"
               color={canCreate ? 'good' : 'grey'}
               disabled={!canCreate}
-              onClick={() => act('create_warband', { bypass_rarity: bypassRarity })}
+              onClick={() => act('create_warband')}
             >
               Create Warband
             </Button>

@@ -9,6 +9,7 @@
 
 /datum/warband_spawner_ui
 	var/list/members = list()
+	var/bypass_rarity = FALSE
 
 /datum/warband_spawner_ui/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
@@ -25,7 +26,10 @@
 	qdel(src)
 
 /datum/warband_spawner_ui/ui_data(mob/user)
-	return list("members" = members)
+	return list(
+		"members" = members,
+		"bypass_rarity" = bypass_rarity,
+	)
 
 /datum/warband_spawner_ui/ui_static_data(mob/user)
 	var/list/active_ckeys = list()
@@ -55,13 +59,16 @@
 				return TRUE
 			members.Cut(chosen_index, chosen_index + 1)
 
+		if("toggle_bypass_rarity")
+			bypass_rarity = !bypass_rarity
+
 		if("create_warband")
-			if(create_warband(ui.user))
+			if(create_warband(ui.user, bypass_rarity))
 				ui.close()
 
 	return TRUE
 
-/datum/warband_spawner_ui/proc/create_warband(mob/admin_mob)
+/datum/warband_spawner_ui/proc/create_warband(mob/admin_mob, bypass = FALSE)
 	if(SSwarbands.warband_managers_busy)
 		to_chat(admin_mob, span_warning("The Warband subsystem is occupied."))
 		return FALSE // we don't want two being created at once
@@ -100,14 +107,24 @@
 		return FALSE
 
 	var/datum/round_event/antagonist/solo/warlord/event = new()
+	event.bypass_rarity = bypass
 
 	event.process_candidate(warlord_mind, "Warlord", /datum/antagonist/warband/warlord, spawn_loc)
 
 	var/expected_warband_id
+	var/atom/movable/screen/warband/manager/target_manager
 	if(!SSwarbands.roundstart_manager_claimed && SSwarbands.roundstart_manager)
-		expected_warband_id = SSwarbands.roundstart_manager.warband_ID
+		target_manager = SSwarbands.roundstart_manager
+		expected_warband_id = target_manager.warband_ID
 	else
 		expected_warband_id = SSwarbands.next_warband_id
+		for(var/atom/movable/screen/warband/manager/chosen_manager in SSwarbands.warband_managers)
+			if(chosen_manager.warband_ID == expected_warband_id)
+				target_manager = chosen_manager
+				break
+
+	if(bypass && target_manager)
+		target_manager.bypass_rarity = TRUE
 
 	var/lt_num = 1
 	for(var/datum/mind/lt_mind in lieutenant_minds)

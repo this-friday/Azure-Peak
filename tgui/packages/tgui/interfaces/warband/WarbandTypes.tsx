@@ -135,4 +135,5 @@ export type Data = {
   manager_faithlock_names?: string[];
   manager_racelocks?: string[];
   manager_racelock_names?: string[];
+  bypass_rarity?: boolean;
 };

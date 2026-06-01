@@ -50,6 +50,7 @@
 	var/datum/mind/warlord_mind
 	var/list/lieutenant_minds = list()
 	var/list/grunt_minds = list()
+	var/bypass_rarity = FALSE
 
 /datum/round_event/antagonist/solo/warlord/start()
 	if(!setup_minds.len)
@@ -110,3 +111,6 @@
 		var/datum/antagonist/warlord_unit = target_mind.has_antag_datum(datum_path)
 		if(warlord_unit)
 			warlord_unit.unique_number = unique_number
+			
+	if(bypass_rarity && target_mind.warband_manager)
+		target_mind.warband_manager.bypass_rarity = TRUE

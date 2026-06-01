@@ -76,6 +76,8 @@
 	var/datum/storytellerlimit			// required storyteller influence for the class to be available
 	var/rarity							// the required number of storyteller influences before a storyteller-limited class is unlocked
 	var/multiclass_capable = FALSE		// When TRUE, this class appears in the subclass panel rather than the primary class panel for multiclass-enabled warbands
+	var/ignore_locks = FALSE			// class ignores an associated warband's faith/racelocks
+	var/forgoes_subclass = FALSE		// when a class is associated with a warband that requires a multiclass/subclass, this allows them to ignore that
 
 /datum/advclass/New()
 	if(ispath(age_mod) && !istype(age_mod))

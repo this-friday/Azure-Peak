@@ -39,6 +39,7 @@
 	populate_warband_lists(data)
 	populate_class_data(data)
 	populate_terms_data(data)
+	data["bypass_rarity"] = bypass_rarity
 	static_data_set = TRUE
 	return data
 
@@ -281,7 +282,7 @@
 		entry["class"] = selected_aspect.asclass
 		entry["max_intensity"] = selected_aspect.max_intensity
 		entry["intensity_costs"] = selected_aspect.build_intensity_costs()
-		entry["intensity"] = (aspect_intensities[selected_aspect.type] || 1)
+		entry["intensity"] = (aspect_intensities["[selected_aspect.type]"] || 1)
 		UNTYPED_LIST_ADD(backend_aspects_list, entry)
 
 	data["warbands"] = warbands_list

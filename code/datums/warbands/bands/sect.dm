@@ -37,29 +37,6 @@
 /datum/warbands/sect/on_warlord_equip(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
 	warlord.verbs += /mob/living/carbon/human/proc/enlighten
 	
-// narrows the faithlock from the subtype's permitted patrons down to the warlord's specific patron
-// gives them the Enlighten verb, too
-/datum/warbands/sect/on_warlord_spawned(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
-	var/patron_allowed = FALSE
-	if(manager.faithlocks.len)
-		for(var/allowed_patron in manager.faithlocks)
-			if(ispath(warlord.patron.type, allowed_patron))
-				patron_allowed = TRUE
-				break
-
-	if(!patron_allowed && manager.faithlocks.len)
-		var/new_patron = pick(manager.faithlocks)
-		warlord.set_patron(new_patron)
-		to_chat(warlord, span_warning("Your patron has been adjusted to match the sect's requirements."))
-
-	manager.faithlocks = list(warlord.patron.type)
-	var/patron_name = warlord.patron.name
-	for(var/mob/living/member in manager.lobby_members)
-		to_chat(member, span_boldwarning("<span style='color:#e8bf67'>SECT FAITHLOCK APPLIED:</span> All characters are now required to serve <span style='color:#e8bf67'>[patron_name].</span>"))
-		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
-
-
-
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SUBTYPES
 

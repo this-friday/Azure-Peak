@@ -41,6 +41,7 @@
 	var/list/racelocks = list()
 	var/list/faithlocks = list()
 	var/static_data_set = FALSE
+	var/bypass_rarity = FALSE						// if TRUE, the rarity filter is skipped entirely for the warband's creation UI | set by the GM debug panel
 
 	// outskirts variables
 	var/list/incoming_mobs = list()					// this tracks who is attempting to attack the warcamp 	(aka currently in the warband's Intermission map)

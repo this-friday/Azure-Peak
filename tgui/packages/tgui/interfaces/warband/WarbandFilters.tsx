@@ -15,7 +15,8 @@ import { useMemo } from 'react';
 
 import { AspectType, ClassType, StorytellerType, SubType, WarbandType } from './WarbandTypes';
 
-const rarityFilter = (band: any, storytellersList: StorytellerType[]): boolean => {
+const rarityFilter = (band: any, storytellersList: StorytellerType[], bypass: boolean): boolean => {
+  if (bypass) return true;
   if (band.storyinfluence) {
     const matchCount = storytellersList.filter(storyteller => storyteller.type === band.storyinfluence).length;
     return matchCount >= band.rarity;
@@ -31,12 +32,13 @@ export const useWarbandFilters = (
   subtypeList: SubType[],
   aspectList: AspectType[],
   classList: ClassType[],
-  storytellersList: StorytellerType[]
+  storytellersList: StorytellerType[],
+  bypassRarity: boolean = false,
 ) => {
 
   const filteredWarbands = useMemo(() => {
-    return warbandList.filter(warband => rarityFilter(warband, storytellersList));
-  }, [warbandList, storytellersList]);
+    return warbandList.filter(warband => rarityFilter(warband, storytellersList, bypassRarity));
+  }, [warbandList, storytellersList, bypassRarity]);
 
   const filteredSubtypes = useMemo(() => {
     if (!selectedWarband) {
@@ -44,9 +46,9 @@ export const useWarbandFilters = (
     }
     return subtypeList.filter(subtype => {
       const isWarbandCompatible = selectedWarband.subtypes?.[0]?.includes(subtype.type);
-      return isWarbandCompatible && rarityFilter(subtype, storytellersList);
+      return isWarbandCompatible && rarityFilter(subtype, storytellersList, bypassRarity);
     });
-  }, [selectedWarband, subtypeList, storytellersList]);
+  }, [selectedWarband, subtypeList, storytellersList, bypassRarity]);
 
   const filteredAspects = useMemo(() => {
     if (!selectedWarband) {
@@ -60,16 +62,16 @@ export const useWarbandFilters = (
     }
     return aspectList.filter(aspect => {
       const isTypeAllowed = allowedAspectTypes.has(aspect.type);
-      return isTypeAllowed && rarityFilter(aspect, storytellersList);
+      return isTypeAllowed && rarityFilter(aspect, storytellersList, bypassRarity);
     }).sort((a, b) => b.points - a.points);
-  }, [selectedWarband, selectedSubtype, aspectList, storytellersList]);
+  }, [selectedWarband, selectedSubtype, aspectList, storytellersList, bypassRarity]);
 
   const filteredClasses = useMemo(() => {
     if (!selectedWarband) {
       return { warlord: [], lieutenant: [], grunt: [] };
     }
 
-    const filteredRarity = classList.filter(classe => rarityFilter(classe, storytellersList));
+    const filteredRarity = classList.filter(classe => rarityFilter(classe, storytellersList, bypassRarity));
 
     const warbandWarlordClasses = selectedWarband.warlordclasses || [];
     const warbandLieuClasses = selectedWarband.lieuclasses || [];
@@ -88,7 +90,7 @@ export const useWarbandFilters = (
     const gruntClasses = filteredRarity.filter(classe => combinedGruntClasses.has(classe.type));
 
     return { warlord: warlordClasses, lieutenant: lieuClasses, grunt: gruntClasses };
-  }, [selectedWarband, selectedSubtype, classList, storytellersList]);
+  }, [selectedWarband, selectedSubtype, classList, storytellersList, bypassRarity]);
 
   const availableClasses = useMemo(() => {
     if (!user_role) return [];
@@ -106,7 +108,7 @@ export const useWarbandFilters = (
   const filteredSubclasses = useMemo(() => {
     if (!selectedWarband?.multiclass_enabled) return [];
 
-    const filteredRarity = classList.filter(c => rarityFilter(c, storytellersList));
+    const filteredRarity = classList.filter(c => rarityFilter(c, storytellersList, bypassRarity));
 
     const getMulticlasses = (classTypes: string[]) =>
       filteredRarity.filter(c => classTypes.includes(c.type) && c.multiclass_capable);
@@ -141,7 +143,7 @@ export const useWarbandFilters = (
     }
 
     return [];
-  }, [selectedWarband, selectedSubtype, user_role, classList, storytellersList]);
+  }, [selectedWarband, selectedSubtype, user_role, classList, storytellersList, bypassRarity]);
 
   return {
     filteredWarbands,
