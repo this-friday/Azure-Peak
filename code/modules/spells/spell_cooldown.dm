@@ -343,6 +343,9 @@
 
 // configures how many bonus castings a spell has | bonus = 0 leaves the default single casting, bonus = 1 means two castings before cooldown, etc.
 /datum/action/cooldown/spell/proc/set_bonus_castings(bonus = 0)
+	if(bonus > 0)
+		if(istype(src, /datum/action/cooldown/spell/projectile/arcyne_barrage))
+			bonus = 0 // conceptually funny, but unfortunately bonus castings interact with channeled spells in an Odd Way
 	max_castings = 1 + max(bonus, 0)
 	castings_available = max_castings
 

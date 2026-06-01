@@ -41,6 +41,7 @@
 ////////////////////////																			////////////////////////
 */
 /datum/warbands
+	abstract_type = /datum/warbands
 	var/points = -1					// selection cost in the creation menu | -1 by default, so the warband is forced to pick at least 1 drawback at minimum during selection
 	var/title						// name used in the creation menu
 	var/name = "Warband"			// name used outside the creation menu and during desertions
@@ -92,12 +93,14 @@
 	return out
 
 /datum/warbands/subtypes
+	abstract_type = /datum/warbands/subtypes
 	points = 0
-	var/quote				// flavortext sent to all members when the warlord spawns
-	var/quote_followup		// as above
+	var/quote			// flavortext sent to all members when the warlord spawns
+	var/quote_followup	// as above
 
 /datum/warbands/aspects
-	var/asclass				// aspects of the same class can't be selected simultaneously (i.e: two map aspects)
+	abstract_type = /datum/warbands/aspects
+	var/asclass			// aspects of the same class can't be selected simultaneously (i.e: two map aspects)
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////// WARBAND HOOKS

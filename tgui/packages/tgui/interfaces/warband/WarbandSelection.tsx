@@ -82,7 +82,7 @@ export const useWarbandSelection = () => {
   // selection
   const handleWarbandSelect = (warband: WarbandType) => {
     if (lockedWarband) { return; }
-    if (selectedWarband?.title === warband.title) { return; }
+    if (selectedWarband?.type === warband.type) { return; }
     const isSubtypeCompatible = selectedSubtype && warband.subtypes?.[0]?.includes(selectedSubtype.type);
     const compatibleAspects = selectedAspects.filter(aspect => warband.aspects.includes(aspect.type));
     const removedTypes = new Set(selectedAspects.filter(a => !warband.aspects.includes(a.type)).map(a => a.type));
@@ -126,9 +126,9 @@ export const useWarbandSelection = () => {
   };
 
   const handleAspectSelect = (aspect: AspectType) => {
-    const isLocked = lockedAspects.some(a => a.title === aspect.title);
+    const isLocked = lockedAspects.some(a => a.type === aspect.type);
     setSelectedAspects(prevAspects => {
-      const isSelected = prevAspects.some(a => a.title === aspect.title);
+      const isSelected = prevAspects.some(a => a.type === aspect.type);
       if (isLocked && isSelected) {
         return prevAspects;
       }
@@ -136,7 +136,7 @@ export const useWarbandSelection = () => {
         // deselect: clear intensity and input state
         setAspectIntensities(prev => { const next = { ...prev }; delete next[aspect.type]; return next; });
         setSelectionInputStates(prev => { const next = { ...prev }; delete next[aspect.type]; return next; });
-        return prevAspects.filter(a => a.title !== aspect.title);
+        return prevAspects.filter(a => a.type !== aspect.type);
       } else {
         const hasConflict = prevAspects.some(a => // we don't want two aspects of the same class being selected (I.E: two map aspects)
           a.class !== null &&

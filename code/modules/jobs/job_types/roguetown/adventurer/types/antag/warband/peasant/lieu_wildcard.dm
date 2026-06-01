@@ -1,4 +1,4 @@
-// draws from a pool of every lieutenant class from every warband
+// draws from a pool of every lieutenant class (and, rarely, warlord class) from every warband
 // presents 3 options
 /datum/advclass/warband/rebellion/lieutenant/wildcard
 	title = "WILDCARD"
@@ -21,12 +21,8 @@
 		/datum/advclass/warband/rebellion/lieutenant/wildcard,
 		/datum/advclass/warband/mercenary
 	)
-
-	for(var/warband_type in WARBANDS)
-		var/datum/warbands/warband = new warband_type()
-		if(!warband)
-			continue
-
+	
+	for(var/datum/warbands/warband as anything in SSwarbands.cached_warbands)
 		for(var/lieutenant_type in warband.lieutenantclasses)
 			var/excluded = FALSE
 			for(var/path in excluded_classes)
@@ -34,8 +30,10 @@
 					excluded = TRUE
 					break
 			if(!excluded)
-				all_lieutenant_classes += new lieutenant_type
-		
+				var/datum/advclass/cached = SSwarbands.cached_classes[lieutenant_type]
+				if(cached)
+					all_lieutenant_classes |= cached
+
 		for(var/warlord_type in warband.warlordclasses)
 			var/excluded = FALSE
 			for(var/path in excluded_classes)
@@ -43,9 +41,9 @@
 					excluded = TRUE
 					break
 			if(!excluded)
-				all_warlord_classes += new warlord_type
-		
-		qdel(warband)
+				var/datum/advclass/cached = SSwarbands.cached_classes[warlord_type]
+				if(cached)
+					all_warlord_classes |= cached
 
 	// roll 3 classes
 	// 90% chance for a lieutenant class, 10% for a warlord class

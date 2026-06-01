@@ -48,6 +48,8 @@ export type ClassType = {
   slots: number;
   type: string;
   multiclass_capable: boolean;
+  ignore_locks?: boolean;
+  forgoes_subclass?: boolean;
 };
 
 export type StorytellerType = {

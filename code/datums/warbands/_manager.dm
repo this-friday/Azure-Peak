@@ -157,7 +157,12 @@
 	checks for any patron & or faith locks
 	if the given mob doesn't match them, fixes the discrepancy
 */
-/atom/movable/screen/warband/manager/proc/lock_check(mob/living/carbon/human/user)
+/atom/movable/screen/warband/manager/proc/lock_check(mob/living/carbon/human/user, spawning_class_path)
+	var/datum/advclass/warband/class = warband_class_for(spawning_class_path)
+	if(class?.ignore_locks)
+		if(user.patron)
+			user.set_patron(user.patron.type)
+		return
 	if(racelocks && racelocks.len)
 		var/user_species_type = user.dna?.species?.type
 		var/species_allowed = FALSE
@@ -548,3 +553,10 @@
 	if(casus_belli_selection.obj_target)
 		cb_copy.obj_target = casus_belli_selection.obj_target
 	T.active_terms += cb_copy
+
+// returns the advclass for a path
+/atom/movable/screen/warband/manager/proc/warband_class_for(class_path)
+	var/datum/advclass/cached = SSwarbands.cached_classes[class_path]
+	if(istype(cached, /datum/advclass/warband))
+		return cached
+	return

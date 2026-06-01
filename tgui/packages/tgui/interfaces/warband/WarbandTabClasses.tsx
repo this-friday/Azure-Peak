@@ -25,6 +25,7 @@ export const ClassesTab = ({
   act,
   canModify = true,
 }: ClassesTabProps) => {
+  const subclassExempt = !!selectedClass?.forgoes_subclass;
   return (
     <Stack vertical fill>
       <Stack row-Reverse style={{ flex: 1 }}>
@@ -73,7 +74,7 @@ export const ClassesTab = ({
           fill 
           style={{ flex: 1 }}
         >
-          {selectedWarband?.multiclass_enabled && filteredSubclasses.length > 0 ? (
+          {selectedWarband?.multiclass_enabled && !subclassExempt && filteredSubclasses.length > 0 ? (
             <Stack vertical>
               {filteredSubclasses.map((subclass) => {
                 const isSelected = selectedSubclass?.alt_name === subclass.alt_name;
@@ -102,7 +103,9 @@ export const ClassesTab = ({
           ) : (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
               <p style={{ color: '#7a2525ff' }}>
-                {selectedWarband?.multiclass_enabled 
+                {subclassExempt
+                  ? 'THIS CLASS CANNOT MULTICLASS'
+                  : selectedWarband?.multiclass_enabled
                   ? `NO ${(selectedWarband.subclass_label || 'SUBCLASS').toUpperCase()}ES AVAILABLE`
                   : 'UNAVAILABLE FOR THIS WARBAND'}
               </p>

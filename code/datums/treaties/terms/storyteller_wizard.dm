@@ -8,7 +8,7 @@
 /datum/treaty/terms/unique/wizard
 	name = "Acknowledge Superior Wizard"
 	desc = "Admit the arcyne superiority of the SORCERER-KING, henceforth and forever."
-	warbandlock = /datum/warbands/storyteller/wizard
+	warbandlock = /datum/warbands/wizard
 	authorities = list(/datum/job/roguetown/magician)
 	hint = "...every other sentence is about how magnificent some wizard is..."
 	// the wizard has acknowledged that they:

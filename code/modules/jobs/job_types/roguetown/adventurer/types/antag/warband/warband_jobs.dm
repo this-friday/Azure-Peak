@@ -132,7 +132,7 @@
 				shirt = /obj/item/clothing/suit/roguetown/shirt/shortshirt
 				id = /obj/item/clothing/ring/signet
 				shoes = /obj/item/clothing/shoes/roguetown/shortboots
-			else if(should_wear_masc_clothes(H))
+			else
 				pants = /obj/item/clothing/under/roguetown/tights
 				armor = /obj/item/clothing/suit/roguetown/shirt/tunic/noblecoat
 				shirt = /obj/item/clothing/suit/roguetown/shirt/undershirt/lowcut

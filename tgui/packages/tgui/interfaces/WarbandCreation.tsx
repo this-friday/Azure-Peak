@@ -69,7 +69,7 @@ export const WarbandCreation = () => {
   const finalize_disabled =
     pointCounter < 0 || !selectedWarband || !selectedClass ||
     (selectedWarband?.subtyperequired && !selectedSubtype) ||
-    (selectedWarband?.title === "MERCENARY COMPANY" && !selectedSubclass);
+    (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.forgoes_subclass && !selectedSubclass);
 
   const pointsColor = pointCounter > 0 ? '#2ee62eff' : (pointCounter < 0 ? '#FF0000' : '#4b504bff');
   const canFinalize = is_warlord || warlord_spawned;

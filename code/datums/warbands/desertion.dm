@@ -147,7 +147,7 @@
 					if(istype(equipped_item, /obj/item/rogueweapon/woodstaff/implement/grand))
 						extra_item = TRUE
 			if(extra_item == TRUE)
-				new_warband_manager.selected_warband = new /datum/warbands/storyteller/wizard
+				new_warband_manager.selected_warband = new /datum/warbands/wizard
 				to_chat(src, span_boldred("I feel a shift in destiny's tides with my declaration. <span style='color:#801d1d'>The Wandering Tower calls to me.</span>"))
 			else
 				new_warband_manager.selected_warband = mind.warband_manager.selected_warband

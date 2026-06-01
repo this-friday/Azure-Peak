@@ -71,21 +71,21 @@ SUBSYSTEM_DEF(warbands)
 			job_to_faction_cache[faction.job_owner] = faction
 
 /datum/controller/subsystem/warbands/proc/initialize_class_cache()
-	for(var/warband_type in WARBANDS)
-		var/datum/warbands/added_warband = new warband_type() 
-		cached_warbands += added_warband
-		warband_lookup[warband_type] = added_warband
-
-	var/list/all_subtypes = WARBAND_UNTAGGED_SUBTYPES + WARBAND_MERCENARIES + WARBAND_SECTS
-	for(var/sub_type in all_subtypes)
-		var/datum/warbands/subtypes/added_subtype = new sub_type() 
-		cached_subtypes += added_subtype
-		subtype_lookup[sub_type] = added_subtype
-
-	for(var/aspect_type in ASPECTS)
-		var/datum/warbands/added_aspect = new aspect_type() 
-		cached_aspects += added_aspect
-		aspect_lookup[aspect_type] = added_aspect
+	for(var/datum/warbands/band_type as anything in subtypesof(/datum/warbands))
+		if(initial(band_type.abstract_type) == band_type)
+			continue
+		if(ispath(band_type, /datum/warbands/subtypes))
+			var/datum/warbands/subtypes/added_subtype = new band_type()
+			cached_subtypes += added_subtype
+			subtype_lookup[band_type] = added_subtype
+		else if(ispath(band_type, /datum/warbands/aspects))
+			var/datum/warbands/aspects/added_aspect = new band_type()
+			cached_aspects += added_aspect
+			aspect_lookup[band_type] = added_aspect
+		else
+			var/datum/warbands/added_warband = new band_type()
+			cached_warbands += added_warband
+			warband_lookup[band_type] = added_warband
 
 	for(var/datum/warbands/warband in cached_warbands)
 		cache_classes_from_datum(warband)

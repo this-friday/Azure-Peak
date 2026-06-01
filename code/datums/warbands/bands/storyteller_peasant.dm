@@ -1,4 +1,4 @@
-/datum/warbands/storyteller/peasant
+/datum/warbands/peasant
 	storytellerlimit = /datum/storyteller/matthios
 	rarity = 1
 	title = "PEASANT REBELLION"
@@ -21,12 +21,12 @@
 	gruntclasses = list(/datum/advclass/warband/rebellion/grunt/militiaman, 
 						/datum/advclass/warband/rebellion/grunt/conspirator)
 
-/datum/warbands/storyteller/peasant/get_base_squad_size(mob/user)
+/datum/warbands/peasant/get_base_squad_size(mob/user)
 	return 8
 
 ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// NPC OUTFIT
-/datum/warbands/storyteller/peasant/get_grunt_outfit(mob/living/carbon/human/species/human/northern/goon/goon)
+/datum/warbands/peasant/get_grunt_outfit(mob/living/carbon/human/species/human/northern/goon/goon)
 	return /datum/outfit/job/roguetown/human/species/human/northern/goon/peasant
 
 /datum/outfit/job/roguetown/human/species/human/northern/goon/peasant/pre_equip(mob/living/carbon/human/species/human/northern/goon/H)

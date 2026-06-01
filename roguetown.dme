@@ -2070,6 +2070,7 @@
 #include "code\modules\jobs\job_types\roguetown\adventurer\types\antag\warband\mercenary\grunt_merc.dm"
 #include "code\modules\jobs\job_types\roguetown\adventurer\types\antag\warband\mercenary\lieu_merc.dm"
 #include "code\modules\jobs\job_types\roguetown\adventurer\types\antag\warband\mercenary\lord_captain.dm"
+#include "code\modules\jobs\job_types\roguetown\adventurer\types\antag\warband\mercenary\lord_patron.dm"
 #include "code\modules\jobs\job_types\roguetown\adventurer\types\antag\warband\peasant\grunt_conspirator.dm"
 #include "code\modules\jobs\job_types\roguetown\adventurer\types\antag\warband\peasant\grunt_militia.dm"
 #include "code\modules\jobs\job_types\roguetown\adventurer\types\antag\warband\peasant\lieu_firebrand.dm"

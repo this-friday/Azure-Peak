@@ -58,7 +58,7 @@
 /obj/item/treaty/proc/add_unique_terms(atom/movable/screen/warband/manager/warband_manager)
 	var/datum/warbands/warband = warband_manager.selected_warband
 	if(warband)
-		if(istype(warband, /datum/warbands/storyteller/wizard))
+		if(istype(warband, /datum/warbands/wizard))
 			terms += new /datum/treaty/terms/unique/wizard
 
 ////////////////////////////////////////////////////////////

@@ -505,7 +505,7 @@ export const CreationTab = ({
           {filteredWarbands.length > 0 ? (
             <Stack vertical>
               {filteredWarbands.map((warband) => {
-                const isSelected = selectedWarband?.title === warband.title;
+                const isSelected = selectedWarband?.type === warband.type;
                 const isExpanded = expandedSelection === warband.type;
                 const needsExpand = true;
                 return (
@@ -609,7 +609,7 @@ export const CreationTab = ({
           {selectedWarband && filteredAspects.length > 0 ? (
             <Stack vertical>
               {filteredAspects.map((aspect) => {
-                const isSelected = selectedAspects.some((s) => s.title === aspect.title);
+                const isSelected = selectedAspects.some((s) => s.type === aspect.type);
                 const isExpanded = expandedSelection === aspect.type;
                 const rank = aspectIntensities[aspect.type] ?? 1;
                 const currentCost = aspect.intensity_costs?.[rank - 1] ?? aspect.points;

@@ -1,4 +1,4 @@
-/datum/warbands/storyteller/wizard
+/datum/warbands/wizard
 	storytellerlimit = /datum/storyteller/noc
 	rarity = 3
 	title = "SORCERER-KING"
@@ -21,7 +21,7 @@
 
 ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// NPC OUTFIT
-/datum/warbands/storyteller/wizard/get_grunt_outfit(mob/living/carbon/human/species/human/northern/goon/goon)
+/datum/warbands/wizard/get_grunt_outfit(mob/living/carbon/human/species/human/northern/goon/goon)
 	return /datum/outfit/job/roguetown/human/species/human/northern/goon/layman
 
 /datum/outfit/job/roguetown/human/species/human/northern/goon/layman/pre_equip(mob/living/carbon/human/species/human/northern/goon/H)

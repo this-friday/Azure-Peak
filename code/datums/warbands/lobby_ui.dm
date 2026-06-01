@@ -198,6 +198,12 @@
 	var/list/class_list = list()
 	for(var/class_type in SSwarbands.cached_classes)
 		var/datum/advclass/class = SSwarbands.cached_classes[class_type]
+		var/class_ignore_locks = FALSE
+		var/class_ignores_subclass_requirement = FALSE
+		if(istype(class, /datum/advclass/warband))
+			var/datum/advclass/warband/wclass = class
+			class_ignore_locks = wclass.ignore_locks
+			class_ignores_subclass_requirement = wclass.forgoes_subclass
 		UNTYPED_LIST_ADD(class_list, list(
 			"name" = class.title,
 			"desc" = class.tutorial,
@@ -206,7 +212,9 @@
 			"rarity" = class.rarity,
 			"slots" = class.maximum_possible_slots,
 			"type" = class.type,
-			"multiclass_capable" = class.multiclass_capable
+			"multiclass_capable" = class.multiclass_capable,
+			"ignore_locks" = class_ignore_locks,
+			"forgoes_subclass" = class_ignores_subclass_requirement
 		))
 	data["classes"] = class_list
 
@@ -359,7 +367,7 @@
 			if(user in lobby_members)
 				lobby_members -= user
 			load_appearance(user, user)
-			lock_check(user)
+			lock_check(user, class_path)
 			spawn_character(class_path, user, subclass_path, is_leader = 0, is_latespawn = user.mind.warband_latespawn)
 			end_intro(user)
 			return
@@ -402,7 +410,7 @@
 			if(user in lobby_members)
 				lobby_members -= user
 			load_appearance(user, user)
-			lock_check(user)
+			lock_check(user, class_path)
 			selected_warband?.on_warlord_spawned(user, src)
 			selected_subtype?.on_warlord_spawned(user, src)
 			for(var/datum/warbands/aspects/aspect in selected_aspects)
@@ -711,7 +719,7 @@
 		if(member in lobby_members)
 			lobby_members -= member
 		load_appearance(member, member)
-		lock_check(member)
+		lock_check(member, class_path)
 		spawn_character(class_path, member, subclass_path)
 		end_intro(member)
 	addtimer(CALLBACK(src, PROC_REF(finalize)), 30) // separated from the main proc, in case someone unreadies mid-finalization

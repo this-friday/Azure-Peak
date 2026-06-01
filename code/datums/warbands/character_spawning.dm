@@ -26,6 +26,9 @@
 
 */
 /atom/movable/screen/warband/manager/proc/spawn_character(classpath, mob/user, subclasspath, is_leader, is_latespawn = FALSE)
+	var/datum/advclass/warband/class = warband_class_for(classpath)
+	if(class?.forgoes_subclass)
+		subclasspath = null
 	var/datum/advclass/class_path = new classpath()
 	var/datum/advclass/subclass_path = subclasspath ? new subclasspath() : null
 

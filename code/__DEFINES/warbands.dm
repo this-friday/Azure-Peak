@@ -29,7 +29,7 @@
 #define ASPIRANT_CHANCE 65 // should remain high, as the main balancing factor for warbands is their inclination to Implode & Kill Each Other
 
 // we'd like our warlord candidates to present evidence of basic sentience (10+ PQ), as they're gonna have a lot on their plate
-#define WARLORD_PQ 10 // in their absence we'll allow anyone
+#define WARLORD_PQ 10 // in their absence we'll still allow people below the PQ threshold to be a warlord, similar to how it works for Lord/Duke
 
 //////////////////////////////////////////////////////
 ///////////////////////////////////////////////// MAPS
@@ -53,9 +53,30 @@
 ////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// DATUMS
 
-// WARBANDS
-#define WARBANDS 	list(/datum/warbands/standard,  /datum/warbands/mercenary, /datum/warbands/sect, \
-					/datum/warbands/storyteller/peasant, /datum/warbands/storyteller/wizard)
+// ASPECTS
+#define ASPECT_RANDOM			/datum/warbands/aspects/fated_suffering
+#define ASPECT_SURPRISE			/datum/warbands/aspects/surprise
+#define ASPECT_FORT				/datum/warbands/aspects/fort
+#define ASPECT_HOST				/datum/warbands/aspects/extraspawns
+#define ASPECT_FIGUREHEAD		/datum/warbands/aspects/figurehead
+#define ASPECT_ENVY				/datum/warbands/aspects/envy
+#define ASPECT_BADSPAWN			/datum/warbands/aspects/badexit
+#define ASPECT_MARKED			/datum/warbands/aspects/marked
+#define ASPECT_SPLINTERED		/datum/warbands/aspects/splintered
+#define ASPECT_HORDE			/datum/warbands/aspects/horde
+#define ASPECT_BATTLETESTED		/datum/warbands/aspects/battletested
+#define ASPECT_MORALE			/datum/warbands/aspects/morale
+#define ASPECT_WAR				/datum/warbands/aspects/war
+#define ASPECT_SCUM				/datum/warbands/aspects/outlaw
+#define ASPECT_CAVALRY			/datum/warbands/aspects/cavalry
+#define ASPECT_SUPPLIES			/datum/warbands/aspects/supplies
+
+// SUBTYPES (SECTS)
+#define WARBAND_SECT_TEN 		/datum/warbands/subtypes/ten 
+#define WARBAND_SECT_FOUR		/datum/warbands/subtypes/ascendant
+#define WARBAND_SECT_PSYDON		/datum/warbands/subtypes/psydon
+
+#define WARBAND_SECTS list(WARBAND_SECT_TEN, WARBAND_SECT_FOUR, WARBAND_SECT_PSYDON)
 
 // SUBTYPES (MERCENARIES)
 #define WARBAND_MERC_NORTHMEN		/datum/warbands/subtypes/northmen
@@ -77,46 +98,11 @@
 #define WARBAND_MERC_TITHEBOUND 	/datum/warbands/subtypes/tithebound
 
 #define WARBAND_MERCENARIES list(WARBAND_MERC_NORTHMEN, WARBAND_MERC_GRENZEL, WARBAND_MERC_BLACKOAK, WARBAND_MERC_CONDO, \
-                            WARBAND_MERC_DESERTRIDER, WARBAND_MERC_FORLORN, WARBAND_MERC_FREI, WARBAND_MERC_GRUDGE, \
-                            WARBAND_MERC_ROUTIER, WARBAND_MERC_RUMA, WARBAND_MERC_STEPPE, WARBAND_MERC_WARSCHOLAR, \
-                            WARBAND_MERC_VAQUERO, WARBAND_MERC_UNDERDWELLER, WARBAND_MERC_DROW, WARBAND_MERC_HANGYAKU, WARBAND_MERC_TITHEBOUND)
+								WARBAND_MERC_DESERTRIDER, WARBAND_MERC_FORLORN, WARBAND_MERC_FREI, WARBAND_MERC_GRUDGE, \
+								WARBAND_MERC_ROUTIER, WARBAND_MERC_RUMA, WARBAND_MERC_STEPPE, WARBAND_MERC_WARSCHOLAR, \
+								WARBAND_MERC_VAQUERO, WARBAND_MERC_UNDERDWELLER, WARBAND_MERC_DROW, WARBAND_MERC_HANGYAKU, \
+								WARBAND_MERC_TITHEBOUND)
 
-// SUBTYPES (SECTS)
-#define WARBAND_SECT_TEN 		/datum/warbands/subtypes/ten 
-#define WARBAND_SECT_FOUR		/datum/warbands/subtypes/ascendant
-#define WARBAND_SECT_PSYDON		/datum/warbands/subtypes/psydon
-
-#define WARBAND_SECTS	list(WARBAND_SECT_TEN, WARBAND_SECT_FOUR, WARBAND_SECT_PSYDON)
-
-// SUBTYPES (OTHER)
-// if you're creating an entirely new subtype for something (unrelated to Mercs or Sects, for example) put it in here
-#define WARBAND_UNTAGGED_SUBTYPES	list()
-
-// ASPECTS
-#define ASPECT_RANDOM			/datum/warbands/aspects/fated_suffering
-#define ASPECT_SURPRISE			/datum/warbands/aspects/surprise
-#define ASPECT_FORT				/datum/warbands/aspects/fort
-#define ASPECT_HOST				/datum/warbands/aspects/extraspawns
-#define ASPECT_FIGUREHEAD		/datum/warbands/aspects/figurehead
-#define ASPECT_ENVY				/datum/warbands/aspects/envy
-#define ASPECT_BADSPAWN			/datum/warbands/aspects/badexit
-#define ASPECT_MARKED			/datum/warbands/aspects/marked
-#define ASPECT_SPLINTERED		/datum/warbands/aspects/splintered
-#define ASPECT_HORDE			/datum/warbands/aspects/horde
-#define ASPECT_BATTLETESTED		/datum/warbands/aspects/battletested
-#define ASPECT_MORALE			/datum/warbands/aspects/morale
-#define ASPECT_WAR				/datum/warbands/aspects/war
-#define ASPECT_SCUM				/datum/warbands/aspects/outlaw
-#define ASPECT_CAVALRY			/datum/warbands/aspects/cavalry
-#define ASPECT_SUPPLIES			/datum/warbands/aspects/supplies
-// don't forget to add it to the list below, too
-
-#define ASPECTS	 list(ASPECT_FORT, ASPECT_SURPRISE, ASPECT_HOST, ASPECT_SCUM, ASPECT_MARKED, \
-					ASPECT_MORALE, ASPECT_WAR, ASPECT_RANDOM, ASPECT_SPLINTERED, ASPECT_HORDE, \
-					ASPECT_FIGUREHEAD, ASPECT_ENVY, ASPECT_BATTLETESTED, ASPECT_BADSPAWN, \
-					ASPECT_CAVALRY, ASPECT_SUPPLIES)
-
-// TREATIES
 // terms in this list are given to EVERY treaty | exclude unique terms from here (such as /datum/treaty/terms/unique/wizard)
 #define WARBAND_TERMS list(/datum/treaty/terms/regime_change, /datum/treaty/terms/codify_law, /datum/treaty/terms/remove_law, /datum/treaty/terms/freeze_laws, \
 						/datum/treaty/terms/abolish_charter, /datum/treaty/terms/seal_grave, /datum/treaty/terms/exile, /datum/treaty/terms/blood_pact, \

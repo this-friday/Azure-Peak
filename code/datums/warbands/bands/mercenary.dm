@@ -13,13 +13,18 @@
 	multiclass_enabled = TRUE
 	subclass_required = TRUE
 
-	warlordclasses = list(/datum/advclass/warband/mercenary/warlord/captain)
+	warlordclasses = list(/datum/advclass/warband/mercenary/warlord/captain, /datum/advclass/warband/mercenary/warlord/patron)
 	
 	lieutenantclasses = list(/datum/advclass/warband/mercenary/lieutenant/vanguard, 
 							/datum/advclass/warband/mercenary/lieutenant/tactician, 
 							/datum/advclass/warband/mercenary/lieutenant/skirmisher)
 
 	gruntclasses = list(/datum/advclass/warband/mercenary/grunt/merc)
+
+/datum/warbands/standard/get_base_squad_size(mob/user)
+	if(user.job == "Patron")
+		return 6
+	return ..()
 
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SUBTYPES

@@ -80,6 +80,7 @@ export const FinalizeTab = ({
   }, [lockWarnings.length]);
 
   const buildLockWarnings = (): string[] => {
+    if (selectedClass?.ignore_locks) return [];
     const warnings: string[] = [];
 
     if (managerFaithlocks.length > 0 && userPatron && !managerFaithlocks.some(f => f === userPatron)) {
@@ -165,7 +166,7 @@ export const FinalizeTab = ({
     if (!selectedWarband) return "NO WARBAND SELECTED";
     if (selectedWarband?.subtyperequired && !selectedSubtype) return "WARBAND REQUIRES A SELECTED SUBTYPE";
     if (!selectedClass) return "NO CLASS SELECTED";
-    if (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedSubclass) {
+    if (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.forgoes_subclass && !selectedSubclass) {
       return `${(selectedWarband.subclass_label || 'SUBCLASS').toUpperCase()} REQUIRED`;
     }
     return null;
