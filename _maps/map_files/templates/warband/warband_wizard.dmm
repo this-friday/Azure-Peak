@@ -61,7 +61,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "bu" = (
-/obj/machinery/light/rogue/firebowl/standing/blue,
+/obj/machinery/light/rogue/firebowl/standing,
 /turf/open/floor/rogue/tile/harem1,
 /area/rogue/indoors/warcamp/wizard)
 "bD" = (
@@ -71,9 +71,7 @@
 	max_integrity = 2000;
 	name = "reinforced bars"
 	},
-/turf/open/lava/mana{
-	light_outer_range = 8
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "bN" = (
 /obj/structure/fluff/railing/corner/south_west,
@@ -128,7 +126,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "ci" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -179,7 +177,7 @@
 /obj/item/magic/infernal/fang,
 /obj/item/magic/infernal/fang,
 /obj/item/magic/infernal/fang,
-/obj/item/magic/infernal/fang,
+/obj/item/magic/infernal/flame,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "cv" = (
@@ -222,12 +220,6 @@
 	},
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
-"cO" = (
-/obj/item/rope/chain/bindingshackles/t3,
-/obj/item/rope/chain/bindingshackles/t3,
-/obj/structure/closet/crate/chest/neu_iron,
-/turf/open/floor/rogue/ruinedwood/spiral,
-/area/rogue/indoors/warcamp/wizard)
 "de" = (
 /obj/structure/bars/pipe{
 	dir = 9;
@@ -237,7 +229,7 @@
 	dir = 10;
 	pixel_x = 19
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "dh" = (
 /obj/effect/decal/cobbleedge{
@@ -408,7 +400,7 @@
 	max_integrity = 2000;
 	name = "reinforced bars"
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "fL" = (
 /obj/structure/fluff/statue/knight/r,
@@ -447,7 +439,7 @@
 /obj/structure/bars/pipe{
 	pixel_x = 16
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "gw" = (
 /obj/structure/chair/wood/rogue{
@@ -507,8 +499,8 @@
 	dir = 4;
 	icon_state = "borderfall"
 	},
-/obj/machinery/light/rogue/firebowl/standing/blue,
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/firebowl/standing,
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -563,7 +555,7 @@
 /obj/item/natural/cloth,
 /obj/item/natural/cloth,
 /obj/item/natural/cloth,
-/obj/machinery/light/rogue/candle/blue/l,
+/obj/machinery/light/rogue/candle/l,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "iq" = (
@@ -628,7 +620,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "je" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -647,19 +639,17 @@
 	max_integrity = 2000;
 	name = "reinforced bars"
 	},
-/turf/open/lava/mana{
-	light_outer_range = 8
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "jq" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
 /turf/open/floor/rogue/cobble,
 /area/rogue/indoors/warcamp/wizard)
 "jx" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -691,7 +681,7 @@
 /area/rogue/indoors/warcamp/wizard)
 "kc" = (
 /obj/structure/table/wood,
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/carpet/stellar{
 	color = "#A2A2A2"
 	},
@@ -719,7 +709,7 @@
 /area/rogue/indoors/warcamp/wizard)
 "kJ" = (
 /obj/structure/fluff/statue/gargoyle,
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /turf/open/floor/rogue/tile/harem1,
 /area/rogue/indoors/warcamp/wizard)
 "kM" = (
@@ -741,7 +731,7 @@
 /obj/structure/bars/pipe{
 	dir = 4
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "kR" = (
 /obj/structure/fluff/railing/corner/south_west,
@@ -893,7 +883,7 @@
 /turf/open/floor/rogue/cobble,
 /area/rogue/indoors/warcamp/wizard)
 "mR" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	light_outer_range = 8
 	},
 /obj/effect/decal/cobbleedge{
@@ -917,7 +907,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "ni" = (
-/obj/machinery/light/rogue/candle/blue/l{
+/obj/machinery/light/rogue/candle/l{
 	light_outer_range = 8
 	},
 /turf/open/floor/rogue/tile,
@@ -948,7 +938,7 @@
 /obj/structure/bars/pipe{
 	dir = 4
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "nF" = (
 /obj/effect/decal/cobbleedge{
@@ -967,7 +957,7 @@
 /area/rogue/indoors/warcamp/wizard)
 "nI" = (
 /obj/structure/table/wood,
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/rogue/tile,
 /area/rogue/indoors/warcamp/wizard)
 "nK" = (
@@ -976,7 +966,7 @@
 	dir = 2;
 	icon_state = "borderfall"
 	},
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/carpet/stellar{
 	color = "#A2A2A2"
 	},
@@ -1077,7 +1067,7 @@
 /obj/structure/bars/pipe{
 	dir = 4
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "px" = (
 /obj/effect/decal/cobbleedge{
@@ -1166,9 +1156,7 @@
 	max_integrity = 2000;
 	name = "reinforced bars"
 	},
-/turf/open/lava/mana{
-	light_outer_range = 8
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "qD" = (
 /obj/structure/fluff/warband/warband_recruit,
@@ -1192,7 +1180,7 @@
 	max_integrity = 2000;
 	name = "reinforced bars"
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "ra" = (
 /obj/structure/stairs/d{
@@ -1258,7 +1246,7 @@
 /area/rogue/indoors/warcamp/wizard)
 "rC" = (
 /obj/structure/table/wood,
-/obj/machinery/light/rogue/candle/blue/l,
+/obj/machinery/light/rogue/candle/l,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "rD" = (
@@ -1302,8 +1290,8 @@
 /area/rogue/indoors/warcamp/wizard)
 "rX" = (
 /obj/structure/table/wood,
-/obj/item/candle/skull/blue/lit,
-/obj/machinery/light/rogue/candle/blue{
+/obj/item/candle/skull/lit,
+/obj/machinery/light/rogue/candle{
 	light_outer_range = 8
 	},
 /turf/open/floor/rogue/cobble,
@@ -1372,7 +1360,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "sD" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -1392,7 +1380,7 @@
 /turf/open/floor/rogue/tile,
 /area/rogue/indoors/warcamp/wizard)
 "sH" = (
-/obj/machinery/light/rogue/candle/blue/l,
+/obj/machinery/light/rogue/candle/l,
 /turf/open/floor/rogue/herringbone,
 /area/rogue/indoors/warcamp/wizard)
 "sJ" = (
@@ -1424,7 +1412,7 @@
 	dir = 10;
 	pixel_x = 19
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "sU" = (
 /obj/machinery/tanningrack,
@@ -1455,7 +1443,7 @@
 /obj/effect/decal/cobbleedge{
 	dir = 6
 	},
-/obj/machinery/light/rogue/firebowl/standing/blue,
+/obj/machinery/light/rogue/firebowl/standing,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "tL" = (
@@ -1473,7 +1461,7 @@
 /turf/open/floor/rogue/tile,
 /area/rogue/indoors/warcamp/wizard)
 "tQ" = (
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /obj/effect/decal/cobbleedge{
 	dir = 10
 	},
@@ -1567,7 +1555,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "uL" = (
-/obj/machinery/light/rogue/firebowl/standing/blue,
+/obj/machinery/light/rogue/firebowl/standing,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "uM" = (
@@ -1616,7 +1604,7 @@
 /obj/item/roguegear,
 /obj/item/ingot/steel,
 /obj/item/ingot/steel,
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "va" = (
@@ -1626,7 +1614,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "vb" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -1698,7 +1686,7 @@
 /turf/closed/wall/mineral/rogue/stone,
 /area/rogue/indoors/warcamp/wizard)
 "wI" = (
-/obj/machinery/light/rogue/candle/blue/r,
+/obj/machinery/light/rogue/candle/r,
 /turf/open/floor/rogue/herringbone,
 /area/rogue/indoors/warcamp/wizard)
 "wJ" = (
@@ -1714,7 +1702,7 @@
 	icon_state = "shelf_biggest";
 	pixel_y = 0
 	},
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "wM" = (
@@ -1755,7 +1743,7 @@
 	dir = 4;
 	pixel_y = 32
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "wZ" = (
 /obj/structure/table/wood{
@@ -1770,7 +1758,7 @@
 	dir = 4;
 	icon_state = "borderfall"
 	},
-/obj/machinery/light/rogue/firebowl/standing/blue,
+/obj/machinery/light/rogue/firebowl/standing,
 /turf/open/floor/rogue/tile,
 /area/rogue/indoors/warcamp/wizard)
 "xf" = (
@@ -1800,7 +1788,7 @@
 	dir = 2;
 	icon_state = "longtable_mid"
 	},
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/carpet/stellar{
 	color = "#A2A2A2"
 	},
@@ -1892,7 +1880,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "yJ" = (
-/obj/machinery/light/rogue/candle/blue/l{
+/obj/machinery/light/rogue/candle/l{
 	light_outer_range = 8
 	},
 /obj/effect/decal/cobbleedge{
@@ -1946,7 +1934,7 @@
 /obj/item/roguegear,
 /obj/item/ingot/steel,
 /obj/item/ingot/steel,
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -1992,7 +1980,7 @@
 	dir = 10;
 	icon_state = "cobbleedge-w"
 	},
-/obj/machinery/light/rogue/candle/blue/l,
+/obj/machinery/light/rogue/candle/l,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "zJ" = (
@@ -2011,7 +1999,7 @@
 	dir = 1;
 	icon_state = "borderfall"
 	},
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Am" = (
@@ -2049,7 +2037,7 @@
 	},
 /area/rogue/indoors/warcamp/wizard)
 "AO" = (
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -2057,7 +2045,7 @@
 /area/rogue/indoors/warcamp/wizard)
 "AP" = (
 /obj/structure/table/wood,
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = -32;
 	light_outer_range = 8
 	},
@@ -2105,14 +2093,14 @@
 	dir = 1;
 	icon_state = "borderfall"
 	},
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/carpet/stellar{
 	color = "#A2A2A2"
 	},
 /area/rogue/indoors/warcamp/wizard)
 "Bk" = (
 /obj/structure/table/wood,
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/rogue/tile/harem1,
 /area/rogue/indoors/warcamp/wizard)
 "BE" = (
@@ -2192,7 +2180,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Cm" = (
-/obj/machinery/light/rogue/candle/blue/r,
+/obj/machinery/light/rogue/candle/r,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Cu" = (
@@ -2218,9 +2206,20 @@
 /turf/open/floor/rogue/dirt/road,
 /area/rogue/indoors/warcamp/wizard)
 "CV" = (
-/turf/open/lava/mana{
-	dir = 4
-	},
+/obj/structure/closet/crate/chest/neu_fancy,
+/obj/item/magic/elemental/mote,
+/obj/item/magic/elemental/mote,
+/obj/item/magic/elemental/mote,
+/obj/item/magic/elemental/mote,
+/obj/item/magic/elemental/mote,
+/obj/item/magic/elemental/shard,
+/obj/item/magic/elemental/shard,
+/obj/item/magic/elemental/shard,
+/obj/item/magic/elemental/fragment,
+/obj/item/magic/elemental/fragment,
+/obj/item/magic/elemental/fragment,
+/obj/item/magic/elemental/relic,
+/turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "CX" = (
 /obj/structure/curtain/black{
@@ -2250,9 +2249,6 @@
 /turf/open/floor/rogue/blocks,
 /area/rogue/indoors/warcamp/wizard)
 "Dw" = (
-/obj/item/rope/chain/bindingshackles/t2,
-/obj/item/rope/chain/bindingshackles/t2,
-/obj/item/rope/chain/bindingshackles/t2,
 /obj/structure/closet/crate/chest/neu_iron,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
@@ -2299,7 +2295,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "DP" = (
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /turf/open/floor/rogue/herringbone,
 /area/rogue/indoors/warcamp/wizard)
 "DZ" = (
@@ -2374,7 +2370,7 @@
 /area/rogue/indoors/warcamp/wizard)
 "EZ" = (
 /obj/structure/table/wood,
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	light_outer_range = 8
 	},
 /turf/open/floor/rogue/cobble,
@@ -2382,7 +2378,7 @@
 "Fa" = (
 /obj/structure/table/wood,
 /obj/structure/fluff/wallclock,
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = 0;
 	pixel_x = 32;
 	light_outer_range = 8
@@ -2490,7 +2486,7 @@
 	dir = 10;
 	pixel_x = 19
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "GB" = (
 /obj/structure/flora/roguegrass,
@@ -2516,9 +2512,7 @@
 /obj/structure/bars/pipe{
 	pixel_x = 49
 	},
-/turf/open/lava/mana{
-	dir = 4
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "GQ" = (
 /obj/effect/decal/cleanable/debris/stony,
@@ -2668,8 +2662,8 @@
 	dir = 4;
 	icon_state = "borderfall"
 	},
-/obj/machinery/light/rogue/firebowl/standing/blue,
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/firebowl/standing,
+/obj/machinery/light/rogue/candle{
 	pixel_y = 0;
 	light_outer_range = 8;
 	pixel_x = 32
@@ -2707,7 +2701,7 @@
 	pixel_x = -13;
 	pixel_y = -17
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "JH" = (
 /obj/structure/fluff/railing/border/west,
@@ -2742,9 +2736,7 @@
 	pixel_x = 6;
 	pixel_y = 15
 	},
-/turf/open/lava/mana{
-	dir = 4
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "Kw" = (
 /obj/structure/mineral_door/wood/fancywood{
@@ -2871,7 +2863,7 @@
 /turf/open/floor/rogue/cobble,
 /area/rogue/indoors/warcamp/wizard)
 "LT" = (
-/obj/machinery/light/rogue/candle/blue/l,
+/obj/machinery/light/rogue/candle/l,
 /obj/effect/decal/cobbleedge{
 	dir = 8;
 	icon_state = "borderfall"
@@ -2879,7 +2871,7 @@
 /turf/open/floor/rogue/cobble,
 /area/rogue/indoors/warcamp/wizard)
 "LX" = (
-/obj/machinery/light/rogue/candle/blue/l,
+/obj/machinery/light/rogue/candle/l,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Md" = (
@@ -2904,11 +2896,6 @@
 "Mm" = (
 /obj/structure/fluff/railing/corner,
 /turf/open/floor/rogue/dirt/road,
-/area/rogue/indoors/warcamp/wizard)
-"MH" = (
-/obj/item/rope/chain/bindingshackles/t5,
-/obj/structure/closet/crate/chest/neu_fancy,
-/turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "MJ" = (
 /obj/effect/decal/cobbleedge{
@@ -2976,17 +2963,20 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Oe" = (
-/obj/item/magic/fairydust,
-/obj/item/magic/fairydust,
-/obj/item/magic/fairydust,
-/obj/item/magic/fairydust,
-/obj/item/magic/fairydust,
-/obj/item/magic/fairydust,
-/obj/item/magic/heartwoodcore,
-/obj/item/magic/heartwoodcore,
-/obj/item/magic/iridescentscale,
-/obj/item/magic/iridescentscale,
 /obj/structure/closet/crate/chest/neu_fancy,
+/obj/item/magic/fae/fairydust,
+/obj/item/magic/fae/fairydust,
+/obj/item/magic/fae/fairydust,
+/obj/item/magic/fae/fairydust,
+/obj/item/magic/fae/fairydust,
+/obj/item/magic/fae/fairydust,
+/obj/item/magic/fae/heartwoodcore,
+/obj/item/magic/fae/heartwoodcore,
+/obj/item/magic/fae/heartwoodcore,
+/obj/item/magic/fae/iridescentscale,
+/obj/item/magic/fae/iridescentscale,
+/obj/item/magic/fae/iridescentscale,
+/obj/item/magic/fae/sylvanessence,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Ok" = (
@@ -2994,7 +2984,7 @@
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Ov" = (
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /obj/effect/decal/cobbleedge{
 	dir = 8;
 	icon_state = "borderfall"
@@ -3025,7 +3015,7 @@
 "OA" = (
 /obj/structure/chair/bench/couchablack/r,
 /obj/structure/fluff/railing/border/east,
-/obj/machinery/light/rogue/candle/blue,
+/obj/machinery/light/rogue/candle,
 /turf/open/floor/carpet/stellar{
 	color = "#A2A2A2"
 	},
@@ -3055,7 +3045,7 @@
 /turf/open/floor/rogue/dirt/road,
 /area/rogue/indoors/warcamp/wizard)
 "Po" = (
-/obj/machinery/light/rogue/candle/blue/l{
+/obj/machinery/light/rogue/candle/l{
 	light_outer_range = 8
 	},
 /obj/effect/decal/cobbleedge{
@@ -3101,28 +3091,12 @@
 /obj/structure/bars/pipe{
 	pixel_y = 17
 	},
-/turf/open/lava/mana,
-/area/rogue/indoors/warcamp/wizard)
-"PT" = (
-/turf/open/lava/mana{
-	light_outer_range = 8
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "PY" = (
 /obj/effect/decal/cleanable/roguerune/arcyne/summoning/max,
 /obj/item/rogueweapon/huntingknife/idagger/silver/arcyne,
 /turf/open/floor/rogue/herringbone,
-/area/rogue/indoors/warcamp/wizard)
-"Qb" = (
-/obj/structure/bars/pipe{
-	dir = 4
-	},
-/obj/structure/bars/pipe{
-	dir = 8;
-	pixel_x = 6;
-	pixel_y = 15
-	},
-/turf/open/lava/mana,
 /area/rogue/indoors/warcamp/wizard)
 "Qd" = (
 /obj/structure/roguemachine/scomm/receive_only{
@@ -3154,7 +3128,9 @@
 /turf/open/floor/rogue/dirt/road,
 /area/rogue/indoors/warcamp/wizard)
 "Qi" = (
-/turf/open/lava/mana,
+/obj/structure/flora/roguegrass,
+/obj/effect/decal/cleanable/debris/stony,
+/turf/open/floor/rogue/dirt/road,
 /area/rogue/indoors/warcamp/wizard)
 "Qk" = (
 /obj/effect/decal/cobbleedge{
@@ -3180,13 +3156,13 @@
 /obj/structure/bars/pipe{
 	dir = 4
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "Qo" = (
 /turf/open/floor/rogue/tile/harem1,
 /area/rogue/indoors/warcamp/wizard)
 "Qq" = (
-/obj/machinery/light/rogue/candle/blue/l{
+/obj/machinery/light/rogue/candle/l{
 	light_outer_range = 8
 	},
 /obj/effect/decal/cobbleedge{
@@ -3221,7 +3197,7 @@
 	pixel_y = 31;
 	density = 0
 	},
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = 0;
 	pixel_x = -63
 	},
@@ -3484,7 +3460,7 @@
 	},
 /area/rogue/indoors/warcamp/wizard)
 "TT" = (
-/obj/machinery/light/rogue/candle/blue/r,
+/obj/machinery/light/rogue/candle/r,
 /turf/open/floor/rogue/tile,
 /area/rogue/indoors/warcamp/wizard)
 "Ua" = (
@@ -3507,6 +3483,9 @@
 /obj/structure/rack/rogue/shelf/big{
 	icon_state = "shelf_biggest";
 	pixel_y = 0
+	},
+/obj/item/magic/melded/t4{
+	pixel_y = 6
 	},
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
@@ -3587,7 +3566,7 @@
 	icon_state = "longtable"
 	},
 /obj/structure/fluff/railing/border,
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/rogue/tile/harem,
 /area/rogue/indoors/warcamp/wizard)
 "Ve" = (
@@ -3642,7 +3621,7 @@
 /area/rogue/indoors/warcamp/wizard)
 "Vn" = (
 /obj/structure/table/wood,
-/obj/item/candle/skull/blue/lit,
+/obj/item/candle/skull/lit,
 /turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Vs" = (
@@ -3675,7 +3654,7 @@
 /obj/structure/bars/pipe{
 	dir = 4
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "VV" = (
 /obj/structure/fluff/walldeco/med5,
@@ -3694,21 +3673,12 @@
 /turf/open/floor/rogue/tile/harem1,
 /area/rogue/indoors/warcamp/wizard)
 "Wt" = (
-/obj/machinery/light/rogue/firebowl/standing/blue,
+/obj/machinery/light/rogue/firebowl/standing,
 /turf/open/floor/rogue/blocks,
-/area/rogue/indoors/warcamp/wizard)
-"Ww" = (
-/obj/item/rope/chain/bindingshackles,
-/obj/item/rope/chain/bindingshackles,
-/obj/item/rope/chain/bindingshackles,
-/obj/item/rope/chain/bindingshackles,
-/obj/item/rope/chain/bindingshackles,
-/obj/structure/closet/crate/chest/neu_iron,
-/turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "Wy" = (
 /obj/structure/table/wood,
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = 0;
 	pixel_x = 32;
 	light_outer_range = 8
@@ -3807,7 +3777,7 @@
 	pixel_x = 6;
 	pixel_y = 15
 	},
-/turf/open/lava/mana,
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "XQ" = (
 /obj/structure/bars{
@@ -3863,9 +3833,7 @@
 /turf/open/floor/rogue/tile,
 /area/rogue/indoors/warcamp/wizard)
 "Yh" = (
-/turf/open/lava/mana{
-	dir = 8
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "Yi" = (
 /obj/structure/closet/crate/roguecloset/dark,
@@ -3883,7 +3851,7 @@
 	dir = 2;
 	icon_state = "longtable_mid"
 	},
-/obj/machinery/light/rogue/candle/blue{
+/obj/machinery/light/rogue/candle{
 	pixel_y = 0;
 	light_outer_range = 8;
 	pixel_x = -32
@@ -3921,19 +3889,12 @@
 /obj/structure/bars/pipe{
 	dir = 5
 	},
-/turf/open/lava/mana{
-	dir = 4
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "ZC" = (
-/obj/machinery/light/rogue/candle/blue/r,
+/obj/machinery/light/rogue/candle/r,
 /obj/effect/decal/cleanable/debris/stony,
 /turf/open/floor/rogue/dirt/road,
-/area/rogue/indoors/warcamp/wizard)
-"ZF" = (
-/obj/item/rope/chain/bindingshackles/t4,
-/obj/structure/closet/crate/chest/neu_iron,
-/turf/open/floor/rogue/ruinedwood/spiral,
 /area/rogue/indoors/warcamp/wizard)
 "ZN" = (
 /obj/structure/fluff/railing/corner/north_east,
@@ -3952,9 +3913,7 @@
 	max_integrity = 2000;
 	name = "reinforced bars"
 	},
-/turf/open/lava/mana{
-	light_outer_range = 8
-	},
+/turf/open/lava/smooth,
 /area/rogue/indoors/warcamp/wizard)
 "ZW" = (
 /obj/machinery/light/rogue/hearth,
@@ -4415,13 +4374,13 @@ Tj
 Qd
 JJ
 JJ
-Qi
-PT
-PT
-Qi
-Qi
-PT
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
 JJ
 AE
 Eu
@@ -4451,7 +4410,7 @@ rD
 Qr
 Py
 sl
-sl
+CV
 JJ
 dq
 lt
@@ -4592,7 +4551,7 @@ rD
 rD
 nT
 sl
-MH
+sl
 JJ
 Tn
 va
@@ -4639,7 +4598,7 @@ rD
 Qr
 FT
 sl
-ZF
+Dw
 JJ
 rq
 sl
@@ -4686,7 +4645,7 @@ rD
 pi
 Py
 sl
-cO
+Dw
 JJ
 uZ
 sl
@@ -4780,7 +4739,7 @@ rD
 Qr
 Py
 sl
-Ww
+Dw
 JJ
 Oy
 Eb
@@ -4853,7 +4812,7 @@ Qo
 gf
 fG
 fU
-Qi
+Yh
 fU
 Py
 GB
@@ -4900,7 +4859,7 @@ yr
 dK
 oD
 fU
-Qi
+Yh
 fU
 Py
 Ao
@@ -5380,10 +5339,10 @@ zT
 "}
 (31,1,1) = {"
 zT
-Qi
-Qi
-Qi
-Qi
+Yh
+Yh
+Yh
+Yh
 JJ
 JJ
 JJ
@@ -5427,11 +5386,11 @@ zT
 "}
 (32,1,1) = {"
 zT
-Qi
-Qi
-Qi
-Qi
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
 JJ
 JJ
 vN
@@ -5474,11 +5433,11 @@ zT
 "}
 (33,1,1) = {"
 zT
-Qi
-Qi
-Qi
-Qi
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
 JJ
 PB
 WK
@@ -5521,11 +5480,11 @@ zT
 "}
 (34,1,1) = {"
 zT
-Qi
-Qi
-Qi
-Qi
-Qi
+Yh
+Yh
+Yh
+cq
+cq
 JJ
 MV
 WK
@@ -5567,12 +5526,12 @@ JJ
 zT
 "}
 (35,1,1) = {"
-zT
-Qi
-Qi
-Qi
-Qi
-Qi
+BW
+Yh
+Yh
+cq
+oI
+oI
 JJ
 HS
 WK
@@ -5614,12 +5573,12 @@ JJ
 zT
 "}
 (36,1,1) = {"
-zT
+BW
+BW
+cq
 Qi
-Qi
-Qi
-Qi
-Qi
+oI
+oI
 JJ
 cr
 WK
@@ -5661,12 +5620,12 @@ JJ
 zT
 "}
 (37,1,1) = {"
-zT
-Qi
-Qi
-Qi
-Qi
-Qi
+BW
+BW
+BW
+cq
+oI
+GB
 JJ
 VV
 WK
@@ -5708,12 +5667,12 @@ JJ
 zT
 "}
 (38,1,1) = {"
-zT
-Qi
-Qi
-Qi
-Qi
-Qi
+BW
+BW
+GB
+oI
+oI
+oI
 JJ
 JJ
 So
@@ -5755,13 +5714,13 @@ JJ
 zT
 "}
 (39,1,1) = {"
-zT
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
+BW
+BW
+cq
+oI
+GB
+oI
+cq
 JJ
 JJ
 JJ
@@ -5789,29 +5748,29 @@ kQ
 de
 Gn
 JJ
-CV
-Qi
-Qi
+Yh
+Yh
+Yh
 PN
-Qi
-Qi
-Qi
-Qi
-Qi
-CV
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
 zT
 "}
 (40,1,1) = {"
-zT
-Qi
-Qi
-Qi
-Qi
-Qi
-CV
-Qi
-Qi
-Qi
+BW
+BW
+GB
+oI
+oI
+oI
+cq
+Yh
+Yh
+Yh
 XQ
 WK
 WK
@@ -5821,7 +5780,7 @@ UR
 WK
 WK
 XQ
-CV
+Yh
 BW
 BW
 cq
@@ -5830,35 +5789,35 @@ xn
 xn
 xn
 oj
-Qi
-Qi
-Qi
-Qi
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
 JJ
 JJ
-Qi
-Qi
+Yh
+Yh
 PN
-Qi
-CV
-Qi
-Qi
-CV
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
 zT
 "}
 (41,1,1) = {"
-zT
-Qi
-Qi
-Qi
-Qi
-Qi
+BW
+BW
 Yh
-CV
-Qi
-Qi
+cq
+oI
+oI
+oI
+Yh
+Yh
+Yh
 XQ
 UR
 WK
@@ -5868,7 +5827,7 @@ WK
 WK
 WK
 XQ
-Qi
+Yh
 BW
 aw
 ZC
@@ -5883,7 +5842,7 @@ Qm
 Jv
 Jv
 TH
-Qb
+JX
 JX
 po
 nz
@@ -5896,16 +5855,16 @@ iW
 rI
 "}
 (42,1,1) = {"
-zT
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
+BW
 Yh
-Qi
-Qi
+Yh
+Yh
+oI
+oI
+Yh
+Yh
+Yh
+Yh
 JJ
 XQ
 XQ
@@ -5924,66 +5883,66 @@ AE
 JJ
 JJ
 JJ
-Qi
+Yh
 JJ
 JJ
-Qi
+Yh
 JJ
 JJ
 JJ
-Qi
-Qi
+Yh
+Yh
 PN
-Qi
+Yh
 gp
-Qi
-CV
-Qi
+Yh
+Yh
+Yh
 BW
 BW
 "}
 (43,1,1) = {"
-zT
-Qi
-Qi
-CV
-Qi
-CV
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
+BW
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
 BW
 BW
-Qi
+Yh
 JJ
 JJ
 JJ
 JJ
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
 Zu
 GP
 gp
-CV
+Yh
 BW
 BW
 BW
@@ -5999,35 +5958,35 @@ zT
 zT
 zT
 zT
-Qi
-Qi
-Qi
-CV
-Qi
-CV
-Qi
 Yh
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
 BW
 BW
 BW
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
-Qi
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
+Yh
 zT
-Qi
+Yh
 lr
 bi
 BW

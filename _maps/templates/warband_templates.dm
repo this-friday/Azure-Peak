@@ -1,7 +1,3 @@
-/obj/effect/landmark/map_load_mark/warcamp
-	name = "Warcamp"
-	templates = list( "warcamp_standard","warcamp_standard_fort","warcamp_peasant","warcamp_wizard" )
-	
 /obj/effect/landmark/warcamp
 	name = "Warcamp"
 
@@ -79,7 +75,6 @@
 	mappath = "_maps/map_files/templates/warband/warband_outskirts_coast1.dmm"
 	warband_template = TRUE
 
-
 ///////////////////////////
 /////////////////////////// OUTSKIRTS
 ///////////////////////////
@@ -117,9 +112,6 @@
 	id = "intermission_coast_a"
 	mappath = "_maps/map_files/templates/warband/warband_intermission_coast.dmm"
 	warband_template = TRUE
-
-
-
 
 ///////////////////////////
 /////////////////////////// INTERMISSIONS
