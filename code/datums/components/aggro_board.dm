@@ -186,13 +186,19 @@
 
 	// Find the mob with the highest threat
 	for(var/mob/threat_mob as anything in aggro_table)
+		if(QDELETED(threat_mob)) // clear qdeleted threats
+			aggro_table -= threat_mob
+			continue
+		if(threat_mob.stat == DEAD) // clear corpses
+			aggro_table -= threat_mob
+			continue
 		if(aggro_table[threat_mob] > highest_threat)
 			highest_threat = aggro_table[threat_mob]
 			highest_threat_mob = threat_mob
 
 	// Update highest threat mob if it meets threshold
 	var/threat_threshold = source.ai_controller.blackboard[BB_THREAT_THRESHOLD] || default_threat_threshold
-	if(highest_threat >= threat_threshold)
+	if(highest_threat_mob && highest_threat >= threat_threshold)
 		source.ai_controller.set_blackboard_key(BB_HIGHEST_THREAT_MOB, highest_threat_mob)
 		SEND_SIGNAL(source, COMSIG_AI_GENERAL_CHANGE, "Threat Changed: [highest_threat_mob]")
 	else

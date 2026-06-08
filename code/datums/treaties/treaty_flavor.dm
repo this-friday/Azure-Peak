@@ -8,6 +8,8 @@
 	var/icon = 'icons/roguetown/weapons/shields32.dmi'
 	var/icon_state = "ironsh"
 
+/datum/treaty_flavor/custom
+
 /datum/treaty_flavor/azure
 	name = "The Crown"
 	desc = "It is the year 1513, and within the ruins of the Holy Land there yet stands a Grand Duchy."
