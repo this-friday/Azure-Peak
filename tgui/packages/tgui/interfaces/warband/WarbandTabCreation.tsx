@@ -634,21 +634,28 @@ export const CreationTab = ({
                 const hasIntensity = (aspect.max_intensity ?? 1) > 1;
                 const needsExpand = true;
                 const rarityLocked = !!aspect.rarity_locked;
+                const aspectCap = selectedWarband?.max_aspects ?? 5;
+                const capReached = !isSelected && selectedAspects.length >= aspectCap;
+                const cardLocked = rarityLocked || capReached;
 
                 return (
                   <Box key={aspect.title}>
                     <Button
                       fluid
-                      onClick={() => { if (rarityLocked) return; if (needsExpand) { handleAspectClick(aspect); } else { handleConfirmSelect(aspect); } }}
-                      disabled={locked || rarityLocked}
-                      tooltip={rarityLocked ? `Storyteller-locked (${aspect.rarity}\u00d7 rarity)` : undefined}
+                      onClick={() => { if (cardLocked) return; if (needsExpand) { handleAspectClick(aspect); } else { handleConfirmSelect(aspect); } }}
+                      disabled={locked || cardLocked}
+                      tooltip={rarityLocked
+                        ? `Storyteller-locked (${aspect.rarity}\u00d7 rarity)`
+                        : capReached
+                          ? `This warband can field at most ${aspectCap} aspects.`
+                          : undefined}
                       style={{
                         backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : getAspectColor(currentCost),
                         height: 'auto',
                         padding: '12px 16px',
                         whiteSpace: 'normal',
                         textAlign: 'left',
-                        opacity: rarityLocked ? 0.45 : 1,
+                        opacity: cardLocked ? 0.45 : 1,
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 'bold' }}>

@@ -27,6 +27,7 @@ export type WarbandType = WarbandDatumBase & {
   multiclass_enabled: boolean;
   subclass_required: boolean;
   subclass_label?: string;
+  max_aspects: number;
 };
 
 export type SubType = WarbandDatumBase & {

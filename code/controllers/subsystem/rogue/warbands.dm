@@ -60,7 +60,6 @@ SUBSYSTEM_DEF(warbands)
 		treaty_flavor_factions += new territory_faction_path
 	create_name_cache()
 	initialize_class_cache()
-	initialize_grunt_mob_cache()
 	initialize_lobby_mob_cache()	
 	roundstart_manager = new /atom/movable/screen/warband/manager()
 	roundstart_manager.warband_ID = next_warband_id++
@@ -345,8 +344,3 @@ SUBSYSTEM_DEF(warbands)
 	else // if the cache is empty fall back to creating a fresh mob
 		var/mob/living/carbon/human/species/human/northern/new_mob = new() 
 		return new_mob
-
-/datum/controller/subsystem/warbands/proc/initialize_grunt_mob_cache()
-	for(var/i = 1 to max_unassigned_cache)
-		var/mob/living/carbon/human/species/human/northern/goon/cached_grunt = new()
-		unassigned_mob_cache += cached_grunt

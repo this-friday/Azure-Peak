@@ -261,6 +261,7 @@
 			entry["multiclass_enabled"] = warband.multiclass_enabled
 			entry["subclass_required"] = warband.subclass_required
 			entry["subclass_label"] = warband.subclass_label
+			entry["max_aspects"] = warband.max_aspects
 			UNTYPED_LIST_ADD(warbands_list, entry)
 		for(var/datum/warbands/subtypes/subtype in SSwarbands.all_subtypes)
 			var/list/entry = serialize_warband_datum(subtype)
@@ -697,14 +698,19 @@
 	if(selected_subtype)
 		selection_inputs["[selected_subtype.type]"] = incoming_selection_inputs["[selected_subtype.type]"] || list()
 
+	var/aspect_cap = selected_warband.max_aspects
 	for(var/aspect_path in aspect_paths)
 		var/aspect_type = text2path(aspect_path)
 		var/datum/warbands/aspects/aspect = SSwarbands.aspect_datum_for(aspect_type)
-		if(aspect)
-			selected_aspects += aspect
-			var/incoming_intensity = text2num(incoming_intensities[aspect_path])
-			aspect_intensities["[aspect_type]"] = clamp(incoming_intensity || 1, 1, aspect.max_intensity)
-			selection_inputs[aspect_path] = incoming_selection_inputs[aspect_path] || list()
+		if(!aspect)
+			continue
+		if(selected_aspects.len >= aspect_cap)
+			to_chat(user, span_warning("This warband can field at most [aspect_cap] aspects."))
+			break // stop before the confirm hooks run, so hook-granted aspects (e.g. Fated Suffering) still apply
+		selected_aspects += aspect
+		var/incoming_intensity = text2num(incoming_intensities[aspect_path])
+		aspect_intensities["[aspect_type]"] = clamp(incoming_intensity || 1, 1, aspect.max_intensity)
+		selection_inputs[aspect_path] = incoming_selection_inputs[aspect_path] || list()
 
 	if(!linked_faction)
 		var/datum/treaty_flavor/custom/seed_faction = new /datum/treaty_flavor/custom()

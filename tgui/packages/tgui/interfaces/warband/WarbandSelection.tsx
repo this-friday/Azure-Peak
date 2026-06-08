@@ -84,8 +84,12 @@ export const useWarbandSelection = () => {
     if (lockedWarband) { return; }
     if (selectedWarband?.type === warband.type) { return; }
     const isSubtypeCompatible = selectedSubtype && warband.subtypes?.[0]?.includes(selectedSubtype.type);
-    const compatibleAspects = selectedAspects.filter(aspect => warband.aspects.includes(aspect.type));
-    const removedTypes = new Set(selectedAspects.filter(a => !warband.aspects.includes(a.type)).map(a => a.type));
+    // carry over aspects the new warband also offers, but clamp to its cap so switching from an uncapped warband to a capped one can't smuggle in extra aspects
+    const aspectCap = warband.max_aspects ?? 5;
+    const carriedAspects = selectedAspects.filter(aspect => warband.aspects.includes(aspect.type));
+    const compatibleAspects = carriedAspects.slice(0, aspectCap);
+    const keptTypes = new Set(compatibleAspects.map(a => a.type));
+    const removedTypes = new Set(selectedAspects.filter(a => !keptTypes.has(a.type)).map(a => a.type));
     setSelectedWarband(warband);
     setSelectedSubtype(isSubtypeCompatible ? selectedSubtype : null);
     setSelectedAspects(compatibleAspects);
@@ -145,6 +149,11 @@ export const useWarbandSelection = () => {
         );
 
         if (hasConflict) {
+          return prevAspects;
+        }
+        // enforce the warband's aspect cap
+        const aspectCap = selectedWarband?.max_aspects ?? 5;
+        if (prevAspects.length >= aspectCap) {
           return prevAspects;
         }
         // initialize intensity to 1 on select, only if it isn't already set by the expand panel

@@ -78,7 +78,8 @@
 
 	var/list/input_fields = list()
 	var/max_intensity = 1	// 1 = no intensity scale (just selected/not) | higher values unlock intensity ranks	
-
+	var/max_aspects = 5		// how many aspects the warlord may select
+	
 /datum/warbands/New()
 	input_fields = list()
 	build_input_fields()

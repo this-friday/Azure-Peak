@@ -234,4 +234,5 @@
 	var/last_breath_spent = 0
 	var/client/swimming_filter_client = null
 
-	var/job_path	// the latest job path a mob used
+	/// the latest job path a mob used
+	var/job_path
