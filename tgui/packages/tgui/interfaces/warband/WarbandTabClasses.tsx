@@ -25,7 +25,7 @@ export const ClassesTab = ({
   act,
   canModify = true,
 }: ClassesTabProps) => {
-  const subclassExempt = !!selectedClass?.forgoes_subclass;
+  const subclassExempt = !!selectedClass?.ignores_multiclass_requirement;
   return (
     <Stack vertical fill>
       <Stack row-Reverse style={{ flex: 1 }}>
@@ -38,10 +38,10 @@ export const ClassesTab = ({
           {selectedWarband && availableClasses.length > 0 ? (
             <Stack vertical>
               {availableClasses.map((classe) => {
-                const isSelected = selectedClass?.name === classe.name;
+                const isSelected = selectedClass?.type === classe.type;
                 return (
                   <Button
-                    key={classe.name}
+                    key={classe.type}
                     onClick={() => {
                       if (!canModify) return;
                       handleClassSelect(classe);
@@ -77,10 +77,10 @@ export const ClassesTab = ({
           {selectedWarband?.multiclass_enabled && !subclassExempt && filteredSubclasses.length > 0 ? (
             <Stack vertical>
               {filteredSubclasses.map((subclass) => {
-                const isSelected = selectedSubclass?.alt_name === subclass.alt_name;
+                const isSelected = selectedSubclass?.type === subclass.type;
                 return (
                   <Button
-                    key={subclass.alt_name}
+                    key={subclass.type}
                     onClick={() => {
                       if (!canModify) return;
                       handleSubclassSelect(subclass);

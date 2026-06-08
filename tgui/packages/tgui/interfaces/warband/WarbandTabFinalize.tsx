@@ -166,7 +166,7 @@ export const FinalizeTab = ({
     if (!selectedWarband) return "NO WARBAND SELECTED";
     if (selectedWarband?.subtyperequired && !selectedSubtype) return "WARBAND REQUIRES A SELECTED SUBTYPE";
     if (!selectedClass) return "NO CLASS SELECTED";
-    if (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.forgoes_subclass && !selectedSubclass) {
+    if (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.ignores_multiclass_requirement && !selectedSubclass) {
       return `${(selectedWarband.subclass_label || 'SUBCLASS').toUpperCase()} REQUIRED`;
     }
     return null;

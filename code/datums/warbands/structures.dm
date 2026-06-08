@@ -75,7 +75,7 @@
 						return
 				if("View Morale")
 					if(linked_warband.disorder <= 1)
-						to_chat(user, span_green("The men are calm and our work continues!"))
+						to_chat(user, span_green("Spirits are high!"))
 						return
 					if(linked_warband.disorder <= 2)
 						to_chat(user, span_warning("There's some strain weighing upon our legion's spirit, but we're holding out well enough."))

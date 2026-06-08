@@ -508,12 +508,13 @@ export const CreationTab = ({
                 const isSelected = selectedWarband?.type === warband.type;
                 const isExpanded = expandedSelection === warband.type;
                 const needsExpand = true;
+                const rarityLocked = !!warband.rarity_locked;
                 return (
                   <Box key={warband.title}>
                     <Button
                       fluid
                       onClick={() => {
-                        if (locked) return;
+                        if (locked || rarityLocked) return;
                         act('interaction_sound');
                         if (needsExpand) {
                           setExpandedSelection(prev => prev === warband.type ? null : warband.type);
@@ -521,10 +522,18 @@ export const CreationTab = ({
                           handleWarbandSelect(warband);
                         }
                       }}
-                      disabled={locked || (isSelected && !needsExpand)}
-                      style={{ backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : undefined }}
+                      disabled={locked || rarityLocked || (isSelected && !needsExpand)}
+                      tooltip={rarityLocked ? `Storyteller-locked (${warband.rarity}\u00d7 rarity)` : undefined}
+                      style={{ backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : undefined, opacity: rarityLocked ? 0.45 : 1 }}
                     >
-                      {warband.title}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <span>{warband.title}</span>
+                        {rarityLocked && (
+                          <span style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#9a8a6a', marginLeft: '8px', flexShrink: 0 }}>
+                            🔒 STORYTELLER-LOCKED
+                          </span>
+                        )}
+                      </div>
                     </Button>
                     {isExpanded && !locked && (
                       <ExpandedPanel
@@ -560,12 +569,13 @@ export const CreationTab = ({
                 const isSelected = selectedSubtype?.type === subtype.type;
                 const isExpanded = expandedSelection === subtype.type;
                 const needsExpand = true;
+                const rarityLocked = !!subtype.rarity_locked;
                 return (
                   <Box key={subtype.title}>
                     <Button
                       fluid
                       onClick={() => {
-                        if (locked) return;
+                        if (locked || rarityLocked) return;
                         act('interaction_sound');
                         if (needsExpand) {
                           setExpandedSelection(prev => prev === subtype.type ? null : subtype.type);
@@ -573,10 +583,18 @@ export const CreationTab = ({
                           handleSubtypeSelect(subtype);
                         }
                       }}
-                      disabled={locked}
-                      style={{ backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : undefined }}
+                      disabled={locked || rarityLocked}
+                      tooltip={rarityLocked ? `Storyteller-locked (${subtype.rarity}\u00d7 rarity)` : undefined}
+                      style={{ backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : undefined, opacity: rarityLocked ? 0.45 : 1 }}
                     >
-                      {subtype.title}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <span>{subtype.title}</span>
+                        {rarityLocked && (
+                          <span style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#9a8a6a', marginLeft: '8px', flexShrink: 0 }}>
+                            🔒 STORYTELLER-LOCKED
+                          </span>
+                        )}
+                      </div>
                     </Button>
                     {isExpanded && !locked && (
                       <ExpandedPanel
@@ -615,24 +633,32 @@ export const CreationTab = ({
                 const currentCost = aspect.intensity_costs?.[rank - 1] ?? aspect.points;
                 const hasIntensity = (aspect.max_intensity ?? 1) > 1;
                 const needsExpand = true;
+                const rarityLocked = !!aspect.rarity_locked;
 
                 return (
                   <Box key={aspect.title}>
                     <Button
                       fluid
-                      onClick={() => needsExpand ? handleAspectClick(aspect) : handleConfirmSelect(aspect)}
-                      disabled={locked}
+                      onClick={() => { if (rarityLocked) return; if (needsExpand) { handleAspectClick(aspect); } else { handleConfirmSelect(aspect); } }}
+                      disabled={locked || rarityLocked}
+                      tooltip={rarityLocked ? `Storyteller-locked (${aspect.rarity}\u00d7 rarity)` : undefined}
                       style={{
                         backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : getAspectColor(currentCost),
                         height: 'auto',
                         padding: '12px 16px',
                         whiteSpace: 'normal',
                         textAlign: 'left',
+                        opacity: rarityLocked ? 0.45 : 1,
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', fontWeight: 'bold' }}>
                         <span>
                           {aspect.title}
+                          {rarityLocked && (
+                            <span style={{ color: '#9a8a6a', fontWeight: 'normal', marginLeft: '6px', fontSize: '0.85em' }}>
+                              🔒 STORYTELLER-LOCKED
+                            </span>
+                          )}
                           {hasIntensity && isSelected && (
                             <span style={{ color: '#c9a347', fontWeight: 'normal', marginLeft: '6px', fontSize: '0.85em' }}>
                               [RANK {rank}]

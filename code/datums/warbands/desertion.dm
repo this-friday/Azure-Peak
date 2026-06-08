@@ -138,7 +138,7 @@
 				new_warband_manager.selected_subtype = new WARBAND_SECT_FOUR
 			else if(patron.name == "Psydon")
 				new_warband_manager.selected_subtype = new WARBAND_SECT_PSYDON
-			new_warband_manager.faithlocks = list(patron)
+			new_warband_manager.faithlocks = list(patron.type)
 			verbs += /mob/living/carbon/human/proc/enlighten
 
 		if("Magician") // a magician in schism (potentially) creates a sorcerer-king 

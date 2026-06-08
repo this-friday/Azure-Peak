@@ -38,15 +38,19 @@ SUBSYSTEM_DEF(warbands)
 	var/list/lobby_mob_cache = list()		// for a reduced impact when the round starts, since we're getting mobs from scratch | also used for Envoys & latespawns, because why not. they're already here
 	var/list/replaced_mobs = list()
 
-	//
-	var/list/cached_warbands = list()
-	var/list/cached_subtypes = list()
-	var/list/cached_aspects = list()
-	var/list/cached_classes = list()
+	// stored as datums
+	var/list/datum/warbands/all_warbands = list()
+	var/list/datum/warbands/subtypes/all_subtypes = list()
+	var/list/datum/warbands/aspects/all_aspects = list()
+	// stored as types
+	var/list/all_warband_class_types = list()
 
-	var/list/datum/warbands/warband_lookup = list()
-	var/list/datum/warbands/subtype_lookup = list()
-	var/list/datum/warbands/aspect_lookup = list()	
+	// data for the lobby's tgui, built once the first time the UI opens and is identical for every viewer all round
+	// only the per-manager selection states (the actual decisions they made, like which warband/subtype they chose) are rebuilt per refresh
+	var/list/warband_ui_data
+	var/list/subtypes_ui_data
+	var/list/aspects_ui_data
+	var/list/cached_ui_classes
 
 /datum/controller/subsystem/warbands/New()
 	..()
@@ -70,28 +74,30 @@ SUBSYSTEM_DEF(warbands)
 		if(faction.job_owner)
 			job_to_faction_cache[faction.job_owner] = faction
 
+
+///////////////////////////////////////////////////////////
+////////////////////////////////////// CLASS INITIALIZATION
+/*
+	collects each warband, subtype & aspect as new datums
+	then we comb through each of THOSE and cache the .types of each class associated with them
+
+*/
 /datum/controller/subsystem/warbands/proc/initialize_class_cache()
 	for(var/datum/warbands/band_type as anything in subtypesof(/datum/warbands))
 		if(initial(band_type.abstract_type) == band_type)
 			continue
 		if(ispath(band_type, /datum/warbands/subtypes))
-			var/datum/warbands/subtypes/added_subtype = new band_type()
-			cached_subtypes += added_subtype
-			subtype_lookup[band_type] = added_subtype
+			all_subtypes += new band_type()
 		else if(ispath(band_type, /datum/warbands/aspects))
-			var/datum/warbands/aspects/added_aspect = new band_type()
-			cached_aspects += added_aspect
-			aspect_lookup[band_type] = added_aspect
+			all_aspects += new band_type()
 		else
-			var/datum/warbands/added_warband = new band_type()
-			cached_warbands += added_warband
-			warband_lookup[band_type] = added_warband
+			all_warbands += new band_type()
 
-	for(var/datum/warbands/warband in cached_warbands)
+	for(var/datum/warbands/warband in all_warbands)
 		cache_classes_from_datum(warband)
-	for(var/datum/warbands/subtypes/subtype in cached_subtypes)
+	for(var/datum/warbands/subtypes/subtype in all_subtypes)
 		cache_classes_from_datum(subtype)
-	for(var/datum/warbands/aspects/aspect in cached_aspects)
+	for(var/datum/warbands/aspects/aspect in all_aspects)
 		cache_classes_from_datum(aspect)
 
 	classes_initialized = TRUE
@@ -99,16 +105,36 @@ SUBSYSTEM_DEF(warbands)
 /datum/controller/subsystem/warbands/proc/cache_classes_from_datum(datum/warbands/source)
 	if(source.warlordclasses)
 		for(var/class_type in source.warlordclasses)
-			if(!cached_classes[class_type])
-				cached_classes[class_type] = new class_type()
+			register_class(class_type)
 	if(source.lieutenantclasses)
 		for(var/class_type in source.lieutenantclasses)
-			if(!cached_classes[class_type])
-				cached_classes[class_type] = new class_type()
+			register_class(class_type)
 	if(source.gruntclasses)
 		for(var/class_type in source.gruntclasses)
-			if(!cached_classes[class_type])
-				cached_classes[class_type] = new class_type()
+			register_class(class_type)
+
+/datum/controller/subsystem/warbands/proc/register_class(class_type)
+	all_warband_class_types[class_type] = TRUE
+	if(initial(class_type:use_subclasses))
+		for(var/sub_type in subtypesof(class_type))
+			all_warband_class_types[sub_type] = TRUE
+	for(var/sub_type in initial(class_type:classes))
+		all_warband_class_types[sub_type] = TRUE
+
+/datum/controller/subsystem/warbands/proc/warband_datum_for(warband_path)
+	for(var/datum/warbands/warband in all_warbands)
+		if(warband.type == warband_path)
+			return warband
+
+/datum/controller/subsystem/warbands/proc/subtype_datum_for(subtype_path)
+	for(var/datum/warbands/subtypes/subtype in all_subtypes)
+		if(subtype.type == subtype_path)
+			return subtype
+
+/datum/controller/subsystem/warbands/proc/aspect_datum_for(aspect_path)
+	for(var/datum/warbands/aspects/aspect in all_aspects)
+		if(aspect.type == aspect_path)
+			return aspect
 
 // cycles through phases each time it fires
 // 	phases: 0 (equip a mob) -> 1 (create a fresh, unassigned mob) -> 2 (create a fresh lobby mob) -> repeat until the caches are full
@@ -219,7 +245,7 @@ SUBSYSTEM_DEF(warbands)
 /////////////////////////////////////////////////////////
 ///////////////////////////////// CREATE UNASSIGNED GRUNT
 /*
-	refills the unassigned grunt cache based on grunts_to_create queue
+	refills the unassigned grunt cache based on the grunts_to_create queue
 
 */
 /datum/controller/subsystem/warbands/proc/create_unassigned_grunt()
@@ -324,4 +350,3 @@ SUBSYSTEM_DEF(warbands)
 	for(var/i = 1 to max_unassigned_cache)
 		var/mob/living/carbon/human/species/human/northern/goon/cached_grunt = new()
 		unassigned_mob_cache += cached_grunt
-		cached_grunt?.ai_controller?.set_ai_status(AI_STATUS_OFF)

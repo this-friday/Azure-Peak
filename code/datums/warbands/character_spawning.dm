@@ -26,8 +26,7 @@
 
 */
 /atom/movable/screen/warband/manager/proc/spawn_character(classpath, mob/user, subclasspath, is_leader, is_latespawn = FALSE)
-	var/datum/advclass/warband/class = warband_class_for(classpath)
-	if(class?.forgoes_subclass)
+	if(warband_class_for(classpath) && initial(classpath:ignores_multiclass_requirement))
 		subclasspath = null
 	var/datum/advclass/class_path = new classpath()
 	var/datum/advclass/subclass_path = subclasspath ? new subclasspath() : null
@@ -74,7 +73,7 @@
 	user.faction |= list("warband_[warband_ID]")
 	user.verbs += /mob/living/carbon/human/proc/shortcut
 	user.verbs += /mob/living/carbon/human/proc/communicate
-	REMOVE_TRAIT(user, TRAIT_FORCED_LOOC, TRAIT_GENERIC)
+	REMOVE_TRAIT(user, TRAIT_FORCED_LOBBY_CHAT, TRAIT_GENERIC)
 	members += user
 	user.nutrition = NUTRITION_LEVEL_FULL
 	user.hydration = HYDRATION_LEVEL_FULL
@@ -138,7 +137,7 @@
 	user.faction |= list("[user.real_name]_faction")
 	ADD_TRAIT(user, TRAIT_BREADY, TRAIT_GENERIC)
 	ADD_TRAIT(user, TRAIT_NO_XP, TRAIT_GENERIC) // we want them doing Literally Anything Else besides farming for skills
-	determine_squad_size(user)
+	determine_squad_size(user, class)
 
 //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ASSIGN GRUNT
@@ -331,8 +330,8 @@
 	warlords will always receive double the expected squad size
 
 */
-/atom/movable/screen/warband/manager/proc/determine_squad_size(mob/user)
-	var/calculated_size = selected_warband?.get_base_squad_size(user) || 4
+/atom/movable/screen/warband/manager/proc/determine_squad_size(mob/user, datum/advclass/primary_class)
+	var/calculated_size = selected_warband?.get_base_squad_size(user, primary_class) || 4
 
 	calculated_size += squad_size_bonus	// applied before doubling so the warlord's multiplier scales it correctly
  

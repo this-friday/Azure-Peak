@@ -110,7 +110,7 @@
 			return
 
 /datum/antagonist/warband/greet()
-	ADD_TRAIT(owner.current, TRAIT_FORCED_LOOC, TRAIT_GENERIC)
+	ADD_TRAIT(owner.current, TRAIT_FORCED_LOBBY_CHAT, TRAIT_GENERIC)
 	SEND_SOUND(owner.current, sound(null))
 	return ..()
 

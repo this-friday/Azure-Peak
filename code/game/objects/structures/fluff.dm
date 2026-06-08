@@ -197,7 +197,7 @@
 			return 0
 	else if(get_dir(loc, target) == dir)
 		if(istype(mover, /mob/living/carbon/human/species/human/northern/goon))
-			return TRUE // railing climbing is broken atm and i can't wrap my head around it, so this is here as a temporary fix to stop Grunts from getting stuck like Roombas	
+			return TRUE // for the sake of Goons not getting stuck like Roombas
 		else
 			return FALSE
 	return 1

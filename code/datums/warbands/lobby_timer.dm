@@ -15,12 +15,16 @@
 	var/cached_remaining_time = -1
 	var/timer_id_warning
 	var/timer_id_timeout
+	var/storytellers_resolved = FALSE // we get the current storytellers when the timer starts, too
 
 /atom/movable/screen/warband/manager/proc/start_creation_timer()
 	if(creation_timer_active)
 		return
 	creation_start_time = world.time
 	creation_timer_active = TRUE
+	if(!storytellers_resolved)
+		storyteller_refresh()
+		storytellers_resolved = TRUE
 	var/time_until_warning = creation_time_limit - creation_warning_threshold
 	timer_id_warning = addtimer(CALLBACK(src, PROC_REF(send_warning)), time_until_warning, TIMER_STOPPABLE)
 
@@ -86,19 +90,19 @@
 	if(creation_stage == 1)
 		to_chat(warlord, span_warning("Selecting random warband configuration..."))
 		
-		if(!SSwarbands.cached_warbands.len)
+		if(!SSwarbands.all_warbands.len)
 			for(var/mob/living/member in lobby_members)
 				cancel_lobby(member)
 			return
 		
-		var/datum/warbands/random_warband = pick(SSwarbands.cached_warbands)
+		var/datum/warbands/random_warband = pick(SSwarbands.all_warbands)
 		selected_warband = random_warband
 		to_chat(warlord, span_notice("Warband: [random_warband.title]"))
 
 		if(random_warband.subtypes && random_warband.subtypes.len > 0)
 			var/list/available_subtypes = list()
 			var/list/compatible_types = random_warband.subtypes[1]
-			for(var/datum/warbands/subtypes/potential_subtype in SSwarbands.cached_subtypes)
+			for(var/datum/warbands/subtypes/potential_subtype in SSwarbands.all_subtypes)
 				if(potential_subtype.type in compatible_types)
 					available_subtypes += potential_subtype
 
@@ -112,7 +116,7 @@
 		var/list/negative_aspects = list()
 		var/list/positive_aspects = list()
 
-		for(var/datum/warbands/aspects/potential_aspect in SSwarbands.cached_aspects)
+		for(var/datum/warbands/aspects/potential_aspect in SSwarbands.all_aspects)
 			var/is_compatible = random_warband.aspects.Find(potential_aspect.type)
 			if(selected_subtype?.aspects)
 				if(selected_subtype.aspects.Find(potential_aspect.type))
@@ -162,39 +166,17 @@
 	
 	if(creation_stage >= 2)
 		if(!selected_warband)
-			if(SSwarbands.cached_warbands.len > 0)
-				selected_warband = pick(SSwarbands.cached_warbands)
+			if(SSwarbands.all_warbands.len > 0)
+				selected_warband = pick(SSwarbands.all_warbands)
 			else
 				for(var/mob/living/carbon/human/member in lobby_members)
 					cancel_lobby(member)
 				return
 
 		to_chat(warlord, span_boldwarning("Spawning with current selections..."))
-		var/class_path = /datum/advclass/warband/standard/warlord/lord
-		var/subclass_path
-		
-		if(selected_warband.warlordclasses && selected_warband.warlordclasses.len > 0)
-			class_path = pick(selected_warband.warlordclasses)
-		else if(selected_subtype && selected_subtype.warlordclasses && selected_subtype.warlordclasses.len > 0)
-			class_path = pick(selected_subtype.warlordclasses)
-
-		if(selected_warband.multiclass_enabled && selected_subtype)
-			var/list/available_subclasses = list()
-			var/list/subtype_classes = list()
-
-			if(warlord.mind.special_role == "Warlord")
-				subtype_classes = selected_warband.warlordclasses + selected_subtype.warlordclasses
-			else if(warlord.mind.special_role == "Lieutenant" || warlord.mind.special_role == "Aspirant Lieutenant")
-				subtype_classes = selected_warband.lieutenantclasses + selected_subtype.lieutenantclasses
-			else
-				subtype_classes = selected_warband.gruntclasses + selected_subtype.gruntclasses
-
-			for(var/class_type in subtype_classes)
-				if(initial(class_type:multiclass_capable))
-					available_subclasses += class_type
-
-			if(available_subclasses.len > 0)
-				subclass_path = pick(available_subclasses)
+		var/list/auto_selection = auto_pick_class_and_subclass(warlord)
+		var/class_path = auto_selection[1]
+		var/subclass_path = auto_selection[2]
 		SSwarbands.warband_managers_busy = TRUE
 		SStgui.close_user_uis(warlord)
 		if(warlord in lobby_members)
@@ -218,6 +200,81 @@
 			if(member.mind.special_role == "Lieutenant" || member.mind.special_role == "Aspirant Lieutenant" || member.mind.special_role == "Grunt")
 				to_chat(member, span_boldwarning("TIME EXPIRED! The warband has been auto-finalized. You may now create your character."))
 				member.playsound_local(member, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
+
+// returns a warband source's class list for a given role tier
+/atom/movable/screen/warband/manager/proc/tier_classes_for(datum/warbands/source, role)
+	if(!source)
+		return list()
+	if(role == "Warlord")
+		return source.warlordclasses || list()
+	if(role == "Lieutenant" || role == "Aspirant Lieutenant")
+		return source.lieutenantclasses || list()
+	return source.gruntclasses || list()
+
+// auto-selects a primary class + subclass for timeout spawns
+/atom/movable/screen/warband/manager/proc/auto_pick_class_and_subclass(mob/member)
+	var/role = member.mind?.special_role
+	var/list/sources = list(selected_warband)
+	if(selected_subtype)
+		sources += selected_subtype
+	for(var/datum/warbands/aspects/aspect in selected_aspects)
+		sources += aspect
+
+	var/list/granted = list()
+	var/list/exclusive = list()
+	var/list/suppressed = list()
+	for(var/datum/warbands/source in sources)
+		var/list/tier_list = tier_classes_for(source, role)
+		if(tier_list.len)
+			granted |= tier_list
+			if(source.replaces_primaries)
+				exclusive |= tier_list
+		if(source.suppressed_classes)
+			suppressed |= source.suppressed_classes
+
+	var/list/primaries = list()
+	for(var/class_type in granted)
+		if(class_type in suppressed)
+			continue
+		if(selected_warband.multiclass_enabled && initial(class_type:multiclass_capable))
+			continue
+		primaries += class_type
+	if(exclusive.len)
+		var/list/restricted = list()
+		for(var/class_type in primaries)
+			if(class_type in exclusive)
+				restricted += class_type
+		primaries = restricted
+
+	var/class_path = pick(primaries)
+
+	var/subclass_path
+	if(selected_warband.multiclass_enabled) // for multiclass warbands (mercenaries)
+		var/list/subclass_pool = list()
+		var/registered = SSwarbands.all_warband_class_types[class_path]
+		if(registered && initial(class_path:use_subclasses))
+			for(var/sub_type in subtypesof(class_path))
+				if(SSwarbands.all_warband_class_types[sub_type] && !(sub_type in suppressed))
+					subclass_pool += sub_type
+		else if(registered && length(initial(class_path:classes)))
+			for(var/sub_type in initial(class_path:classes))
+				if(!(sub_type in suppressed))
+					subclass_pool += sub_type
+		else
+			var/list/tier_types = tier_classes_for(selected_warband, role) + tier_classes_for(selected_subtype, role)
+			for(var/class_type in tier_types)
+				if((class_type in suppressed) || !initial(class_type:multiclass_capable))
+					continue
+				subclass_pool += class_type
+			if(!subclass_pool.len)
+				var/list/grunt_types = (selected_warband.gruntclasses || list()) + (selected_subtype ? (selected_subtype.gruntclasses || list()) : list())
+				for(var/class_type in grunt_types)
+					if((class_type in suppressed) || !initial(class_type:multiclass_capable))
+						continue
+					subclass_pool += class_type
+		if(subclass_pool.len)
+			subclass_path = pick(subclass_pool)
+	return list(class_path, subclass_path)
 
 // called between stages
 // refreshes the creation timer

@@ -12,10 +12,10 @@
 	authorities = list(/datum/job/roguetown/magician)
 	hint = "...every other sentence is about how magnificent some wizard is..."
 	// the wizard has acknowledged that they:
-	var/list/base_insult = list("are, quote, 'a fraud in all manners arcyne'", \
+	var/static/list/base_insult = list("are, quote, 'a fraud in all manners arcyne'", \
 								"are, quote, 'a clay-brained charlatan'", \
 								"are, quote, 'a drooling hylic'")
-	var/list/followup = list("who is 'lucky they haven't annihilated themselves casting cantrips, much less trying to breathe'", \
+	var/static/list/followup = list("who is 'lucky they haven't annihilated themselves casting cantrips, much less trying to breathe'", \
 							"whose 'only attentions from Noc likely came in the form of a meteorite falling into their skull'", \
 							"who 'come their death, will be damned to cluelessly roam the Underworld for all eternity' as the Carriageman is, quote, 'likely to mistake them for a fogbeast or a similar such brainless creechur'", \
 							"who should 'forsake the secrets of the universe and embrace their ultimate destiny of tilling fields'")

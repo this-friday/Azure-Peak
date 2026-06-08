@@ -104,8 +104,8 @@ GLOBAL_LIST_INIT(department_radio_keys, list(
 		SSblackbox.record_feedback("tally", "ic_blocked_words", 1, lowertext(config.ic_filter_regex.match))
 		return
 
-	if(HAS_TRAIT(src, TRAIT_FORCED_LOOC)) // for warband lobbies | sends the message into LOOC
-		client.do_looc(message, FALSE)
+	if(HAS_TRAIT(src, TRAIT_FORCED_LOBBY_CHAT)) // for warband lobbies | sends the message into LOOC
+		client.do_lobby_say(message, FALSE)
 		return
 
 	var/datum/saymode/saymode = SSradio.saymodes[talk_key]

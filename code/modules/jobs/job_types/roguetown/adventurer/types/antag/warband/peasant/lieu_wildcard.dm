@@ -22,7 +22,7 @@
 		/datum/advclass/warband/mercenary
 	)
 	
-	for(var/datum/warbands/warband as anything in SSwarbands.cached_warbands)
+	for(var/datum/warbands/warband as anything in SSwarbands.all_warbands)
 		for(var/lieutenant_type in warband.lieutenantclasses)
 			var/excluded = FALSE
 			for(var/path in excluded_classes)
@@ -30,7 +30,7 @@
 					excluded = TRUE
 					break
 			if(!excluded)
-				var/datum/advclass/cached = SSwarbands.cached_classes[lieutenant_type]
+				var/datum/advclass/cached = SSwarbands.all_warband_class_types[lieutenant_type]
 				if(cached)
 					all_lieutenant_classes |= cached
 
@@ -41,7 +41,7 @@
 					excluded = TRUE
 					break
 			if(!excluded)
-				var/datum/advclass/cached = SSwarbands.cached_classes[warlord_type]
+				var/datum/advclass/cached = SSwarbands.all_warband_class_types[warlord_type]
 				if(cached)
 					all_warlord_classes |= cached
 

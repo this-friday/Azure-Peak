@@ -2,6 +2,40 @@
 	COOLDOWN_DECLARE(squad_spawn_cooldown)
 	COOLDOWN_DECLARE(treaty_cooldown)
 
+/datum/advclass
+	var/title							// name that exclusively appears in class selection
+	var/datum/storytellerlimit			// required storyteller influence for the class to be available
+	var/rarity							// the required number of storyteller influences before a storyteller-limited class is unlocked
+	var/ignore_locks = FALSE			// class ignores an associated warband's faith/racelocks
+
+	var/multiclass_capable = FALSE					// when TRUE, this class appears in the subclass panel rather than the primary class panel for multiclass-enabled warbands
+	var/ignores_multiclass_requirement = FALSE		// when a class is associated with a warband that requires a multiclass, this allows them to ignore that
+	var/use_subclasses = FALSE
+
+/* 
+	warbands use two different subclass methods: "Multiclass" and "Subclass"
+		CLASSIC SUBCLASS
+			- the classic subclass method, where we just rely on a class datum's subtypes
+			- a class datum's subtypes are selectable in its class tab
+			- flag it with the use_subclasses variable
+			- see /datum/advclass/warband/mercenary/warlord/patron for an example
+
+		MULTICLASS
+			- Multiclassing is so specific to the Mercenary Warband (/datum/warbands/mercenary) that I can't really see it being used for anything else
+			- if you're thinking of adding subclasses, you're almost 100% thinking of the Classic method
+			- but for posterity's sake:
+				it equips two classes at once
+					the first class is taken from the base warband datum's class lists
+					the second class can be any class flagged multiclass_capable
+
+					classes in the warband's Grunt list are given as secondary options to everyone (including Lieutenants and the Warlord)
+					classes in the warband's Lieutenant or Warlord lists are only given to them. the grunt classes are hidden
+
+			- requires multiclass_enabled on the WARBAND and multiclass_capable on the class
+
+*/
+
+
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ASSOCIATE
 /* 

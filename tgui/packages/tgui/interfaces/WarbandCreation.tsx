@@ -40,6 +40,8 @@ export const WarbandCreation = () => {
     manager_faithlock_names,
     manager_racelocks,
     manager_racelock_names,
+    lobby_chat_muted,
+    lobby_mute_remaining,
   } = useWarbandData();
 
   const {
@@ -53,6 +55,7 @@ export const WarbandCreation = () => {
   
   const { filteredWarbands, filteredSubtypes, filteredAspects, availableClasses, filteredSubclasses } = useWarbandFilters(
     user_role, selectedWarband, selectedSubtype,
+    selectedAspects, selectedClass,
     warbandList, subtypeList, aspectList, classList, storytellersList,
     bypass_rarity,
   );
@@ -69,7 +72,7 @@ export const WarbandCreation = () => {
   const finalize_disabled =
     pointCounter < 0 || !selectedWarband || !selectedClass ||
     (selectedWarband?.subtyperequired && !selectedSubtype) ||
-    (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.forgoes_subclass && !selectedSubclass);
+    (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.ignores_multiclass_requirement && !selectedSubclass);
 
   const pointsColor = pointCounter > 0 ? '#2ee62eff' : (pointCounter < 0 ? '#FF0000' : '#4b504bff');
   const canFinalize = is_warlord || warlord_spawned;
@@ -132,6 +135,46 @@ export const WarbandCreation = () => {
     </div>
   );
 
+  const muteRemainingLabel = lobby_chat_muted ? formatTime(lobby_mute_remaining) : '2:00';
+  const renderLobbyMuteControl = () => {
+    if (is_warlord) {
+      return (
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '12px' }}>
+          <Button
+            icon={lobby_chat_muted ? 'volume-xmark' : 'volume-high'}
+            onClick={() => act('mute_lobby_chat')}
+            tooltip={lobby_chat_muted
+              ? 'Lift the silence on the warband lobby.'
+              : 'Shut everybody else up for 2 minutes.'}
+            style={{
+              height: '40px',
+              backgroundColor: lobby_chat_muted ? '#7a1f1f' : '#2a0808',
+              border: `1px solid ${lobby_chat_muted ? '#e8bf67' : '#682222ff'}`,
+              color: lobby_chat_muted ? '#e8bf67' : '#c9c9c9',
+              fontWeight: 'bold',
+              display: 'flex', alignItems: 'center',
+            }}
+          >
+            {lobby_chat_muted
+              ? `LOBBY SILENCED - ${muteRemainingLabel}`
+              : 'SILENCE LOBBY - 2:00'}
+          </Button>
+        </div>
+      );
+    }
+    if (lobby_chat_muted) {
+      return (
+        <div style={{
+          marginLeft: 'auto', paddingRight: '12px', display: 'flex', alignItems: 'center',
+          color: '#e8bf67', fontWeight: 'bold',
+        }}>
+          LOBBY SILENCED BY WARLORD - {formatTime(lobby_mute_remaining)}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <Window theme="azure_warband" width={1380} height={710}>
       <Window.Content style={{ background: 'linear-gradient(to left, #000000 0%, #1d0505ff 100%)' }}>
@@ -151,6 +194,7 @@ export const WarbandCreation = () => {
               TIME REMAINING: <span style={{ color: getTimerColor() }}>{formatTime(time_remaining)}</span>
             </span>
           </div>
+          {renderLobbyMuteControl()}
         </Stack>
 
         <div style={{ background: 'linear-gradient(to left, #000000 0%, #3c0d0d 100%)', borderBottom: '2px solid #160303', marginBottom: '4px' }}>

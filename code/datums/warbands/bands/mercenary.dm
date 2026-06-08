@@ -4,16 +4,17 @@
 	treaty_name = "The Company"
 	summary = "So numerous are the potential motives for a band of mercenaries, that the idea \
 	they're fighting for mammon becomes a mere afterthought."
+	warning = "...an entire company's worth of mercenaries soon to be upon us."
 	subtyperequired = TRUE
 	subtypes = list(WARBAND_MERCENARIES)
-	aspects = list(ASPECT_SURPRISE, ASPECT_FORT, ASPECT_BATTLETESTED, ASPECT_HOST, ASPECT_ENVY, ASPECT_RANDOM, ASPECT_SCUM, ASPECT_WAR, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED, ASPECT_SUPPLIES)
+	aspects = list(ASPECT_SURPRISE, ASPECT_FORT, ASPECT_BATTLETESTED, ASPECT_HOST, ASPECT_ENVY, ASPECT_RANDOM, ASPECT_SCUM, ASPECT_WAR, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED, ASPECT_SUPPLIES, ASPECT_PATRON)
 	warcamp = /datum/map_template/warcamp_standard
 	spawns = RESPAWNS_LOW
 	combatmusic = list('sound/music/combat_veteran.ogg')
 	multiclass_enabled = TRUE
 	subclass_required = TRUE
 
-	warlordclasses = list(/datum/advclass/warband/mercenary/warlord/captain, /datum/advclass/warband/mercenary/warlord/patron)
+	warlordclasses = list(/datum/advclass/warband/mercenary/warlord/captain)
 	
 	lieutenantclasses = list(/datum/advclass/warband/mercenary/lieutenant/vanguard, 
 							/datum/advclass/warband/mercenary/lieutenant/tactician, 
@@ -21,15 +22,19 @@
 
 	gruntclasses = list(/datum/advclass/warband/mercenary/grunt/merc)
 
-/datum/warbands/standard/get_base_squad_size(mob/user)
-	if(user.job == "Patron")
-		return 6
+/datum/warbands/mercenary/get_base_squad_size(mob/user, datum/advclass/primary_class)
+	if(istype(primary_class, /datum/advclass/warband/mercenary/warlord/patron))
+		return 5
 	return ..()
 
-//////////////////////////////////////////////////////////
-///////////////////////////////////////////////// SUBTYPES
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// NOTE ON HOW CLASSES WORK HERE
+/*
+	classes in the warband's Grunt list are given as secondary options to everyone (including Lieutenants and the Warlord)
+	classes in the warband's Lieutenant or Warlord lists are only given to them
+	if a warlord/lieutenant has a filled class list, it overrides the Grunt List
 
-// if you're adding a merc subtype here, don't forget to add it to the WARBAND_MERCENARIES define list
+*/
 
 /datum/warbands/subtypes/northmen
 	title = "NORTHMEN"

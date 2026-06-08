@@ -3,6 +3,10 @@
 	var/list/mob/living/carbon/human/species/human/northern/goon/followers = list()	// goons currently following via the waypoint system
 	var/list/turf/waypoints = list()	// 	as the leader moves, they mark the turfs they pass over as 'waypoints'
 	var/max_waypoints = 40				//	followers move along said waypoints
+	var/list/turf/portals = list()		// when the leader changes z-levels, we mark the tile they left as a "portal" to wherever they landed
+
+	var/list/stuck_cycles = list()		// associative list that's a goon + consecutive move cycles they failed to make progress in
+	var/max_stuck_cycles = 5			// drop a follower after this many cycles of them getting nowhere
 
 /datum/component/squad_controller/Initialize()
 	RegisterSignal(parent, COMSIG_MOVABLE_MOVED, PROC_REF(on_leader_moved))
@@ -12,28 +16,38 @@
 	members = null
 	followers = null
 	waypoints = null
+	portals = null
+	stuck_cycles = null
 	return ..()
 
 /datum/component/squad_controller/proc/on_leader_moved(atom/movable/mover, atom/old_loc, direction, forced)
 	var/turf/current_pos = get_turf(parent)
 	if(!current_pos)
 		return
-	
+		
+	// when the leader changes z-levels, we mark the tile they left as a "portal" to wherever they landed
+	var/turf/old_turf = get_turf(old_loc)
+	if(old_turf && old_turf.z != current_pos.z)
+		portals[old_turf] = current_pos
+
 	if(!waypoints.len || waypoints[1] != current_pos)
 		waypoints.Insert(1, current_pos)
 		if(waypoints.len > max_waypoints)
 			waypoints.Cut(max_waypoints + 1)
-	
+			clear_portals()
+
 	move_squad_waypoint()
 
 /datum/component/squad_controller/proc/add_follower(mob/living/carbon/human/species/human/northern/goon/new_member)
 	members |= new_member	// permanently record them as part of this leader's squad
-	followers |= new_member	// mark them as an active waypoint follower
 	new_member.squad_leader = parent
-	RegisterSignal(new_member, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(remove_follower))
+
+	if(!(new_member in followers))
+		followers |= new_member // mark them as an active waypoint follower
+		RegisterSignal(new_member, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(remove_follower))
+
 	new_member.ai_controller?.CancelActions()
 	new_member.ai_controller?.set_ai_status(AI_STATUS_OFF)
-
 	return
 
 // the mob stops following the leader
@@ -42,14 +56,27 @@
 	if(!(member in followers))
 		return
 	followers -= member
+	stuck_cycles -= member
 	member.squad_leader = null
-	UnregisterSignal(member, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(remove_follower))
+	UnregisterSignal(member, COMSIG_ATOM_WAS_ATTACKED)
 	member.ai_controller?.clear_blackboard_key(BB_TRAVEL_DESTINATION)
 	member.ai_controller?.set_ai_status(AI_STATUS_ON)
+
+/datum/component/squad_controller/proc/lose_follower(mob/living/carbon/human/species/human/northern/goon/goon)
+	var/mob/living/carbon/human/leader = parent
+	if(leader)
+		to_chat(leader, span_warning("A goon couldn't follow me."))
+	remove_follower(goon)
 
 /datum/component/squad_controller/proc/clear_followers()
 	for(var/mob/living/carbon/human/M in followers)
 		remove_follower(M)
+
+// drop any portal whose entry tile is no longer part of the live waypoint trail
+/datum/component/squad_controller/proc/clear_portals()
+	for(var/turf/entry in portals)
+		if(!(entry in waypoints))
+			portals -= entry
 
 /datum/component/squad_controller/proc/move_squad_waypoint()
 	var/list/sorted_followers = list()
@@ -65,15 +92,36 @@
 	sorted_followers = sortTim(sorted_followers, GLOBAL_PROC_REF(cmp_dist_to_atom_dsc), leader)
 
 	for(var/mob/living/carbon/human/species/human/northern/goon/goon in sorted_followers)
+		var/turf/goon_turf = get_turf(goon)
+
+		var/turf/portal_exit = goon_turf ? portals[goon_turf] : null
+		if(portal_exit)
+			goon.forceMove(portal_exit)
+			goon.recent_travel = world.time
+			if(goon.m_intent != MOVE_INTENT_SNEAK)
+				playsound(goon, 'sound/foley/climb.ogg', 100, TRUE)
+			stuck_cycles -= goon
+			continue
+
 		var/turf/target_waypoint = next_best_waypoint(goon)
 		
 		if(!target_waypoint)
+			stuck_cycles[goon] += 1
+			if(stuck_cycles[goon] >= max_stuck_cycles)
+				lose_follower(goon)
 			continue
 		
 		var/step_dir = get_dir(goon, target_waypoint)
 		if(!step_dir)
+			stuck_cycles -= goon
 			continue
-		try_move_grunt(goon, step_dir)
+
+		if(try_move_grunt(goon, step_dir))
+			stuck_cycles -= goon // made progress this cycle
+		else
+			stuck_cycles[goon] += 1 // blocked by terrain or another mob
+			if(stuck_cycles[goon] >= max_stuck_cycles)
+				lose_follower(goon)
 
 /datum/component/squad_controller/proc/try_move_grunt(mob/living/carbon/human/species/human/northern/goon/goon, move_dir)
 	if(!move_dir)
@@ -100,44 +148,43 @@
 	
 	return step(goon, move_dir)
 
-
 /datum/component/squad_controller/proc/next_best_waypoint(mob/living/carbon/human/species/human/northern/goon/goon)
-	if(!waypoints.len)
-		return get_turf(parent)
-	
 	var/turf/goon_turf = get_turf(goon)
+	if(!goon_turf)
+		return
+
 	var/turf/best_waypoint
 	var/closest_dist = INFINITY
 	
 	for(var/turf/waypoint in waypoints)
-		if(waypoint == goon_turf)
-			continue  // skip the waypoint they're already standing on
-		
+		if(waypoint == goon_turf || waypoint.z != goon_turf.z) // skip the waypoint we're already standing on
+			continue // and skip waypoints on other z-levels
+
 		var/dist = get_dist(goon, waypoint)
-		
+
 		// prefer waypoints that are 1-3 tiles away
-		if(dist > 0 && dist <= 3)
-			if(dist < closest_dist)
-				closest_dist = dist
-				best_waypoint = waypoint
-	
+		if(dist > 0 && dist <= 3 && dist < closest_dist)
+			closest_dist = dist
+			best_waypoint = waypoint
+
 	// if there's no nearby waypoint, just take the closest one
 	if(!best_waypoint)
 		for(var/turf/waypoint in waypoints)
-			if(waypoint == goon_turf)
+			if(waypoint == goon_turf || waypoint.z != goon_turf.z)
 				continue
 			
 			var/dist = get_dist(goon, waypoint)
 			if(dist < closest_dist)
 				closest_dist = dist
 				best_waypoint = waypoint
-	
 
+	// fall back to the leader's tile, but only if they're on this goon's floor
 	if(!best_waypoint)
-		best_waypoint = get_turf(parent)
-	
-	return best_waypoint
+		var/turf/leader_turf = get_turf(parent)
+		if(leader_turf && leader_turf.z == goon_turf.z)
+			best_waypoint = leader_turf
 
+	return best_waypoint
 
 // whenever the squad leader goes through a travel tile, we bring along any squadmates within 5 tiles of them
 // we also bring along the squadmates nearby THOSE squadmates
@@ -155,10 +202,9 @@
 		if(!(goon in qualified))
 			remove_follower(goon)
 
-
 /datum/component/squad_controller/proc/get_qualified_members(max_range = 5)
 	var/mob/living/carbon/human/leader = parent
-	var/list/to_check = list(leader)	
+	var/list/to_check = list(leader)
 	var/list/qualified = list()
 	var/list/checked = list()
 	
@@ -181,5 +227,3 @@
 					to_check += goon
 	
 	return qualified
-
-

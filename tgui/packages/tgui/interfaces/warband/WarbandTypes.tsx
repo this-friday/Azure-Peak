@@ -15,6 +15,9 @@ export type WarbandDatumBase = {
   racelock_names?: string[];
   inputs?: import('./TreatyTypes').InputFieldDescriptor[];
   selection_inputs?: Record<string, any>;
+  suppressed_classes?: string[];
+  replaces_primaries?: boolean;
+  rarity_locked?: boolean;
 };
 
 export type WarbandType = WarbandDatumBase & {
@@ -49,7 +52,8 @@ export type ClassType = {
   type: string;
   multiclass_capable: boolean;
   ignore_locks?: boolean;
-  forgoes_subclass?: boolean;
+  ignores_multiclass_requirement?: boolean;
+  classes?: string[];
 };
 
 export type StorytellerType = {
@@ -110,6 +114,8 @@ export type Data = {
   is_warlord: boolean;
   time_remaining: number;
   timer_active: boolean;
+  lobby_chat_muted: boolean;
+  lobby_mute_remaining: number;
   warbands?: WarbandType[];
   subtypes?: SubType[];
   aspects?: AspectType[];

@@ -7,7 +7,7 @@
 	var/warband_ID
 	var/datum/warbands/warband
 	var/datum/warbands/subtypes/subtype
-	var/list/abandon_textoptions = list("succumbs to an old infection - collapsing first to their knees, then crashing down face first.", "succumbs to the elements.", "goes pale and faints soon afterwards. Their breath stills.", "is lost to a hunger long unsated. They die thin and frail.")
+	var/static/list/abandon_textoptions = list("succumbs to an old infection - collapsing first to their knees, then crashing down face first.", "succumbs to the elements.", "goes pale and faints soon afterwards. Their breath stills.", "is lost to a hunger long unsated. They die thin and frail.")
 	var/mob/squad_leader
 
 	// when a grunt is equipped, we cache the type of any item that can be disarmed/dismembered from them (gloves, weapons etc)

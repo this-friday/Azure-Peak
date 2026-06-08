@@ -34,8 +34,6 @@
 		'/obj/structure/fluff/traveltile/warband/intermission_to_outskirts' | an exit
 		in strongdmm they'll appear red & orange
 
-	add any warbands & aspects you make to the #define lists, otherwise they'll never pop up in the warband creation menu
-
 ////////////////////////																			////////////////////////
 //////////////////////////////////////////////// NOTES ON WARBAND CREATION ////////////////////////////////////////////////
 ////////////////////////																			////////////////////////
@@ -69,6 +67,8 @@
 	var/list/warlordclasses = list()
 	var/list/lieutenantclasses = list()
 	var/list/gruntclasses = list()
+	var/list/suppressed_classes = list()	// class type paths to hide from this selection's class/subclass panels
+	var/replaces_primaries = FALSE			// when TRUE, for each tier this datum grants into, the PRIMARY panel is restricted to those grants (blocks all other primaries)
 	var/spawns						// lost when an NPC is spawned | combined with the baseline spawns (400)
 	var/list/combatmusic = list()
 	var/datum/outskirts_wave/outskirts_wave
@@ -111,7 +111,7 @@
 	return /datum/outfit/job/roguetown/human/species/human/northern/goon
 
 // returns the base squad size
-/datum/warbands/proc/get_base_squad_size(mob/user)
+/datum/warbands/proc/get_base_squad_size(mob/user, datum/advclass/primary_class)
 	return ALLIED_NPC_MINIMUM // 4
 
 // called by set_race_and_faith_locks() after locks are built

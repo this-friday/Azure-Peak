@@ -169,7 +169,7 @@ export const useWarbandSelection = () => {
 
   const handleClassSelect = (classe: ClassType) => {
     setSelectedClass(prevClass => {
-      if (prevClass?.name === classe.name) {
+      if (prevClass?.type === classe.type) {
         return null;
       }
       return classe;
@@ -179,7 +179,7 @@ export const useWarbandSelection = () => {
 
   const handleSubclassSelect = (subclass: ClassType) => {
     setSelectedSubclass(prevSubclass => {
-      if (prevSubclass?.alt_name === subclass.alt_name) {
+      if (prevSubclass?.type === subclass.type) {
         return null;
       }
       return subclass;

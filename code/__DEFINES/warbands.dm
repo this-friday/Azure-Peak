@@ -70,6 +70,7 @@
 #define ASPECT_SCUM				/datum/warbands/aspects/outlaw
 #define ASPECT_CAVALRY			/datum/warbands/aspects/cavalry
 #define ASPECT_SUPPLIES			/datum/warbands/aspects/supplies
+#define ASPECT_PATRON			/datum/warbands/aspects/patron
 
 // SUBTYPES (SECTS)
 #define WARBAND_SECT_TEN 		/datum/warbands/subtypes/ten 

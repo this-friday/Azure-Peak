@@ -73,18 +73,13 @@
 ///////////////////////////////////////////////// BASE PROCS
 /*
 	// INITIALIZING
-	1  - FIGURE REFRESH			// populates the importantfigures list from current player_list
-	2  - STORYTELLER REFRESH	// populates the manager's storyinfluence list
+	0 - GET MANAGER				// gets the warband manager of a provided mob
+	1 - FIGURE REFRESH			// populates the importantfigures list from current player_list
+	2 - STORYTELLER REFRESH		// populates the manager's storyinfluence list
 
 	// LORE LOCKS
 	1 - LOCK CHECK 				// compares a mob against the warband's faith & racelocks
 	2 - SET LOCKS				// collects all race & faith locks from the selected warband/subtype/aspects
-	3 - NOTIFY SECT				// notifies lobby members of sect restrictions
-	4 - APPLY SECT FAITHLOCK	// after a Sect Warlord spawns, updates the faithlock to match their patron
-
-	// ASPECT HANDLING
-	1 - ASPECT TWEAKS		// makes final tweaks to the warband's stats based on aspects
-	2 - ENVY CHECK			// converts lieutenants to aspirants if Throne of Envy is selected
 
 	// OUTSKIRTS
 	1 - INITIALIZE OUTSKIRTS ENCOUNTER		// sets up the outskirts encounter manager
@@ -105,6 +100,20 @@
 	if(!finalized)
 		storyteller_refresh()
 		figure_refresh()
+
+///////////////////////////////////////////////
+/////////////////////////////////// GET MANAGER
+/proc/get_lobby_manager_for(mob/talker)
+	if(!talker?.mind)
+		return
+	if(talker.mind.warband_manager)
+		return talker.mind.warband_manager
+	for(var/atom/movable/screen/warband/manager/candidate in SSwarbands.warband_managers)
+		if(candidate.warband_ID == talker.mind.warband_ID)
+			return candidate
+		if(talker in candidate.lobby_members)
+			return candidate
+	return
 
 /atom/movable/screen/warband/manager/proc/figure_refresh()
 	var/list/important_jobs = list(
@@ -134,6 +143,8 @@
 		the roundstart storyteller
 		the currently active storyteller (only really matters for latespawns)
 		each prince has a 50% chance to contribute their patron to the storyteller list
+	
+	ran when a manager's timer first starts during start_creation_timer()
 */
 /atom/movable/screen/warband/manager/proc/storyteller_refresh()
 	storyinfluence.Cut()
@@ -158,8 +169,8 @@
 	if the given mob doesn't match them, fixes the discrepancy
 */
 /atom/movable/screen/warband/manager/proc/lock_check(mob/living/carbon/human/user, spawning_class_path)
-	var/datum/advclass/warband/class = warband_class_for(spawning_class_path)
-	if(class?.ignore_locks)
+	var/class_path = warband_class_for(spawning_class_path)
+	if(class_path && initial(class_path:ignore_locks))
 		if(user.patron)
 			user.set_patron(user.patron.type)
 		return
@@ -554,9 +565,8 @@
 		cb_copy.obj_target = casus_belli_selection.obj_target
 	T.active_terms += cb_copy
 
-// returns the advclass for a path
+// returns the type path if it's a registered warband class, else null | callers read metadata via initial(path:var)
 /atom/movable/screen/warband/manager/proc/warband_class_for(class_path)
-	var/datum/advclass/cached = SSwarbands.cached_classes[class_path]
-	if(istype(cached, /datum/advclass/warband))
-		return cached
+	if(SSwarbands.all_warband_class_types[class_path] && ispath(class_path, /datum/advclass/warband))
+		return class_path
 	return

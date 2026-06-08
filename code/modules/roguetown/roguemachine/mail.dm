@@ -632,9 +632,7 @@
 			playsound(src, 'sound/misc/coininsert.ogg', 100, FALSE, -1)
 			return display_marquette(usr)
 		else
-			return
-
-
+			return	
 	if(istype(P, /obj/item/roguecoin))
 		var/obj/item/roguecoin/C = P
 		var/coin_value = C.get_real_price()

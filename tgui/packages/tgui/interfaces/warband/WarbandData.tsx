@@ -25,6 +25,8 @@ export const useWarbandData = () => {
   
   const time_remaining = data?.time_remaining || 0;
   const timer_active = data?.timer_active || false;
+  const lobby_chat_muted = data?.lobby_chat_muted || false;
+  const lobby_mute_remaining = data?.lobby_mute_remaining || 0;
 
   const warbandList = finalized_status ? backend_warband : (data?.warbands || []);
   const subtypeList = finalized_status ? backend_subtype : (data?.subtypes || []);
@@ -71,6 +73,8 @@ export const useWarbandData = () => {
     bypass_rarity,
     time_remaining,
     timer_active,
+    lobby_chat_muted,
+    lobby_mute_remaining,
     allTerms,
     casusBelliProposals,
     userProposal,
