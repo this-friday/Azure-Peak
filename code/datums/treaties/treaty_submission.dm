@@ -15,7 +15,7 @@
 /obj/item/treaty/proc/text_to_faction(target_name)
 	if(!target_name)
 		return
-	for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+	for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 		if(faction.name == target_name)
 			return faction
 	return

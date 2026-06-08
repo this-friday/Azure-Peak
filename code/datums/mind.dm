@@ -150,7 +150,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	var/warband_latespawn = FALSE				// identifier for any warband character that joined late
 	var/enlightened = FALSE						// has a prophet (Sect Warlord) performed their Enlighten verb on them?
 
-	var/list/datum/territory_faction/associated_factions = list()	// contains someone's associated TREATY factions
+	var/list/datum/treaty_flavor/associated_factions = list()	// contains someone's associated TREATY factions
 	
 	var/mob/living/original_char // given to envoys to track their original character | drawn on for returning + treaty authority
 

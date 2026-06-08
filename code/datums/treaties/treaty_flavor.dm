@@ -1,29 +1,21 @@
-/datum/territory_faction
+/datum/treaty_flavor
 	var/name = "Warband"
 	var/desc = ""
 	var/job_owner 			// a job path given to the faction to determine ownership | used in preset factions	
 	var/owner				// a real_name given to the faction to determine ownership | used in generated factions
-	var/vault				// money
+	var/vault				// money (literally not real at all)
 	var/list/member_names = list()
 	var/icon = 'icons/roguetown/weapons/shields32.dmi'
 	var/icon_state = "ironsh"
 
-//////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// DEFAULT FACTIONS
-/*
-	pre-generated factions
-
-*/
-/datum/territory_faction/custom
-
-/datum/territory_faction/azure
+/datum/treaty_flavor/azure
 	name = "The Crown"
 	desc = "It is the year 1513, and within the ruins of the Holy Land there yet stands a Grand Duchy."
 	job_owner = /datum/job/roguetown/lord
 	icon = 'icons/roguetown/weapons/legacy_shield_heraldry.dmi'
 	icon_state = "ironsh_azure peak"
 
-/datum/territory_faction/heartfelt
+/datum/treaty_flavor/heartfelt
 	name = "The Heartfelt"
 	desc = "Fortune has always been cruel to the Heartfelt."
 	job_owner = /datum/migrant_role/heartfelt/lord
@@ -31,7 +23,7 @@
 	icon = 'icons/roguetown/weapons/legacy_shield_heraldry.dmi'
 	icon_state = "woodsh_peacemaker"
 
-/datum/territory_faction/church
+/datum/treaty_flavor/church
 	name = "The Holy See"
 	desc = "And so must Ten servants be worshipped as Lords; for He is gone, and we cannot remain alone."
 	job_owner = /datum/job/roguetown/priest
@@ -39,7 +31,7 @@
 	icon = 'icons/roguetown/weapons/shields32.dmi'
 	icon_state = "gsshield"
 
-/datum/territory_faction/orthodoxy
+/datum/treaty_flavor/orthodoxy
 	name = "The Orthodoxy"
 	desc = "Deep within old halls, older men weep in memory of the eldest God."
 	job_owner = /datum/job/roguetown/inquisitor
@@ -47,7 +39,7 @@
 	icon = 'icons/roguetown/weapons/shields32.dmi'
 	icon_state = "psyshield"
 
-/datum/territory_faction/farm
+/datum/treaty_flavor/farm
 	name = "The Soilfolk"
 	desc = "Several families of land-tending yeomen, graciously granted workable soil by the Crown."
 	vault = 1500
@@ -55,8 +47,7 @@
 	icon = 'icons/roguetown/weapons/shields32.dmi'
 	icon_state = "deprived"
 
-// guildmaster is given a territory with a randomized Prized Good (limited to materials)
-/datum/territory_faction/guild
+/datum/treaty_flavor/guild
 	name = "The Guild"
 	desc = "Stonemasons, tailors and artificers share very little in common. \
 	And yet, these little commonalities are pressing enough to see a grand fraternity forged."
@@ -65,8 +56,7 @@
 	icon = 'icons/roguetown/weapons/shields32.dmi'
 	icon_state = "artificershield"
 
-// merchant is given a territory with a randomized Prized Good (any)
-/datum/territory_faction/merchant
+/datum/treaty_flavor/merchant
 	name = "The Merchant"
 	desc = "A humble merchant. No more, no less."
 	vault = 2000
@@ -74,14 +64,7 @@
 	icon = 'icons/roguetown/weapons/shields32.dmi'
 	icon_state = "bronzeshield"
 
-
-////////////////////////////////////////////////////
-/////////////////////////////////// GENERATE FACTION
-/*
-	generate and return a faction for a given user
-	also generates a single territory for said faction
-*/
-/datum/territory_faction/proc/generate_faction(mob/user, faction_name = "Unknown Domain", faction_desc = "", stewardhidden = FALSE)
+/datum/treaty_flavor/proc/generate_faction(mob/user, faction_name = "Unknown Domain", faction_desc = "", stewardhidden = FALSE)
 	if(user)
 		owner = user.real_name	
 	var/given_name = faction_name
@@ -95,32 +78,25 @@
 	name = verify_faction_name(given_name, user) // no two names can be the exact same
 	desc = "[given_desc]"
 
-	src.vault = rand(400, 1400)
+	vault = rand(400, 1400)
 
-	var/datum/territory_faction/generated_faction = src
+	var/datum/treaty_flavor/generated_faction = src
 	generated_faction.member_names |= user.real_name
 	if(owner) // adds the faction to the subsystem's cache
 		SSwarbands.name_to_faction_cache[owner] = generated_faction
 	if(job_owner)
 		SSwarbands.job_to_faction_cache[job_owner] = generated_faction
-	SSwarbands.territory_factions += generated_faction
+	SSwarbands.treaty_flavor_factions += generated_faction
 	return generated_faction
 
-
-//////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// VERIFY NAMES
-/*
-	makes sure that generated factions will never have the exact same name
-	if they ever do, you'll start to see problems w/ownership
-*/
-/datum/territory_faction/proc/verify_faction_name(base_name, mob/user)
+/datum/treaty_flavor/proc/verify_faction_name(base_name, mob/user)
 	var/proposed_name = base_name
 	var/counter = 1
 	var/name_exists = TRUE
 	
 	while(name_exists)
 		name_exists = FALSE
-		for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+		for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 			if(faction.name == proposed_name)
 				name_exists = TRUE
 				break

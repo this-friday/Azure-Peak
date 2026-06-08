@@ -36,7 +36,7 @@
 
 	var/schism_level = 0					// warbands can split/schism | this number = how many schisms away the warband is from its progenitor warband | doesn't actually influence anything atm, but for posterity's sake
 
-	var/datum/territory_faction/linked_faction		// the treaty faction connected to the warband
+	var/datum/treaty_flavor/linked_faction		// the treaty faction connected to the warband
 
 	var/list/racelocks = list()
 	var/list/faithlocks = list()
@@ -346,9 +346,9 @@
 	var/faction_tag = "warband_[warband_ID]"
 	var/personal_faction_tag
 	var/mob/exiled_creecher = initial_target
-	var/datum/component/squad_controller/manager = user.GetComponent(/datum/component/squad_controller)
+	var/datum/component/trail_follow/manager = user.GetComponent(/datum/component/trail_follow)
 	if(!manager)
-		manager = user.AddComponent(/datum/component/squad_controller)
+		manager = user.AddComponent(/datum/component/trail_follow)
 
 	if(menu_name) // get the mob w/the name given from the exile menu
 		for(var/mob/living/member in members)

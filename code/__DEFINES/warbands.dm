@@ -110,15 +110,15 @@
 						/datum/treaty/terms/attainder, /datum/treaty/terms/peace, /datum/treaty/terms/freeform)
 
 // treaty flavor datums
-#define TFACTION_AZURE /datum/territory_faction/azure
-#define TFACTION_CHURCH /datum/territory_faction/church
-#define TFACTION_HEARTFELT /datum/territory_faction/heartfelt
-#define TFACTION_ORTHODOX /datum/territory_faction/orthodoxy
-#define TFACTION_SOILER	/datum/territory_faction/farm
-#define TFACTION_GUILD /datum/territory_faction/guild
-#define TFACTION_MERCHANT /datum/territory_faction/merchant
+#define TFACTION_AZURE /datum/treaty_flavor/azure
+#define TFACTION_CHURCH /datum/treaty_flavor/church
+#define TFACTION_HEARTFELT /datum/treaty_flavor/heartfelt
+#define TFACTION_ORTHODOX /datum/treaty_flavor/orthodoxy
+#define TFACTION_SOILER	/datum/treaty_flavor/farm
+#define TFACTION_GUILD /datum/treaty_flavor/guild
+#define TFACTION_MERCHANT /datum/treaty_flavor/merchant
 
-#define DEFAULT_TERRITORY_FACTIONS list(TFACTION_AZURE, TFACTION_CHURCH, TFACTION_HEARTFELT, TFACTION_ORTHODOX, TFACTION_SOILER, TFACTION_GUILD, TFACTION_MERCHANT)
+#define DEFAULT_TREATY_FLAVOR_FACTIONS list(TFACTION_AZURE, TFACTION_CHURCH, TFACTION_HEARTFELT, TFACTION_ORTHODOX, TFACTION_SOILER, TFACTION_GUILD, TFACTION_MERCHANT)
 
 
 #define TEMPLATE_OUTSKIRTS 1

@@ -43,9 +43,9 @@
 	var/list/viable_targets = list()
 	var/atom/throwtarget
 	var/base_recharge = initial(recharge_time)
-	var/datum/component/squad_controller/manager = user.GetComponent(/datum/component/squad_controller)
+	var/datum/component/trail_follow/manager = user.GetComponent(/datum/component/trail_follow)
 	if(!manager)
-		manager = user.AddComponent(/datum/component/squad_controller)
+		manager = user.AddComponent(/datum/component/trail_follow)
 
 	for(var/mob/living/carbon/AM in view(push_range, user))
 		if(AM == user || AM.anchored)

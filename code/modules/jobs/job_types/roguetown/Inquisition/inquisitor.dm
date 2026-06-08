@@ -31,12 +31,6 @@
 	job_bitflag = BITFLAG_HOLY_WARRIOR	//Counts as church.
 	allowed_patrons = list(/datum/patron/old_god)
 
-/datum/outfit/job/roguetown/puritan/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
-	. = ..()
-	if(!visualsOnly)
-		link_treaty_faction(H)
-
-
 //// The Inquisitor. Jack of all trades, master of none. Respectable assortment of skills, stats, and equipment; good at both subterfuge and combat. Functions very well on their own, and even better with a full sect.
 
 /datum/advclass/inquisitor/inspector

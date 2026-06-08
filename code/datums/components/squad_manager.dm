@@ -1,26 +1,25 @@
-/datum/component/squad_controller
+// a component that allows squads of Warband NPCs to follow their leader conga line style
+// drags them up & down z-levels as required
+// no real pathfinding (outside of getting directions), so massive groups of NPCs on the move shouldn't be TIDI intensive
+/datum/component/trail_follow
 	var/list/mob/living/carbon/human/species/human/northern/goon/members = list()	// all goons spawned & associated with the squad leader
 	var/list/mob/living/carbon/human/species/human/northern/goon/followers = list()	// goons currently following via the waypoint system
 	var/list/turf/waypoints = list()	// 	as the leader moves, they mark the turfs they pass over as 'waypoints'
 	var/max_waypoints = 40				//	followers move along said waypoints
-	var/list/turf/portals = list()		// when the leader changes z-levels, we mark the tile they left as a "portal" to wherever they landed
+	var/list/turf/portals = list()		//	when the leader changes z-levels, we mark the tile they left as a "portal" to wherever they landed
 
-	var/list/stuck_cycles = list()		// associative list that's a goon + consecutive move cycles they failed to make progress in
-	var/max_stuck_cycles = 5			// drop a follower after this many cycles of them getting nowhere
-
-/datum/component/squad_controller/Initialize()
+/datum/component/trail_follow/Initialize()
 	RegisterSignal(parent, COMSIG_MOVABLE_MOVED, PROC_REF(on_leader_moved))
 
-/datum/component/squad_controller/Destroy()
+/datum/component/trail_follow/Destroy()
 	clear_followers()
 	members = null
 	followers = null
 	waypoints = null
 	portals = null
-	stuck_cycles = null
 	return ..()
 
-/datum/component/squad_controller/proc/on_leader_moved(atom/movable/mover, atom/old_loc, direction, forced)
+/datum/component/trail_follow/proc/on_leader_moved(atom/movable/mover, atom/old_loc, direction, forced)
 	var/turf/current_pos = get_turf(parent)
 	if(!current_pos)
 		return
@@ -38,7 +37,7 @@
 
 	move_squad_waypoint()
 
-/datum/component/squad_controller/proc/add_follower(mob/living/carbon/human/species/human/northern/goon/new_member)
+/datum/component/trail_follow/proc/add_follower(mob/living/carbon/human/species/human/northern/goon/new_member)
 	members |= new_member	// permanently record them as part of this leader's squad
 	new_member.squad_leader = parent
 
@@ -52,33 +51,32 @@
 
 // the mob stops following the leader
 // beyond that, they stay in the Members list of the squad
-/datum/component/squad_controller/proc/remove_follower(mob/living/carbon/human/species/human/northern/goon/member)
+/datum/component/trail_follow/proc/remove_follower(mob/living/carbon/human/species/human/northern/goon/member)
 	if(!(member in followers))
 		return
 	followers -= member
-	stuck_cycles -= member
 	member.squad_leader = null
 	UnregisterSignal(member, COMSIG_ATOM_WAS_ATTACKED)
 	member.ai_controller?.clear_blackboard_key(BB_TRAVEL_DESTINATION)
 	member.ai_controller?.set_ai_status(AI_STATUS_ON)
 
-/datum/component/squad_controller/proc/lose_follower(mob/living/carbon/human/species/human/northern/goon/goon)
+/datum/component/trail_follow/proc/lose_follower(mob/living/carbon/human/species/human/northern/goon/goon)
 	var/mob/living/carbon/human/leader = parent
 	if(leader)
 		to_chat(leader, span_warning("A goon couldn't follow me."))
 	remove_follower(goon)
 
-/datum/component/squad_controller/proc/clear_followers()
+/datum/component/trail_follow/proc/clear_followers()
 	for(var/mob/living/carbon/human/M in followers)
 		remove_follower(M)
 
 // drop any portal whose entry tile is no longer part of the live waypoint trail
-/datum/component/squad_controller/proc/clear_portals()
+/datum/component/trail_follow/proc/clear_portals()
 	for(var/turf/entry in portals)
 		if(!(entry in waypoints))
 			portals -= entry
 
-/datum/component/squad_controller/proc/move_squad_waypoint()
+/datum/component/trail_follow/proc/move_squad_waypoint()
 	var/list/sorted_followers = list()
 	var/mob/living/carbon/human/leader = parent
 
@@ -100,30 +98,20 @@
 			goon.recent_travel = world.time
 			if(goon.m_intent != MOVE_INTENT_SNEAK)
 				playsound(goon, 'sound/foley/climb.ogg', 100, TRUE)
-			stuck_cycles -= goon
 			continue
 
 		var/turf/target_waypoint = next_best_waypoint(goon)
 		
 		if(!target_waypoint)
-			stuck_cycles[goon] += 1
-			if(stuck_cycles[goon] >= max_stuck_cycles)
-				lose_follower(goon)
 			continue
 		
 		var/step_dir = get_dir(goon, target_waypoint)
 		if(!step_dir)
-			stuck_cycles -= goon
 			continue
 
-		if(try_move_grunt(goon, step_dir))
-			stuck_cycles -= goon // made progress this cycle
-		else
-			stuck_cycles[goon] += 1 // blocked by terrain or another mob
-			if(stuck_cycles[goon] >= max_stuck_cycles)
-				lose_follower(goon)
+		try_move_grunt(goon, step_dir)
 
-/datum/component/squad_controller/proc/try_move_grunt(mob/living/carbon/human/species/human/northern/goon/goon, move_dir)
+/datum/component/trail_follow/proc/try_move_grunt(mob/living/carbon/human/species/human/northern/goon/goon, move_dir)
 	if(!move_dir)
 		return
 	
@@ -148,7 +136,7 @@
 	
 	return step(goon, move_dir)
 
-/datum/component/squad_controller/proc/next_best_waypoint(mob/living/carbon/human/species/human/northern/goon/goon)
+/datum/component/trail_follow/proc/next_best_waypoint(mob/living/carbon/human/species/human/northern/goon/goon)
 	var/turf/goon_turf = get_turf(goon)
 	if(!goon_turf)
 		return
@@ -189,7 +177,7 @@
 // whenever the squad leader goes through a travel tile, we bring along any squadmates within 5 tiles of them
 // we also bring along the squadmates nearby THOSE squadmates
 // so we get a long chain of teleports
-/datum/component/squad_controller/proc/teleport_squad(turf/destination, max_range = 5)
+/datum/component/trail_follow/proc/teleport_squad(turf/destination, max_range = 5)
 	var/list/qualified = get_qualified_members(max_range)
 	
 	// teleport qualified followers
@@ -202,7 +190,7 @@
 		if(!(goon in qualified))
 			remove_follower(goon)
 
-/datum/component/squad_controller/proc/get_qualified_members(max_range = 5)
+/datum/component/trail_follow/proc/get_qualified_members(max_range = 5)
 	var/mob/living/carbon/human/leader = parent
 	var/list/to_check = list(leader)
 	var/list/qualified = list()

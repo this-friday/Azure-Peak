@@ -21,7 +21,7 @@
 	var/datum/asset/spritesheet/spritesheet = get_asset_datum(/datum/asset/spritesheet/treaty_icons)
 
 	if(firstparty)
-		for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+		for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 			if(faction.name == firstparty)
 				data["firstparty"] = list(
 					"name" = faction.name,
@@ -34,7 +34,7 @@
 				break
 
 	if(secondparty)
-		for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+		for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 			if(faction.name == secondparty)
 				data["secondparty"] = list(
 					"name" = faction.name,
@@ -84,9 +84,9 @@
 	var/datum/asset/spritesheet/spritesheet = get_asset_datum(/datum/asset/spritesheet/treaty_icons)
 
 	var/list/faction_list = list()
-	for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+	for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 		var/show_faction = FALSE
-		if(faction.type in DEFAULT_TERRITORY_FACTIONS)
+		if(faction.type in DEFAULT_TREATY_FLAVOR_FACTIONS)
 			show_faction = TRUE
 		else if(faction.owner == user.real_name)
 			show_faction = TRUE
@@ -189,7 +189,7 @@
 					if(term_to_sign.target == user_name || (original_name && term_to_sign.target == original_name))
 						is_authority = TRUE
 					else
-						for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+						for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 							if(faction.name == term_to_sign.target)
 								if(ismob(faction.owner) && faction.owner == user)
 									is_authority = TRUE
@@ -204,7 +204,7 @@
 					if(term_to_sign.receiver == user_name || (original_name && term_to_sign.receiver == original_name))
 						is_authority = TRUE
 					else
-						for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+						for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 							if(faction.name == term_to_sign.receiver)
 								if(ismob(faction.owner) && faction.owner == user)
 									is_authority = TRUE
@@ -288,8 +288,8 @@
 			if(party_id == 2 && firstparty == faction_name)
 				to_chat(user, span_warning("A faction cannot serve as both parties!"))
 				return FALSE
-			var/datum/territory_faction/found_faction
-			for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+			var/datum/treaty_flavor/found_faction
+			for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 				if(faction.name == faction_name)
 					found_faction = faction
 					break

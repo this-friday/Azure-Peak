@@ -130,7 +130,7 @@
 			if(!(linked_faction in user.mind.associated_factions))
 				user.mind.associated_factions += linked_faction
 			if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant") // and if they're a lieutenant we also give them one of their own
-				var/datum/territory_faction/lieu_faction = new /datum/territory_faction()
+				var/datum/treaty_flavor/lieu_faction = new /datum/treaty_flavor()
 				lieu_faction.generate_faction(user, stewardhidden = TRUE)
 				user.mind.associated_factions |= lieu_faction
 

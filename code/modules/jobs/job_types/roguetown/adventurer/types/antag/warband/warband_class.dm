@@ -68,7 +68,7 @@
 		var/mob/living/target = targets[1]
 		var/faction_tag = "warband_[user.mind.warband_ID]"
 		var/personal_faction_tag = "[user.real_name]_faction"
-		var/datum/component/squad_controller/manager = user.GetComponent(/datum/component/squad_controller)
+		var/datum/component/trail_follow/manager = user.GetComponent(/datum/component/trail_follow)
 
 		if(target == user)
 			to_chat(user, span_warning("I cannot be further associated with myself than I already am."))
@@ -353,9 +353,9 @@
 		to_chat(caster, span_warning("I've given a special order recently. I'll need to wait."))
 		return
 
-	var/datum/component/squad_controller/manager = caster.GetComponent(/datum/component/squad_controller)
+	var/datum/component/trail_follow/manager = caster.GetComponent(/datum/component/trail_follow)
 	if(!manager)
-		manager = caster.AddComponent(/datum/component/squad_controller)
+		manager = caster.AddComponent(/datum/component/trail_follow)
 
 	for(var/mob/other_mob in manager.members)
 		if(!other_mob)

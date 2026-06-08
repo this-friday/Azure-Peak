@@ -29,7 +29,6 @@
 		qdel(related_handler)
 
 	for(var/atom/movable/screen/advsetup/subclass_hud in owner.hud_used.static_inventory)
-		// owner.hud_used.static_inventory -= subclass_hud
 		qdel(subclass_hud)
 
 

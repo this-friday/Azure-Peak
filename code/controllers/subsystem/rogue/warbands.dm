@@ -13,7 +13,7 @@ SUBSYSTEM_DEF(warbands)
 
 	var/list/treaties = list()
 	var/list/submitted_treaties = list()
-	var/territory_factions = list()
+	var/treaty_flavor_factions = list()
 
 	// list of associated faction names & jobs
 	var/list/name_to_faction_cache = list() 	 
@@ -56,8 +56,8 @@ SUBSYSTEM_DEF(warbands)
 	..()
 
 /datum/controller/subsystem/warbands/Initialize()
-	for(var/territory_faction_path in DEFAULT_TERRITORY_FACTIONS)
-		territory_factions += new territory_faction_path
+	for(var/territory_faction_path in DEFAULT_TREATY_FLAVOR_FACTIONS)
+		treaty_flavor_factions += new territory_faction_path
 	create_name_cache()
 	initialize_class_cache()
 	initialize_grunt_mob_cache()
@@ -68,7 +68,7 @@ SUBSYSTEM_DEF(warbands)
 	return ..()
 
 /datum/controller/subsystem/warbands/proc/create_name_cache()
-	for(var/datum/territory_faction/faction in territory_factions)
+	for(var/datum/treaty_flavor/faction in treaty_flavor_factions)
 		if(faction.owner)
 			name_to_faction_cache[faction.owner] = faction
 		if(faction.job_owner)

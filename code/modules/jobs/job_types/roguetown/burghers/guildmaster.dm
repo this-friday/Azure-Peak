@@ -101,8 +101,3 @@
 
 /datum/outfit/job/roguetown/guildmaster/choose_loadout(mob/living/carbon/human/H)
 	. = ..()
-
-/datum/outfit/job/roguetown/guildmaster/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
-	. = ..()
-	if(!visualsOnly)
-		link_treaty_faction(H)

@@ -89,9 +89,9 @@
 // effects of desertion take place
 /mob/living/carbon/human/proc/desertion_results(stolen_troops, troops_available, old_faction_string, initial_ID)
 	var/extra_item = FALSE	// for schism variants
-	var/datum/component/squad_controller/squad_manager = GetComponent(/datum/component/squad_controller)
+	var/datum/component/trail_follow/squad_manager = GetComponent(/datum/component/trail_follow)
 	if(!squad_manager)
-		squad_manager = AddComponent(/datum/component/squad_controller)
+		squad_manager = AddComponent(/datum/component/trail_follow)
 	troops_available = mind.warband_manager.spawns // reaffirm the available troops | could've changed while a manual desertion message was being typed
 	if(stolen_troops > troops_available)
 		stolen_troops = troops_available
@@ -112,8 +112,8 @@
 	faction.Remove(old_faction_string)
 	faction |= list("warband_[mind.warband_ID]")
 
-	var/datum/territory_faction/personal_faction
-	for(var/datum/territory_faction/faction in mind.associated_factions)
+	var/datum/treaty_flavor/personal_faction
+	for(var/datum/treaty_flavor/faction in mind.associated_factions)
 		if(faction.owner == real_name)
 			personal_faction = faction
 			break

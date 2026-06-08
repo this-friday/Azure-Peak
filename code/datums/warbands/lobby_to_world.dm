@@ -25,7 +25,7 @@
 	var/chosen_desc
 	var/land_name
 	var/land_desc
-	var/datum/territory_faction/new_faction = new /datum/territory_faction/custom
+	var/datum/treaty_flavor/new_faction = new /datum/treaty_flavor/custom
 
 	if(selected_subtype) // look for a subtype first
 		if(selected_subtype.treaty_name != "Warband")

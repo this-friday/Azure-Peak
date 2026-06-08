@@ -502,19 +502,3 @@
 				if(L != player.prefs.extra_language)
 					H.remove_language(L)
 		H.grant_language(player.prefs.extra_language)
-
-// links a mob to an existing Default Faction found in SSwarbands.territory_factions
-/datum/outfit/proc/link_treaty_faction(mob/living/carbon/human/H)
-	if(!H || !H.mind)
-		return
-	
-	if(!H.mind.associated_factions)
-		H.mind.associated_factions = list()
-	
-	if(H.job_path && (H.job_path in SSwarbands.job_to_faction_cache))
-		var/datum/territory_faction/faction = SSwarbands.job_to_faction_cache[H.job_path]
-		H.mind.associated_factions |= faction
-	
-	if(H.real_name && (H.real_name in SSwarbands.name_to_faction_cache))
-		var/datum/territory_faction/faction = SSwarbands.name_to_faction_cache[H.real_name]
-		H.mind.associated_factions |= faction

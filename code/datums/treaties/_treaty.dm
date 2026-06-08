@@ -71,7 +71,7 @@
 /obj/item/treaty/proc/get_wealth(faction_name)
 	if(faction_name == "The Crown")
 		return SStreasury.discretionary_fund.balance
-	for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
+	for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 		if(faction.name == faction_name)
 			return faction.vault
 	return FALSE

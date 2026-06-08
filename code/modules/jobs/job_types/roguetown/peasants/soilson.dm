@@ -140,9 +140,3 @@
 		/obj/item/seeds/pipeweed,
 		/obj/item/seeds/pipeweed,
 	)
-
-/datum/outfit/job/roguetown/farmer/basic/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
-	. = ..()
-	if(!visualsOnly)
-		link_treaty_faction(H)
-

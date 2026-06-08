@@ -125,11 +125,6 @@ GLOBAL_LIST_EMPTY(lord_titles)
 				new_origin = pick(/datum/virtue/origin/grenzelhoft, /datum/virtue/origin/otava, /datum/virtue/origin/etrusca)
 			change_origin(H, new_origin, "Royal line")
 
-/datum/outfit/job/roguetown/lord/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
-	. = ..()
-	if(!visualsOnly)
-		link_treaty_faction(H)
-
 //	SSticker.rulermob = H
 /**
 	Warrior Lord subclass. An evolution from the Daring Twit. This is the original Lord Class.

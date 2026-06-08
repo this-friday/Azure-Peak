@@ -90,9 +90,3 @@
 		// For selling
 		/obj/item/hunting_map/white_stag = 1,
 	)
-
-
-/datum/outfit/job/roguetown/merchant/basic/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
-	. = ..()
-	if(!visualsOnly)
-		link_treaty_faction(H)

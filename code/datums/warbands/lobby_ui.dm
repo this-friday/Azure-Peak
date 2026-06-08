@@ -162,8 +162,8 @@
 
 /atom/movable/screen/warband/manager/proc/populate_faction_data(list/data)
 	var/list/cb_faction_list = list()
-	for(var/datum/territory_faction/faction in SSwarbands.territory_factions)
-		if(faction.type in DEFAULT_TERRITORY_FACTIONS)
+	for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
+		if(faction.type in DEFAULT_TREATY_FLAVOR_FACTIONS)
 			UNTYPED_LIST_ADD(cb_faction_list, list(
 				"name" = faction.name,
 				"desc" = faction.desc,
@@ -707,8 +707,8 @@
 			selection_inputs[aspect_path] = incoming_selection_inputs[aspect_path] || list()
 
 	if(!linked_faction)
-		var/datum/territory_faction/custom/seed_faction = new /datum/territory_faction/custom()
-		SSwarbands.territory_factions += seed_faction
+		var/datum/treaty_flavor/custom/seed_faction = new /datum/treaty_flavor/custom()
+		SSwarbands.treaty_flavor_factions += seed_faction
 		seed_faction.name = seed_faction.verify_faction_name("The Warband")
 		linked_faction = seed_faction
 

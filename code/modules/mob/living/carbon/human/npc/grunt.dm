@@ -57,7 +57,7 @@
 
 /mob/living/carbon/human/species/human/northern/goon/Destroy()
 	if(squad_leader)
-		var/datum/component/squad_controller/squad = squad_leader.GetComponent(/datum/component/squad_controller)
+		var/datum/component/trail_follow/squad = squad_leader.GetComponent(/datum/component/trail_follow)
 		if(squad)
 			squad.remove_follower(src)
 			squad.members -= src
@@ -105,7 +105,7 @@
 		ai_controller.CancelActions()
 	moveToNullspace()
 	if(squad_leader)
-		var/datum/component/squad_controller/squad_component = squad_leader.GetComponent(/datum/component/squad_controller)
+		var/datum/component/trail_follow/squad_component = squad_leader.GetComponent(/datum/component/trail_follow)
 		squad_component.remove_follower(src)
 		squad_component.members -= src
 		squad_leader = null

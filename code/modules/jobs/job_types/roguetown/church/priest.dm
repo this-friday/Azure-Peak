@@ -221,12 +221,6 @@ GLOBAL_LIST_EMPTY(heretical_players)
 	if(H.patron?.type == /datum/patron/divine/ravox)
 		ADD_TRAIT(H, TRAIT_STEELHEARTED, TRAIT_GENERIC)
 
-/datum/outfit/job/roguetown/priest/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
-	. = ..()
-	if(!visualsOnly)
-		link_treaty_faction(H)
-
-
 /datum/job/priest/vice //just used to change the priest title
 	title = "Vice Priest"
 	f_title = "Vice Priestess"
