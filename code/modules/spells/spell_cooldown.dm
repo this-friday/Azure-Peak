@@ -134,6 +134,8 @@
 	var/self_cast_possible = TRUE
 	/// The casting range of our spell.
 	var/cast_range = 7
+	/// If TRUE, this spell may be cast at a target on a different Z-level. Defaults FALSE; only projectile spells opt in.
+	var/allow_cross_z = FALSE
 	/// Variable dictating if the spell will use turf based aim assist.
 	var/aim_assist = TRUE
 
@@ -597,6 +599,8 @@
 
 /// Adjust the cooldown time based on associated_stat and armor.
 /datum/action/cooldown/spell/proc/get_adjusted_cooldown()
+	if(!isliving(owner))
+		return initial(cooldown_time)
 	var/mob/living/living_owner = owner
 	var/base = initial(cooldown_time)
 	var/newcd = base
@@ -616,6 +620,9 @@
 	// Weapon-in-hand penalty
 	if(weapon_penalty_active)
 		newcd += base * WEAPON_CAST_PENALTY
+
+	if(HAS_TRAIT(living_owner, TRAIT_LEYLINE_HASTE)) // Hastens CD by 25%.
+		newcd *= 0.75
 
 	return newcd
 
@@ -846,7 +853,7 @@
 		if(sig_return & SPELL_CANCEL_CAST)
 			return sig_return
 
-		if(spell_requirements & SPELL_REQUIRES_SAME_Z)
+		if(!allow_cross_z)
 			var/turf/caster_t = get_turf(owner)
 			var/turf/target_t = get_turf(cast_on)
 			if(caster_t && target_t && caster_t.z != target_t.z)
@@ -935,6 +942,9 @@
 		var/mob/living/carbon/human/H = owner
 		if(H.has_status_effect(/datum/status_effect/buff/clash))
 			H.bad_guard(span_warning("I can't focus while casting spells!"), cheesy = TRUE)
+
+		if(H.get_skill_level(/datum/skill/misc/sneaking) >= SKILL_LEVEL_JOURNEYMAN || HAS_TRAIT(H, TRAIT_LIGHT_STEP))
+			H.apply_status_effect(/datum/status_effect/stealth_revealed)
 
 	// Sparks and smoke can only occur if there's an owner to source them from.
 	if(sparks_amt)
@@ -1368,13 +1378,19 @@
 	else
 		stats += span_info("Range: Self")
 
+	var/display_charge = charge_time
+	if(user && HAS_TRAIT(user, TRAIT_SWIFTCAST))
+		display_charge = 0
+
 	// Charge time
-	if(charge_time > 0)
-		stats += span_info("Charge time: [DisplayTimeText(charge_time)]")
-		if(spell_requirements & SPELL_REQUIRES_NO_MOVE)
-			stats += span_warning("Channeling is interrupted by movement.")
+	if(display_charge > 0)
+		stats += span_info("Charge time: [DisplayTimeText(display_charge)]")
+		if(HAS_TRAIT(user, TRAIT_LEYLINE_HASTE))
+			stats += span_info(" <font color='#00e1ff'>Ley Lines (-25%)</font>")
 	else
 		stats += span_info("Charge time: Instant")
+		if(HAS_TRAIT(user, TRAIT_SWIFTCAST))
+			stats += span_info(" <font color='#8c00ff'>(Swiftcast)</font>")
 
 	// Cooldown
 	var/base_cd = initial(cooldown_time)
@@ -1460,6 +1476,8 @@
 		var/armor_mod = base * armor_mult
 		var/armor_label = user.check_armor_skill() ? "Armor weight" : "Untrained armor"
 		breakdown += span_smallred("  [armor_label]: +[DisplayTimeText(armor_mod)]")
+	if(HAS_TRAIT(user, TRAIT_LEYLINE_HASTE))
+		breakdown += span_smallgreen("  <font color='#00e1ff'>Ley Lines (-25%)</font>")
 	return breakdown
 
 /// Breakdown of resource cost modifiers for examine.
@@ -1540,6 +1558,13 @@
 	on_start_charge()
 	charge_started_at = world.time
 	charge_target_time = charge_time
+
+	if(HAS_TRAIT(owner, TRAIT_SWIFTCAST)) // Makes your next spell be instant.
+		charge_target_time = 0
+	else if(HAS_TRAIT(owner, TRAIT_LEYLINE_HASTE)) // Leyline cast reduction by 25%.
+		charge_target_time = charge_time * 0.75
+	else
+		charge_target_time = charge_time
 
 	return COMPONENT_CLIENT_MOUSEDOWN_INTERCEPT
 

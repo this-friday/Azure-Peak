@@ -8,7 +8,7 @@
 	category_tags = list(CTAG_WRETCH)
 	maximum_possible_slots = 2 // Two so that the gimmick isn't overdone
 	applies_post_equipment = TRUE
-	traits_applied = list(TRAIT_MEDIUMARMOR, TRAIT_ARCYNE)
+	traits_applied = list(TRAIT_MEDIUMARMOR, TRAIT_SHATTER_KILL, TRAIT_ARCYNE, TRAIT_DUSTABLE, TRAIT_BLOODLOSS_IMMUNE)
 	subclass_stats = list(
 		STATKEY_INT = 2,
 		STATKEY_WIL = 2,
@@ -111,7 +111,7 @@
 		H.mind.AddSpell(new /datum/action/cooldown/spell/bind_weapon)
 		H.mind.AddSpell(new /datum/action/cooldown/spell/mending)
 		H.mind.AddSpell(new /obj/effect/proc_holder/spell/self/suicidebomb/lesser)
-		H.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/bonemend)
+		H.mind.AddSpell(new /datum/action/cooldown/spell/bonemend)
 
 	H.adjust_blindness(-3)
 	var/helmets = list(

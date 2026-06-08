@@ -53,6 +53,7 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 	var/use_skintones = FALSE	// does it use skintones or not? (spoiler alert this is only used by humans)
 	var/exotic_blood = ""	// If my race wants to bleed something other than bog standard blood, change this to reagent id.
 	var/exotic_bloodtype = "" //If my race uses a non standard bloodtype (A+, O-, AB-, etc)
+	var/blood_color = BLOOD_COLOR_RED // Hex color used to tint blood decals this species leaves behind.
 	var/meat = /obj/item/reagent_containers/food/snacks/rogue/meat/steak //What the species drops on gibbing
 	var/skinned_type
 	var/liked_food = NONE
@@ -154,7 +155,6 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 
 	// Associative list of stat (STAT_STRENGTH, etc) bonuses used to differentiate each race. They should ALWAYS be positive.
 	var/list/race_bonus = list()
-	var/construct = 0
 	var/gibs_on_shapeshift = FALSE
 
 	var/obj/item/mutanthands
@@ -482,9 +482,6 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 	if(TRAIT_NOMETABOLISM in inherent_traits)
 		C.reagents.end_metabolization(C, keep_liverless = TRUE)
 
-	if(construct)
-		C.construct = 1 //for constructs? Duh.
-
 	if(inherent_factions)
 		for(var/i in inherent_factions)
 			C.faction += i //Using +=/-= for this in case you also gain the faction from a different source.
@@ -789,7 +786,8 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 					return FALSE
 			if(H.wear_armor)
 				if(istype(H.wear_armor, I.type))
-					return FALSE
+					if(!(I.blocking_behavior & SAMEWEAR))
+						return FALSE
 				if(I.blocksound)
 					if(I.blocksound == H.wear_armor.blocksound)
 						return FALSE
@@ -1197,6 +1195,10 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 	if(HAS_TRAIT(user, TRAIT_PACIFISM))
 		to_chat(user, span_warning("I don't want to harm [target]!"))
 		return FALSE
+	if(user.has_status_effect(/datum/status_effect/debuff/deadite_grace) && target.mind)
+		to_chat(user, span_warning("Ah, Lux... I calm down considerably, but my hunger only increases."))
+		user.remove_status_effect(/datum/status_effect/debuff/deadite_grace)
+
 	if(user.rogue_sneaking)
 		user.mob_timers[MT_FOUNDSNEAK] = world.time
 		user.update_sneak_invis(reset = TRUE)
@@ -1243,6 +1245,9 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 			target.process_skd(user, IM)
 			return
 
+		var/mob/living/carbon/human/H = target
+		H.process_golgatha_rebuke(user)
+
 		if(user.mob_biotypes & MOB_UNDEAD)
 			if(target.has_status_effect(/datum/status_effect/buff/necras_vow))
 				if(isnull(user.mind))
@@ -1270,7 +1275,6 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 			return FALSE
 */
 		var/selzone = melee_accuracy_check(user.zone_selected, user, target, /datum/skill/combat/unarmed, user.used_intent)
-		var/selzone_real = user.zone_selected
 
 		var/obj/item/bodypart/affecting = target.get_bodypart(check_zone(selzone))
 
@@ -1304,8 +1308,7 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 				SEND_SIGNAL(user, COMSIG_HEAD_PUNCHED, target)
 		log_combat(user, target, "punched")
 		if(ishuman(user))
-			var/text = "[bodyzone2readablezone(selzone_real)]..."
-			user.filtered_balloon_alert(TRAIT_COMBAT_AWARE, text, show_self = FALSE)
+			user.resolve_combataware(target, "[bodyzone2readablezone(selzone)]...", "[bodyzone2readablezone(user.zone_selected)]...")
 
 		if(!nodmg)
 			if(user.limb_destroyer)
@@ -1538,6 +1541,10 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 	if(HAS_TRAIT(user, TRAIT_PACIFISM))
 		to_chat(user, span_warning("I don't want to harm [target]!"))
 		return FALSE
+	if(user.has_status_effect(/datum/status_effect/debuff/deadite_grace) && target.mind)
+		to_chat(user, span_warning("Ah, Lux... I calm down considerably, but my hunger only increases."))
+		user.remove_status_effect(/datum/status_effect/debuff/deadite_grace)
+
 	if(user.IsKnockdown())
 		return FALSE
 	if(user == target)
@@ -1577,8 +1584,7 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 			log_combat(user, target, "kicked")
 
 			if(ishuman(user))
-				var/text = "[bodyzone2readablezone(user.zone_selected)]..."
-				user.filtered_balloon_alert(TRAIT_COMBAT_AWARE, text, show_self = FALSE)
+				user.resolve_combataware(target, "[bodyzone2readablezone(selzone)]...", "[bodyzone2readablezone(user.zone_selected)]...")
 
 			user.do_attack_animation_simple(target, ATTACK_EFFECT_KICK, TRUE)
 			if(!nodmg)
@@ -1757,7 +1763,6 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 		return 0
 
 	var/hit_area
-	var/selzone_real = user.zone_selected
 
 	selzone = melee_accuracy_check(user.zone_selected, user, H, I.associated_skill, user.used_intent, I)
 	affecting = H.get_bodypart(check_zone(selzone))
@@ -1829,14 +1834,10 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 		used_intfactor = higher_intfactor
 
 	if(ishuman(user) && user != H)
-		var/text = "[bodyzone2readablezone(selzone_real)]..."
+		var/aim_text = "[bodyzone2readablezone(user.zone_selected)]..."
 		if(HAS_TRAIT(user, TRAIT_DECEIVING_MEEKNESS))
-			if(prob(10))
-				text = "<i>I can't tell...</i>"
-			else
-				text = null
-		if(text)
-			user.filtered_balloon_alert(TRAIT_COMBAT_AWARE, text, show_self = FALSE)
+			aim_text = prob(10) ? "<i>I can't tell...</i>" : null
+		user.resolve_combataware(H, "[bodyzone2readablezone(selzone)]...", aim_text)
 
 	if(H.client?.prefs.combat_toggles & HITZONE_TEXT)
 		H.balloon_alert(H, "[bodyzone2readablezone(selzone)]...") 
@@ -1925,7 +1926,8 @@ GLOBAL_LIST_EMPTY(roundstart_races)
 				bloody = 1
 				var/turf/location = H.loc
 				var/splatter_dir = get_dir(H, user)
-				new /obj/effect/temp_visual/dir_setting/bloodsplatter(H.loc, splatter_dir)
+				var/obj/effect/temp_visual/dir_setting/bloodsplatter/splatter = new(H.loc, splatter_dir)
+				splatter.set_blood_color(H.get_blood_color())
 				if(istype(location))
 					H.add_splatter_floor(location)
 					H.add_splatter_wall(location, force = I.force)

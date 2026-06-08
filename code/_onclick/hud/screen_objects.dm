@@ -150,11 +150,7 @@
 			if(H.craftingthing)
 				last_craft = world.time
 				var/datum/component/personal_crafting/C = H.craftingthing
-				if(H.client.legacycraft)
-					C.roguecraft(location, control, params, H)
-				else
-					C.ui_interact(H)
-			else
+				C.ui_interact(H)
 
 
 /atom/movable/screen/area_creator
@@ -1891,7 +1887,7 @@
 				state2use = "stress"
 			if(5 to 14)
 				state2use = "stress2"
-			if(5 to 24)
+			if(15 to 24)
 				state2use = "stress3"
 			if(25 to 999)
 				state2use = "stress4"
@@ -1915,7 +1911,7 @@
 			state2use = "mood_ult"
 
 		//We go down a janky list of exceptions for total overrides
-		if(HAS_TRAIT(H, TRAIT_NOMOOD))
+		if(HAS_TRAIT(H, TRAIT_DETACHED))
 			state2use = "mood_hopeless"
 		else if(H.stat == DEAD)
 			state2use = "mood_dead"
@@ -2437,13 +2433,3 @@
 
 /atom/movable/screen/bloodpool_maskpart/mask
 	icon_state = "mana_mask"
-
-
-/atom/movable/screen/bloodpool/breath
-	name = "breath"
-	screen_loc = "WEST-1:3, CENTER+2"
-
-/atom/movable/screen/bloodpool/breath/Initialize(mapload)
-	. = ..()
-	set_fill_color("#00eaff")
-	set_value(1.0)

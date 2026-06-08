@@ -8,7 +8,7 @@
 	category_tags = list(CTAG_WRETCH)
 	maximum_possible_slots = 2 // Two so that the gimmick isn't overdon
 	applies_post_equipment = TRUE
-	traits_applied = list(TRAIT_HEAVYARMOR)
+	traits_applied = list(TRAIT_HEAVYARMOR, TRAIT_SHATTER_KILL, TRAIT_BLOODLOSS_IMMUNE, TRAIT_DUSTABLE)
 	subclass_stats = list(
 		STATKEY_STR = 2,
 		STATKEY_CON = 0,
@@ -88,7 +88,7 @@
 	if(H.mind)
 		H.mind.AddSpell(new /datum/action/cooldown/spell/mending)
 		H.mind.AddSpell(new /obj/effect/proc_holder/spell/self/suicidebomb/lesser)
-		H.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/bonemend)
+		H.mind.AddSpell(new /datum/action/cooldown/spell/bonemend)
 
 	H.set_blindness(0)
 

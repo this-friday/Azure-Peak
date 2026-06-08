@@ -10,7 +10,7 @@
 	confess_lines = list(
 		"I AM ANCIENT!",
 		"I AM THE LAND!",
-		"I AM THE FIRSTBORNE OF KAINE!",
+		"I AM THE ETERNAL!",
 		"I AM THE INHERITOR!",
 		"I WILL NOT BE FORGOTTEN!",
 	)
@@ -37,10 +37,9 @@
 	var/mob/living/carbon/human/H = owner.current
 	H.equipOutfit(/datum/outfit/job/vamplord)
 	H.set_patron(/datum/patron/inhumen/zizo)
-	H.verbs |= /mob/living/carbon/human/proc/demand_submission
+	add_verb(H, /mob/living/carbon/human/proc/demand_submission)
 	H.maxbloodpool += 3000
 	H.adjust_bloodpool(3000)
-	H.cmode_music = 'sound/music/cmode/combat_ready_to_die.ogg' //LISTEN TO ME WHETHER YOU WANT TO HEAR IT OR NOT, YOU WEREN'T EVEN BORN WHEN THIS HAPPENED
 	for(var/S in MOBSTATS)
 		H.change_stat(S, 2)
 	H.forceMove(pick(GLOB.vlord_starts))
@@ -103,7 +102,7 @@
 // NEW VERBS
 /mob/living/carbon/human/proc/demand_submission()
 	set name = "Demand Submission"
-	set category = "VAMPIRE"
+	set category = "RoleUnique.Vampire"
 	if(SSmapping.retainer.king_submitted)
 		to_chat(src, span_warning("I am already the Master of [SSmapping.config.map_name]."))
 		return
@@ -127,7 +126,7 @@
 
 /mob/living/carbon/human/proc/punish_spawn()
 	set name = "Punish Minion"
-	set category = "VAMPIRE"
+	set category = "RoleUnique.Vampire"
 
 	if(!clan_position)
 		to_chat(src, span_warning("You have no subordinates to punish."))
@@ -196,7 +195,7 @@
 ////////BROKEN////////
 /obj/item/clothing/suit/roguetown/armor/chainmail/iron/vampire
 	name = "old ancient ceremonial vestments" //Currently invisible, due to the lack of an object sprite. Reinstate once someone adds a 'vunder' icon to the shirt.dmi.
-	desc = "An ornate aketon, woven from crimson silk and worn beneath a layer of enchanted gilbranze maille. Vheslyn, Zizo, Kaine had all failed in their pursuits - yet, the ancient truths they left behind were more valuable than lyfe itself. It's time to show them all how a Lord truly gets it done."
+	desc = "An ornate aketon, woven from crimson silk and worn beneath a layer of enchanted gilbranze maille. Vheslyn, and Zizo had both failed in their pursuits - yet, the ancient truths they left behind were more valuable than lyfe itself. It's time to show them all how a Lord truly gets it done."
 	icon_state = "vunder"
 	item_state = "vunder"
 	icon = 'icons/roguetown/clothing/shirts.dmi'
@@ -240,7 +239,7 @@
 
 /obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy/vampire
 	name = "ancient ceremonial vestments"
-	desc = "An ornate aketon, woven from crimson silk and worn beneath a layer of enchanted gilbranze maille. Vheslyn, Zizo, Kaine had all failed in their pursuits - yet, the ancient truths they left behind were more valuable than lyfe itself. It's time to show them all how a Lord truly gets it done."
+	desc = "An ornate aketon, woven from crimson silk and worn beneath a layer of enchanted gilbranze maille. Vheslyn, and Zizo had both failed in their pursuits - yet, the ancient truths they left behind were more valuable than lyfe itself. It's time to show them all how a Lord truly gets it done."
 	armor_class = ARMOR_CLASS_HEAVY
 	armor = ARMOR_VAMP
 	max_integrity = ARMOR_INT_CHEST_PLATE_ANTAG
@@ -302,6 +301,7 @@
 	body_parts_inherent = FULL_BODY
 	max_integrity = ARMOR_INT_SIDE_ANTAG
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
+	throw_on_break = FALSE //We only get one set
 
 /obj/item/clothing/gloves/roguetown/chain/vampire/Initialize()
   ..()
@@ -315,6 +315,7 @@
 	armor = ARMOR_VAMP
 	max_integrity = ARMOR_INT_SIDE_ANTAG
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
+	throw_on_break = FALSE //We only get one set
 
 /obj/item/clothing/wrists/roguetown/bracers/paalloy/vampire/Initialize()
   ..()
@@ -328,6 +329,7 @@
 	armor = ARMOR_VAMP
 	max_integrity = ARMOR_INT_SIDE_ANTAG
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
+	throw_on_break = FALSE //We only get one set
 
 /obj/item/clothing/neck/roguetown/gorget/paalloy/vampire/Initialize()
   ..()
@@ -346,6 +348,7 @@
 	smeltresult = /obj/item/ingot/purifiedaalloy
 	var/active_item = FALSE
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
+	throw_on_break = FALSE //We only get one set
 
 /obj/item/clothing/head/roguetown/helmet/heavy/vampire/Initialize()
   ..()

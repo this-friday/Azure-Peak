@@ -24,9 +24,10 @@
 	grid_width = 32
 	grid_height = 32
 	var/tier = 0 //used for determining potency for mob healing
+	dropshrink = 0.85
 
 /obj/item/magic/familiar
-	resistance_flags = INDESTRUCTIBLE
+	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF
 	var/mob/living/simple_animal/pet/familiar/stored_familiar
 
 /obj/item/magic/familiar/dropped(mob/user, silent)
@@ -45,6 +46,10 @@
 	name = "Familiar Spirit"
 	icon = 'icons/roguetown/mob/familiars.dmi'
 	slot_flags = ITEM_SLOT_HIP|ITEM_SLOT_NECK|ITEM_SLOT_RING // little pendant-esque thing
+
+/obj/item/magic/familiar/familiar_spirit/Initialize()
+	. = ..()
+	src.filters += filter(type = "drop_shadow", x=0, y=0, size=1, offset = 2, color = GLOW_COLOR_ARCANE)
 
 // MELD
 /obj/item/magic/melded
@@ -115,6 +120,7 @@
 	icon_state = "runedartifact"
 	desc = "An old stone from age long ago, marked with glowing sigils."
 	w_class = WEIGHT_CLASS_SMALL
+	dropshrink = 0.8
 
 /obj/item/magic/artifact/Initialize()
 	.=..()
