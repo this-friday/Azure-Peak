@@ -1,11 +1,14 @@
 /obj/effect/landmark/warcamp
 	name = "Warcamp"
+	invisibility = 0 // for the sake of event runners being able to see & pave over landmarks if they want to use the event space
 
 /obj/effect/landmark/warcamp_outskirts
 	name = "Warcamp Outskirts"
+	invisibility = 0
 
 /obj/effect/landmark/warcamp_intermission
 	name = "Warcamp Intermission"
+	invisibility = 0
 
 
 ///////////////////////////

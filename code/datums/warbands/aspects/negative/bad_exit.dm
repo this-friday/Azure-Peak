@@ -1,11 +1,10 @@
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
-// the warband's initial exit (aka: before they establish their travel tiles) is based off of quest markers
-// this forces the initial exit to a Hard quest marker
+// doubles the toll for spawning allied NPCs
 
 /datum/warbands/aspects/badexit
 	title = "BAD TRIP"
-	summary = "Fate denied an easy path into the Duchy. The Warcamp's initial exit will be someplace awful."
-	desc = "By default, the Warband's initial exit is based off of quest markers. BAD TRIP forcibly elects a Hard quest marker."
-	warning = "...taking an obscure route into the Duchy."
+	summary = "Fate denied an easy path into the Duchy. The brutal march bleeds the Warband's strength."
+	desc = "Doubles the spawns spent whenever allied NPC soldiers are summoned."
+	warning = "...arriving haggard, and short of able bodies."
 	points = 1

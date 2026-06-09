@@ -224,114 +224,6 @@
 	linked_warband.busy_summoning = FALSE
 	return TRUE
 
-
-//////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// SUMMON ENVOY
-/*
-	alternates depending on if we're spawning a simple envoy or using a character slot
-
-	simple envoys choose a race from a tiny selection, then get an option to choose a name after they're equipped later on
-	custom envoys just spawn as a human, which is then modified via the user's active preferences
-
-	then it assigns the following to the envoy:
-		warband & personal faction
-		warband ID
-		warband manager
-		envoy job & special role
-
-	the envoy and the person who summoned it are rotated out
-		summoner's ckey is put into the spawned envoy
-		summoner's body is stored in the recruitment point
-*/
-
-/obj/structure/fluff/warband/warband_recruit/proc/summon_envoy(mob/living/carbon/human/user, race_choice, depth_choice)
-	var/mob/living/carbon/human/envoy
-	switch(depth_choice)
-		if("Simple Envoy")
-			switch(race_choice)
-				if("Humen")
-					envoy = new /mob/living/carbon/human/species/human/northern(loc)	
-				if("Half-Elf")
-					envoy = new /mob/living/carbon/human/species/human/halfelf(loc)
-				if("Dwarf")
-					envoy = new /mob/living/carbon/human/species/dwarf/mountain(loc)
-				if("Elf")
-					envoy = new /mob/living/carbon/human/species/elf/wood(loc)
-				if("Aasimar")
-					envoy = new /mob/living/carbon/human/species/aasimar(loc)
-			envoy.real_name = pick(world.file2list("strings/rt/names/human/humsoulast.txt"))
-			simpleappearance(envoy)
-		if("Use a Character Slot")
-			envoy = new /mob/living/carbon/human/species/human/northern(loc)
-	envoy.sync_mind()
-	envoy.faction |= list("warband_[warband_ID]", "[user.real_name]_faction")			
-	envoy.key = user.key
-	envoy.mind.warband_ID = warband_ID
-	envoy.mind.warband_manager = linked_warband
-	envoy.mind.original_char = user
-	envoy.mind.warband_manager.spawns--
-	transfer_treaties(user, envoy)
-	equip_envoy(envoy)
-	SSjob.AssignRole(envoy, "Warlord's Envoy")
-	envoy.mind.special_role = "Warlord's Envoy"
-	contents += user
-	return envoy
-
-/obj/structure/fluff/warband/warband_recruit/proc/transfer_treaties(mob/living/carbon/human/from_mob, mob/living/carbon/human/to_mob)
-	for(var/obj/item/treaty/carried_treaty in from_mob.contents)
-		if(from_mob.transferItemToLoc(carried_treaty, to_mob.loc))
-			to_mob.put_in_hands(carried_treaty)
-	
-	for(var/obj/item/storage/bag in from_mob.contents)
-		for(var/obj/item/treaty/bag_treaty in bag.contents)
-			bag_treaty.remove_item_from_storage(from_mob)
-			bag_treaty.forceMove(to_mob.loc)
-			to_mob.put_in_hands(bag_treaty)
-
-
-////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////
-
-/obj/structure/fluff/warband/warband_recruit/proc/simpleappearance(mob/living/carbon/human/envoy)
-	var/obj/item/bodypart/head/head = envoy.get_bodypart(BODY_ZONE_HEAD)
-	var/hair_choice = /datum/sprite_accessory/hair/head/troubadour
-
-	var/datum/bodypart_feature/hair/head/new_hair = new()
-
-	new_hair.set_accessory_type(hair_choice, null, envoy)
-
-	if(prob(50))
-		new_hair.accessory_colors = "#96403d"
-		new_hair.hair_color = "#96403d"
-	else
-		new_hair.accessory_colors = "#160d02"
-		new_hair.hair_color = "#160d02"
-
-	head.add_bodypart_feature(new_hair)
-
-	envoy.dna.update_ui_block(DNA_HAIR_COLOR_BLOCK)
-	envoy.dna.species.handle_body(envoy)
-
-
-	var/obj/item/organ/eyes/organ_eyes = envoy.getorgan(/obj/item/organ/eyes)
-	if(organ_eyes)
-		var/picked_eye_color = pick("#365334", "#395c70", "#30261e")
-		organ_eyes.eye_color = picked_eye_color
-		organ_eyes.accessory_colors = picked_eye_color + picked_eye_color
-
-/////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// EQUIP ENVOY
-/*
-	equips an envoy
-*/
-/obj/structure/fluff/warband/warband_recruit/proc/equip_envoy(mob/envoy, used_slot)
-	var/datum/advclass/warband/envoy/envoy_class = new /datum/advclass/warband/envoy
-	if(linked_warband)
-		envoy.cmode_music = linked_warband.combatmusic
-	envoy.job = envoy_class.name
-	envoy_class.equipme(envoy, null, used_slot)
-
-
 ///////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// EQUIP VETERAN
 /*
@@ -436,57 +328,34 @@
 						switch(depth_choice)
 							if("Use a Character Slot")
 								linked_warband.select_pref_slot(user)
-								var/mob/living/envoy = summon_envoy(user, null, depth_choice)
+								var/mob/living/envoy = linked_warband.summon_envoy(user, loc, src, null, depth_choice)
 								linked_warband.load_appearance(user, envoy)
-								linked_warband.spawns--
 							if("Simple Envoy")
 								var/list/races = list("Humen","Half-Elf","Dwarf","Elf","Aasimar")
 								var/race_choice = input(user, "What species should they be?", "Warband Recruitment") as anything in races
-								summon_envoy(user, race_choice, depth_choice)
-								linked_warband.spawns--
+								linked_warband.summon_envoy(user, loc, src, race_choice, depth_choice)
 					else
 						to_chat(user, span_userdanger("No reinforcements remain."))					
 				if("Summon GOONS (NPCs)")
 					if(!user.mind.warband_manager.outskirts_established)
 						to_chat(user, span_warning("It's far too soon to prepare the soldiery. We should allow time for our envoys to scout a path, first."))
 						return
-					
-					var/squad_deployed
-					var/datum/component/trail_follow/manager = user.GetComponent(/datum/component/trail_follow)
-					if(!manager)
-						manager = user.AddComponent(/datum/component/trail_follow)
-					for(var/mob/friend in manager.members)
-						if(istype(friend, /mob/living/carbon/human/species/human/northern/goon))
-							squad_deployed = TRUE
-							break
-					
+
+					var/datum/component/trail_follow/squad = linked_warband.get_squad_component(user)
+
 					if(!COOLDOWN_FINISHED(user.mind, squad_spawn_cooldown))
 						var/time_left = COOLDOWN_TIMELEFT(user.mind, squad_spawn_cooldown)
 						to_chat(user, span_warning("I've recently summoned a squad. I should wait another [round(time_left / 10, 1)] seconds."))
 						return
-					
-					if(squad_deployed)
+
+					if(linked_warband.squad_has_goons(squad))
 						var/list/choices = list("ABANDON OLD SQUAD","CANCEL")
 						var/abandon_choice = input(user, "You've already deployed a squad. Abandon them?", "Warband Recruitment") as anything in choices
-						switch(abandon_choice)
-							if("ABANDON OLD SQUAD")
-								for(var/mob/living/carbon/human/species/human/northern/goon/abandoned_grunt in manager.members)
-									if(!abandoned_grunt)
-										manager.members -= abandoned_grunt
-										continue
-									abandoned_grunt.abandonevent()
-									manager.members -= abandoned_grunt
-							if("CANCEL")
-								return
+						if(abandon_choice == "ABANDON OLD SQUAD")
+							linked_warband.abandon_npc_squad(squad)
 						return
 					else if(linked_warband.spawns > 0)
-						for(var/grunts_spawned = 1, grunts_spawned <= user.mind.squad_size && linked_warband.spawns > 0, grunts_spawned++)
-							var/mob/living/carbon/human/species/human/northern/goon/new_grunt = linked_warband.get_cached_grunt(loc, user)
-							new_grunt.patron = user.patron
-							new_grunt.faction |= list("warband_[warband_ID]", "[user.real_name]_faction")
-							new_grunt.warband_ID = user.mind.warband_ID
-							manager.members |= new_grunt
-							linked_warband.spawns--
+						linked_warband.deploy_npc_squad(user, loc, squad, 1)
 						to_chat(user, span_userdanger("There are [linked_warband.spawns] soldiers remaining."))
 						COOLDOWN_START(user.mind, squad_spawn_cooldown, 2 MINUTES)
 					else
@@ -820,117 +689,19 @@
 				switch(depth_choice)
 					if("Use a Character Slot")
 						linked_warband.select_pref_slot(user)
-						var/mob/living/envoy = summon_envoy_traveltile(user, depth_choice)
+						var/mob/living/envoy = linked_warband.summon_envoy(user, get_turf(user), linked_warband.get_random_recruit_point(), null, depth_choice)
 						linked_warband.load_appearance(user, envoy)
 					if("Simple Envoy")
 						var/list/races = list("Humen","Half-Elf","Dwarf","Elf","Aasimar")
 						var/race_choice = input(user, "What species should they be?", "Envoy Creation") as anything in races
-						summon_envoy_traveltile(user, race_choice, depth_choice)
+						linked_warband.summon_envoy(user, get_turf(user), linked_warband.get_random_recruit_point(), race_choice, depth_choice)
 				return
 	to_chat(user, span_warning("I can't leave yet. I need to send out an ENVOY first."))
 	return
 
-/obj/structure/fluff/traveltile/warband/proc/get_random_recruit_point()
-	var/list/recruit_points = list()
-	for(var/obj/structure/fluff/warband/warband_recruit/point in SSwarbands.warband_machines)
-		if(point.warband_ID == warband_ID)
-			recruit_points += point
-
-	if(recruit_points.len)
-		return pick(recruit_points)
-	return
-
-/obj/structure/fluff/traveltile/warband/camp_to_outskirts/proc/summon_envoy_traveltile(mob/living/carbon/human/user, race_choice, depth_choice)
-	var/mob/living/carbon/human/envoy
-	var/turf/spawn_loc = get_turf(user)
-	
-	switch(depth_choice)
-		if("Simple Envoy")
-			switch(race_choice)
-				if("Humen")
-					envoy = new /mob/living/carbon/human/species/human/northern(spawn_loc)	
-				if("Half-Elf")
-					envoy = new /mob/living/carbon/human/species/human/halfelf(spawn_loc)
-				if("Dwarf")
-					envoy = new /mob/living/carbon/human/species/dwarf/mountain(spawn_loc)
-				if("Elf")
-					envoy = new /mob/living/carbon/human/species/elf/wood(spawn_loc)
-				if("Aasimar")
-					envoy = new /mob/living/carbon/human/species/aasimar(spawn_loc)
-			envoy.real_name = pick(world.file2list("strings/rt/names/human/humsoulast.txt"))
-			simple_appearance_traveltile(envoy)
-		if("Use a Character Slot")
-			envoy = new /mob/living/carbon/human/species/human/northern(spawn_loc)
-	
-	envoy.sync_mind()
-	envoy.faction |= list("warband_[warband_ID]", "[user.real_name]_faction")			
-	envoy.key = user.key
-	envoy.mind.warband_ID = warband_ID
-	envoy.mind.warband_manager = linked_warband
-	envoy.mind.original_char = user
-	envoy.mind.warband_manager.spawns--
-	transfer_treaties_traveltile(user, envoy)	
-	equip_envoy_traveltile(envoy)
-	SSjob.AssignRole(envoy, "Warlord's Envoy")
-	envoy.mind.special_role = "Warlord's Envoy"
-	var/obj/structure/fluff/warband/warband_recruit/rally_point = get_random_recruit_point()
-	if(rally_point)
-		rally_point.contents += user
-	return envoy
-	
-/obj/structure/fluff/traveltile/warband/camp_to_outskirts/proc/equip_envoy_traveltile(mob/envoy, used_slot)
-	var/datum/advclass/warband/envoy/envoy_class = new /datum/advclass/warband/envoy
-	if(linked_warband)
-		envoy.cmode_music = linked_warband.combatmusic
-	envoy.job = envoy_class.name
-	envoy_class.equipme(envoy, used_slot)
-
-/obj/structure/fluff/traveltile/warband/camp_to_outskirts/proc/transfer_treaties_traveltile(mob/living/carbon/human/from_mob, mob/living/carbon/human/to_mob)
-	for(var/obj/item/treaty/carried_treaty in from_mob.contents)
-		carried_treaty.forceMove(to_mob.loc)
-		to_mob.put_in_hands(carried_treaty)
-	
-	for(var/obj/item/storage/bag in from_mob.contents)
-		for(var/obj/item/treaty/bag_treaty in bag.contents)
-			bag_treaty.forceMove(to_mob.loc)
-			to_mob.put_in_hands(bag_treaty)
-
-/obj/structure/fluff/traveltile/warband/camp_to_outskirts/proc/simple_appearance_traveltile(mob/living/carbon/human/envoy)
-	var/obj/item/bodypart/head/head = envoy.get_bodypart(BODY_ZONE_HEAD)
-	var/hair_choice = /datum/sprite_accessory/hair/head/troubadour
-
-	var/datum/bodypart_feature/hair/head/new_hair = new()
-
-	new_hair.set_accessory_type(hair_choice, null, envoy)
-
-	if(prob(50))
-		new_hair.accessory_colors = "#96403d"
-		new_hair.hair_color = "#96403d"
-	else
-		new_hair.accessory_colors = "#160d02"
-		new_hair.hair_color = "#160d02"
-
-	head.add_bodypart_feature(new_hair)
-
-	envoy.dna.update_ui_block(DNA_HAIR_COLOR_BLOCK)
-	envoy.dna.species.handle_body(envoy)
-
-	var/obj/item/organ/eyes/organ_eyes = envoy.getorgan(/obj/item/organ/eyes)
-	if(organ_eyes)
-		var/picked_eye_color = pick("#365334", "#395c70", "#30261e")
-		organ_eyes.eye_color = picked_eye_color
-		organ_eyes.accessory_colors = picked_eye_color + picked_eye_color
-
 /obj/structure/fluff/traveltile/warband/proc/summon_grunt_squad_at_tile(mob/living/carbon/human/user)
 	var/atom/movable/screen/warband/manager/user_warband = user.mind.warband_manager
-	var/datum/component/trail_follow/squad_manager = user.GetComponent(/datum/component/trail_follow)
-	if(!squad_manager)
-		squad_manager = user.AddComponent(/datum/component/trail_follow)
-	var/squad_deployed = FALSE
-	for(var/mob/friend in squad_manager.members)
-		if(istype(friend, /mob/living/carbon/human/species/human/northern/goon))
-			squad_deployed = TRUE
-			break
+	var/datum/component/trail_follow/squad = user_warband.get_squad_component(user)
 
 	if(!COOLDOWN_FINISHED(user.mind, squad_spawn_cooldown))
 		var/time_left = COOLDOWN_TIMELEFT(user.mind, squad_spawn_cooldown)
@@ -941,24 +712,11 @@
 		to_chat(user, span_userdanger("No reinforcements remain."))
 		return FALSE
 
-	if(squad_deployed)
-		for(var/mob/living/carbon/human/species/human/northern/goon/abandoned_grunt in squad_manager.members)
-			if(!abandoned_grunt)
-				squad_manager.members -= abandoned_grunt
-				continue
-			abandoned_grunt.abandonevent()
-			squad_manager.members -= abandoned_grunt
+	if(user_warband.squad_has_goons(squad))
+		user_warband.abandon_npc_squad(squad)
 		to_chat(user, span_warning("My previous squad has been abandoned."))
 
-	for(var/grunts_spawned = 1, grunts_spawned <= user.mind.squad_size && user_warband.spawns > 0, grunts_spawned++)
-		if(user_warband.spawns < 2)
-			break
-		var/mob/living/carbon/human/species/human/northern/goon/new_grunt = user_warband.get_cached_grunt(src.loc, user)
-		new_grunt.patron = user.patron
-		new_grunt.faction |= list("warband_[user_warband.warband_ID]", "[user.real_name]_faction")
-		squad_manager.members += new_grunt
-		user_warband.spawns -= 2 // summoning via a travel tile costs twice as many spawns
-
+	user_warband.deploy_npc_squad(user, loc, squad, 2) // base 2 for summoning so far from camp, potentially doubled again by /datum/warbands/aspects/badexit
 	to_chat(user, span_warning("There are [user_warband.spawns] soldiers remaining. Summoning my men so far from the Camp has incurred additional attrition."))
 	COOLDOWN_START(user.mind, squad_spawn_cooldown, 4 MINUTES) // cooldown for summoning via travel tile is a little longer
 	return TRUE

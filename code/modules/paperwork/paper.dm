@@ -448,7 +448,7 @@
 
 	if(is_blind(user))
 		return ..()
-	
+
 	if(istype(P, /obj/item/natural/feather/infernal))
 		if(trapped)
 			to_chat(user, span_warning("[src] is already trapped."))

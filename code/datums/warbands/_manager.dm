@@ -570,3 +570,148 @@
 	if(SSwarbands.all_warband_class_types[class_path] && ispath(class_path, /datum/advclass/warband))
 		return class_path
 	return
+
+////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// NPC SPAWN COST
+/*
+	returns how many spawns a single allied NPC (goon) costs to summon
+*/
+/atom/movable/screen/warband/manager/proc/get_npc_spawn_cost(base_cost = 1)
+	for(var/datum/warbands/aspects/aspect in selected_aspects)
+		if(istype(aspect, ASPECT_BADSPAWN))
+			return base_cost * 2
+	return base_cost
+
+/////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// ENVOY SUMMONING
+
+/atom/movable/screen/warband/manager/proc/summon_envoy(mob/living/carbon/human/user, turf/spawn_loc, atom/storage_point, race_choice, depth_choice)
+	var/mob/living/carbon/human/envoy
+	switch(depth_choice)
+		if("Simple Envoy")
+			switch(race_choice)
+				if("Humen")
+					envoy = new /mob/living/carbon/human/species/human/northern(spawn_loc)
+				if("Half-Elf")
+					envoy = new /mob/living/carbon/human/species/human/halfelf(spawn_loc)
+				if("Dwarf")
+					envoy = new /mob/living/carbon/human/species/dwarf/mountain(spawn_loc)
+				if("Elf")
+					envoy = new /mob/living/carbon/human/species/elf/wood(spawn_loc)
+				if("Aasimar")
+					envoy = new /mob/living/carbon/human/species/aasimar(spawn_loc)
+			envoy.real_name = pick(world.file2list("strings/rt/names/human/humsoulast.txt"))
+			apply_simple_envoy_appearance(envoy)
+		if("Use a Character Slot")
+			envoy = new /mob/living/carbon/human/species/human/northern(spawn_loc)
+	if(!envoy)
+		return
+	envoy.sync_mind()
+	envoy.faction |= list("warband_[warband_ID]", "[user.real_name]_faction")
+	envoy.key = user.key
+	envoy.mind.warband_ID = warband_ID
+	envoy.mind.warband_manager = src
+	envoy.mind.original_char = user
+	transfer_treaties(user, envoy)
+	equip_envoy(envoy)
+	SSjob.AssignRole(envoy, "Warlord's Envoy")
+	envoy.mind.special_role = "Warlord's Envoy"
+	spawns-- // an envoy costs a single spawn
+	if(storage_point)
+		storage_point.contents += user
+	return envoy
+
+// moves any treaties the summoner is carrying into the envoy's hands
+/atom/movable/screen/warband/manager/proc/transfer_treaties(mob/living/carbon/human/from_mob, mob/living/carbon/human/to_mob)
+	for(var/obj/item/treaty/carried_treaty in from_mob.contents)
+		if(from_mob.transferItemToLoc(carried_treaty, to_mob.loc))
+			to_mob.put_in_hands(carried_treaty)
+
+	for(var/obj/item/storage/bag in from_mob.contents)
+		for(var/obj/item/treaty/bag_treaty in bag.contents)
+			bag_treaty.remove_item_from_storage(from_mob)
+			bag_treaty.forceMove(to_mob.loc)
+			to_mob.put_in_hands(bag_treaty)
+
+/atom/movable/screen/warband/manager/proc/apply_simple_envoy_appearance(mob/living/carbon/human/envoy)
+	var/obj/item/bodypart/head/head = envoy.get_bodypart(BODY_ZONE_HEAD)
+	var/hair_choice = /datum/sprite_accessory/hair/head/troubadour
+
+	var/datum/bodypart_feature/hair/head/new_hair = new()
+
+	new_hair.set_accessory_type(hair_choice, owner = envoy)
+
+	if(prob(50))
+		new_hair.accessory_colors = "#96403d"
+		new_hair.hair_color = "#96403d"
+	else
+		new_hair.accessory_colors = "#160d02"
+		new_hair.hair_color = "#160d02"
+
+	head.add_bodypart_feature(new_hair)
+
+	envoy.dna.update_ui_block(DNA_HAIR_COLOR_BLOCK)
+	envoy.dna.species.handle_body(envoy)
+
+	var/obj/item/organ/eyes/organ_eyes = envoy.getorgan(/obj/item/organ/eyes)
+	if(organ_eyes)
+		var/picked_eye_color = pick("#365334", "#395c70", "#30261e")
+		organ_eyes.eye_color = picked_eye_color
+		organ_eyes.accessory_colors = picked_eye_color + picked_eye_color
+
+// equips an envoy with the envoy advclass kit
+/atom/movable/screen/warband/manager/proc/equip_envoy(mob/envoy, used_slot)
+	var/datum/advclass/warband/envoy/envoy_class = new /datum/advclass/warband/envoy
+	envoy.cmode_music = combatmusic
+	envoy.job = envoy_class.name
+	envoy_class.equipme(envoy, FALSE)
+
+// returns a random rally point belonging to this warband, or null
+/atom/movable/screen/warband/manager/proc/get_random_recruit_point()
+	var/list/recruit_points = list()
+	for(var/obj/structure/fluff/warband/warband_recruit/point in SSwarbands.warband_machines)
+		if(point.warband_ID == warband_ID)
+			recruit_points += point
+	if(recruit_points.len)
+		return pick(recruit_points)
+	return
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+// returns (creating if needed) the trail_follow component that herds a player's NPC squad
+/atom/movable/screen/warband/manager/proc/get_squad_component(mob/user)
+	var/datum/component/trail_follow/squad = user.GetComponent(/datum/component/trail_follow)
+	if(!squad)
+		squad = user.AddComponent(/datum/component/trail_follow)
+	return squad
+
+// TRUE if the given squad component is currently herding any goons
+/atom/movable/screen/warband/manager/proc/squad_has_goons(datum/component/trail_follow/squad)
+	for(var/mob/friend in squad.members)
+		if(istype(friend, /mob/living/carbon/human/species/human/northern/goon))
+			return TRUE
+	return FALSE
+
+// abandons every goon currently herded by the given squad component
+/atom/movable/screen/warband/manager/proc/abandon_npc_squad(datum/component/trail_follow/squad)
+	for(var/mob/living/carbon/human/species/human/northern/goon/abandoned_grunt in squad.members)
+		if(!abandoned_grunt)
+			squad.members -= abandoned_grunt
+			continue
+		abandoned_grunt.abandonevent()
+		squad.members -= abandoned_grunt
+
+// spawns a fresh squad of goons at spawn_loc
+/atom/movable/screen/warband/manager/proc/deploy_npc_squad(mob/living/carbon/human/user, turf/spawn_loc, datum/component/trail_follow/squad, base_cost = 1)
+	var/grunt_cost = get_npc_spawn_cost(base_cost)
+	var/deployed = 0
+	for(var/grunts_spawned = 1, grunts_spawned <= user.mind.squad_size && spawns >= grunt_cost, grunts_spawned++)
+		var/mob/living/carbon/human/species/human/northern/goon/new_grunt = get_cached_grunt(spawn_loc, user)
+		new_grunt.patron = user.patron
+		new_grunt.faction |= list("warband_[warband_ID]", "[user.real_name]_faction")
+		new_grunt.warband_ID = warband_ID
+		squad.members |= new_grunt
+		spawns -= grunt_cost
+		deployed++
+	return deployed

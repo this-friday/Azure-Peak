@@ -42,6 +42,10 @@
 			qdel(warlord_spawn)
 			break
 
+		// no warcamp was loaded, so there's no warlord landmark
+		if(!warlord_landmark_turf && warband_spawn_turf)
+			user.forceMove(warband_spawn_turf)
+
 		for(var/datum/warbands/aspects/aspect in selected_aspects)
 			aspect.on_warlord_spawned(user, src)
 		selected_warband?.on_warlord_spawned(user, src)
@@ -57,7 +61,8 @@
 					shortest_distance = distance
 					nearest_rally = rally
 
-		warband_spawn_turf = nearest_rally ? get_turf(nearest_rally) : warlord_landmark_turf
+		// prefer the nearest rally point, then the warlord landmark, then a field spawn turf already set by choose_map
+		warband_spawn_turf = nearest_rally ? get_turf(nearest_rally) : (warlord_landmark_turf || warband_spawn_turf)
 	else if(!is_latespawn)
 		user.forceMove(warband_spawn_turf)
 

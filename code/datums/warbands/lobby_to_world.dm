@@ -91,53 +91,45 @@
 				warband_tile.aportalid = "outskirts_[warband_ID]"
 				warband_tile.aportalgoesto = "camp_[warband_ID]"
 
+// returns FALSE if a turf sits in an area we never want to spawn a warband into
+// currently just the wretch lair/cave, as we shouldn't really have anything to worry about beyond that
+/atom/movable/screen/warband/manager/proc/is_valid_wretch_turf(turf/T)
+	if(!T)
+		return FALSE
+	var/area/A = get_area(T)
+	if(istype(A, /area/rogue/under/cave/inhumen))
+		return FALSE
+	if(istype(A, /area/rogue/outdoors/woods/wretch_lair))
+		return FALSE
+	return TRUE
+
+// picks a random valid wretch spawn landmark
+/atom/movable/screen/warband/manager/proc/get_random_wretch_landmark()
+	var/list/candidates = list()
+	for(var/obj/effect/landmark/start/wretchlate/wretch in GLOB.start_landmarks_list)
+		if(is_valid_wretch_turf(get_turf(wretch)))
+			candidates += wretch
+	if(candidates.len)
+		return pick(candidates)
+	return
+
 //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SET DEFAULT EXIT
 /*
 	before the warcamp's z-level is connected to the main z-level, they need envoys to establish travel tiles
 	before those travel tiles are established, the envoys spawn on a Default Exit
 
-	at the moment, we're using the quest landmarks to pick a Default Exit
-	65% chance for an Easy landmark to be chosen
-	35% chance to be Immediately Killed By Shadow People (medium or hard landmark)
-
-	if there's no quest landmarks, we just dump them at spawn
+	the Default Exit is one of the wretch spawn landmarks
+	if there's no valid wretch landmark, we fall back on the Adventurer Spawn
 
 */
 /atom/movable/screen/warband/manager/proc/set_default_exit()
-	var/chosen_landmark_type
-	var/random_landmark
+	var/obj/effect/landmark/random_landmark = get_random_wretch_landmark()
 
-	var/has_badspawn = FALSE
-	for(var/datum/warbands/aspects/aspect in selected_aspects)
-		if(istype(aspect, ASPECT_BADSPAWN))
-			has_badspawn = TRUE
+	if(!random_landmark)
+		for(var/obj/effect/landmark/start/adventurerlate/fallback_spawn_landmark in GLOB.start_landmarks_list)
+			random_landmark = fallback_spawn_landmark
 			break
-
-	if(has_badspawn)
-		chosen_landmark_type = pick(/obj/effect/landmark/quest_spawner/medium, /obj/effect/landmark/quest_spawner/hard)
-	else
-		if(prob(65))
-			chosen_landmark_type = /obj/effect/landmark/quest_spawner/easy
-		else
-			if(prob(50))
-				chosen_landmark_type = /obj/effect/landmark/quest_spawner/medium
-			else
-				chosen_landmark_type = /obj/effect/landmark/quest_spawner/hard
-
-	var/list/candidates = list()
-	for(var/landmark in GLOB.quest_landmarks_list)
-		if(istype(landmark, chosen_landmark_type)) 
-			candidates += landmark 
-
-	if(candidates.len) 
-		random_landmark = pick(candidates) 
-	else
-		for(var/fallback_spawn_landmark in GLOB.start_landmarks_list)
-			if(istype(fallback_spawn_landmark, /obj/effect/landmark/start/adventurerlate))
-				random_landmark = fallback_spawn_landmark
-				message_admins("Warband [warband_ID] couldn't find a default exit landmark. Exit is defaulting to the Adventurer Spawn.")				
-				break
 
 	for(var/obj/structure/fluff/traveltile/warband/camp_to_outskirts/exit_tile in SSwarbands.warband_machines)
 		if(exit_tile.warband_ID == warband_ID)
@@ -149,6 +141,7 @@
 	selects & spawns a map
 	prioritizes a choice from an aspect or subtype before falling back on the warband map
 
+	if there's no room to spawn a fresh warcamp (e.g. prior warbands consumed all the warcamp landmarks), we flag the warband to spawn directly in the field at a wretch landmark
 */
 /atom/movable/screen/warband/manager/proc/choose_map(latespawn = FALSE)
 	var/warcamp_template_type
@@ -173,12 +166,19 @@
 
 	for(var/obj/effect/landmark/warcamp/warcamp_landmark in GLOB.landmarks_list)
 		var/list/bounds = chosenmap.load(warcamp_landmark.loc, centered = TRUE)
-		if(!bounds)
-			qdel(warcamp_landmark)
-			return FALSE
 		qdel(warcamp_landmark)
+		if(!bounds)
+			continue
 		warcamp_established = TRUE
 		break
+
+	// no warcamp could be placed, so we just drop the warband straight onto the field at a wretch spawn landmark and continue
+	if(!warcamp_established)
+		var/obj/effect/landmark/field_landmark = get_random_wretch_landmark()
+		if(!field_landmark)
+			return FALSE
+		warband_spawn_turf = get_turf(field_landmark)
+		return TRUE
 
 	if(latespawn == TRUE)
 		for(var/obj/effect/landmark/start/warlordlate/warlord_spawn in GLOB.landmarks_list)

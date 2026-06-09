@@ -27,6 +27,7 @@
 	// when the leader changes z-levels, we mark the tile they left as a "portal" to wherever they landed
 	var/turf/old_turf = get_turf(old_loc)
 	if(old_turf && old_turf.z != current_pos.z)
+		portals -= current_pos // to prevent accidentally creating loops (for example: going up stairs and going down again), we clear portal doorways we happen to land on post-z-transition
 		portals[old_turf] = current_pos
 
 	if(!waypoints.len || waypoints[1] != current_pos)

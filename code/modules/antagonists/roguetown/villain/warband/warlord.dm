@@ -27,7 +27,8 @@
 
 /datum/antagonist/warband/warlord/replace_mob(mob/living/carbon/human/new_warlord)
 	var/mob/living/replacement_mob = ..(new_warlord)
-	SSwarbands.replaced_mobs += new_warlord
+	if(!istype(new_warlord, /mob/dead))
+		SSwarbands.replaced_mobs += new_warlord
 	new_warlord.real_name = "replacedmob"
 	return replacement_mob
 
