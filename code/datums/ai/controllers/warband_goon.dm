@@ -49,3 +49,11 @@
 		/datum/ai_planning_subtree/travel_to_point/and_clear_target,
 		/datum/ai_planning_subtree/equip_item,
 	)
+
+// goons in a trail_follow squad stay fully dormant
+/datum/ai_controller/human_npc/melee/goon/set_ai_status(new_ai_status)
+	if(new_ai_status != AI_STATUS_OFF)
+		var/mob/living/carbon/human/species/human/northern/goon/goon_pawn = pawn
+		if(istype(goon_pawn) && goon_pawn.squad_leader)
+			new_ai_status = AI_STATUS_OFF
+	return ..()

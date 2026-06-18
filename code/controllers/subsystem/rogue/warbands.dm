@@ -7,7 +7,7 @@ SUBSYSTEM_DEF(warbands)
 	var/list/warband_managers = list()
 	var/list/warband_machines = list()
 	var/warband_managers_busy = FALSE	// prevents multiple warbands from being loaded in at once | necessary, as warband_ID assignments for objects will expect this to be the case
-	var/atom/movable/screen/warband/manager/roundstart_manager
+	var/datum/warband_manager/roundstart_manager
 	var/roundstart_manager_claimed = FALSE
 	var/next_warband_id = 1
 
@@ -21,7 +21,7 @@ SUBSYSTEM_DEF(warbands)
 
 	var/classes_initialized = FALSE
 
-	var/list/currentrun_encounters = list()
+	var/list/currentrun_encounters = list() // currently running Defense encounters for warcamps
 
 	// npc cache
 	// we're spawning large groups of complex mobs at once (especially during outskirts fights), so this is softens the lag spikes
@@ -38,11 +38,11 @@ SUBSYSTEM_DEF(warbands)
 	var/list/lobby_mob_cache = list()		// for a reduced impact when the round starts, since we're getting mobs from scratch | also used for Envoys & latespawns, because why not. they're already here
 	var/list/replaced_mobs = list()
 
-	// stored as datums
+	// warbands (stored as datums)
 	var/list/datum/warbands/all_warbands = list()
 	var/list/datum/warbands/subtypes/all_subtypes = list()
 	var/list/datum/warbands/aspects/all_aspects = list()
-	// stored as types
+	// classes (stored as types)
 	var/list/all_warband_class_types = list()
 
 	// data for the lobby's tgui, built once the first time the UI opens and is identical for every viewer all round
@@ -60,11 +60,27 @@ SUBSYSTEM_DEF(warbands)
 		treaty_flavor_factions += new territory_faction_path
 	create_name_cache()
 	initialize_class_cache()
-	initialize_lobby_mob_cache()	
-	roundstart_manager = new /atom/movable/screen/warband/manager()
-	roundstart_manager.warband_ID = next_warband_id++
-	warband_managers += roundstart_manager
+	initialize_lobby_mob_cache()
+	// grunts_to_create = max_unassigned_cache
+	roundstart_manager = new /datum/warband_manager()
+	register_manager(roundstart_manager)
 	return ..()
+
+/datum/controller/subsystem/warbands/proc/allocate_warband_id()
+	return next_warband_id++
+
+// registers a freshly created manager with the subsystem & stamps its ID
+/datum/controller/subsystem/warbands/proc/register_manager(datum/warband_manager/manager)
+	if(!manager.warband_ID)
+		manager.warband_ID = allocate_warband_id()
+	warband_managers |= manager
+	return manager
+
+// shared player-count scaling for grunt allotments
+// currently: a minimum of 2 grunts per lieutenant, +1 for every 15 active players past 40
+/proc/warband_grunts_per_lieutenant()
+	var/scaled = GRUNTS_PER_LIEUTENANT + max(0, round((get_active_player_count() - 40) / 15))
+	return min(scaled, GRUNTS_PER_LIEUTENANT_MAX)
 
 /datum/controller/subsystem/warbands/proc/create_name_cache()
 	for(var/datum/treaty_flavor/faction in treaty_flavor_factions)
@@ -111,6 +127,15 @@ SUBSYSTEM_DEF(warbands)
 	if(source.gruntclasses)
 		for(var/class_type in source.gruntclasses)
 			register_class(class_type)
+	if(source.universal_warlordclasses)
+		for(var/class_type in source.universal_warlordclasses)
+			register_class(class_type)
+	if(source.universal_lieutenantclasses)
+		for(var/class_type in source.universal_lieutenantclasses)
+			register_class(class_type)
+	if(source.universal_gruntclasses)
+		for(var/class_type in source.universal_gruntclasses)
+			register_class(class_type)
 
 /datum/controller/subsystem/warbands/proc/register_class(class_type)
 	all_warband_class_types[class_type] = TRUE
@@ -140,14 +165,14 @@ SUBSYSTEM_DEF(warbands)
 /datum/controller/subsystem/warbands/fire(resumed = FALSE)
 	if(!resumed)
 		currentrun_encounters = list()
-		for(var/atom/movable/screen/warband/manager/warband in warband_managers)
+		for(var/datum/warband_manager/warband in warband_managers)
 			if(warband.encounter_manager)
 				currentrun_encounters += warband.encounter_manager
 	
 	process_encounters()
 
 	// push timer updates for any lobby currently counting down
-	for(var/atom/movable/screen/warband/manager/manager in warband_managers)
+	for(var/datum/warband_manager/manager in warband_managers)
 		if(manager.creation_timer_active)
 			manager.cached_remaining_time = manager.get_remaining_time()
 			SStgui.update_uis(manager)
@@ -182,31 +207,27 @@ SUBSYSTEM_DEF(warbands)
 			return new chosen_type()
 
 /datum/controller/subsystem/warbands/proc/process_encounters()
-	var/list/current = currentrun_encounters
-	while(current.len)
-		var/datum/outskirts_encounter/encounter = current[current.len]
-		current.len--
-
-		if(!encounter || QDELETED(encounter))
-			if(MC_TICK_CHECK)
-				return
+	for(var/datum/outskirts_encounter/encounter as anything in currentrun_encounters)
+		if(QDELETED(encounter))
 			continue
 		encounter.check_wave_integrity()
 		encounter.process_cleanup_queue()
 
-
 ////////////////
 ////// MOB CACHE
 
+// warbands considered viable to receive a fresh cached mob
 /datum/controller/subsystem/warbands/proc/get_viable_warbands()
 	var/list/viable = list()
-	for(var/atom/movable/screen/warband/manager/warband in warband_managers)
+	for(var/datum/warband_manager/warband in warband_managers)
 		if(warband.creation_stage < 2 || !warband.selected_warband)
 			continue // skip incomplete warbands
 		if(warband.cache_source)
 			continue // skip warbands that are sharing a cache with another
 		if(warband.assigned_grunt_cache.len >= 100)
 			continue // skip warbands with 100 mobs in their assigned cache
+					 // note: grunt caches can still exceed 100 mobs if, for example: a bunch are summoned, the cache naturally refills, and the already-existing summoned mobs get recycled
+					 // this should be fine. in that scenario, the cache is likely in High Demand at that point
 		viable += warband
 	return viable
 
@@ -224,7 +245,7 @@ SUBSYSTEM_DEF(warbands)
 	if(current_warband_index > viable_warbands.len)
 		current_warband_index = 1
 	
-	var/atom/movable/screen/warband/manager/target_warband = viable_warbands[current_warband_index]
+	var/datum/warband_manager/target_warband = viable_warbands[current_warband_index]
 	var/mob/living/carbon/human/species/human/northern/goon/cached_grunt = unassigned_mob_cache[1]
 	unassigned_mob_cache -= cached_grunt
 	

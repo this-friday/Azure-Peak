@@ -13,33 +13,36 @@
 /datum/warbands/aspects/marked/get_points_at_intensity(intensity)
 	return intensity
 
-/datum/warbands/aspects/marked/on_grunt_spawned(mob/living/carbon/human/grunt, atom/movable/screen/warband/manager/manager)
-	var/max_assassins = manager.aspect_intensities["/datum/warbands/aspects/marked"] || 1
-	max_assassins = 2 + (max_assassins - 1) * 2
-	if(manager.marked_assassin_count >= max_assassins && prob(50))
-		return // until we reach the assassin cap, there's a 50% chance that a spawning Grunt becomes an assassin
+/datum/warbands/aspects/marked/on_grunt_spawned(mob/living/carbon/human/grunt, datum/warband_manager/manager)
+	var/intensity_rank = manager.aspect_intensities["[src.type]"] || 1
+	var/max_assassins = 2 + (intensity_rank - 1) * 2
+	if(manager.marked_assassin_count >= max_assassins)
+		return // hard cap based on the chosen intensity (minimum of 2)
+	if(!prob(50))
+		return // until the cap is reached, each spawning Grunt has a 50% chance of becoming an assassin
 
 	var/mob/living/carbon/human/warlord
 	for(var/mob/living/carbon/human/member in manager.members)
-		if(member.mind?.special_role == "Warlord")
+		if(member.mind?.special_role == ROLE_WARLORD)
 			warlord = member
 			break
 
 	if(!warlord)
 		return
 
-	manager.marked_assassin_count++
-
 	var/datum/antagonist/warband/grunt/grunt_antag
-	var/datum/objective/warband/assassin/kill_objective = new
-
-	kill_objective.owner = grunt.mind
-	kill_objective.target = warlord.mind
-
 	for(var/datum/antagonist/antag in grunt.mind.antag_datums)
 		if(istype(antag, /datum/antagonist/warband/grunt))
 			grunt_antag = antag
 			break
+	if(!grunt_antag)
+		return
+
+	manager.marked_assassin_count++
+
+	var/datum/objective/warband/assassin/kill_objective = new
+	kill_objective.owner = grunt.mind
+	kill_objective.target = warlord.mind
 	grunt_antag.objectives |= kill_objective
 	grunt.mind.announce_objectives()
 

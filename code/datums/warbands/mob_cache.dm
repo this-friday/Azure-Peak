@@ -8,7 +8,7 @@
 	4 - GET GRUNT CACHE			// returns the root goon cache list to use
 */
 
-/atom/movable/screen/warband/manager/proc/get_cached_grunt(turf/spawn_location, mob/owner)
+/datum/warband_manager/proc/get_cached_grunt(turf/spawn_location, mob/owner)
 	var/list/cache_to_use = get_grunt_cache()
 	var/mob/living/carbon/human/species/human/northern/goon/grunt
 	if(cache_to_use.len)
@@ -36,7 +36,7 @@
 	
 	if so, both warbands share a single cache
 */
-/atom/movable/screen/warband/manager/proc/has_compatible_cache(atom/movable/screen/warband/manager/other_manager)
+/datum/warband_manager/proc/has_compatible_cache(datum/warband_manager/other_manager)
 	if(selected_warband.type != other_manager.selected_warband.type)
 		return FALSE
 	
@@ -45,11 +45,11 @@
 	
 	return TRUE // we'll assume they're compatible if they have the same warband and subtype
 
-/atom/movable/screen/warband/manager/proc/share_cache_with(atom/movable/screen/warband/manager/source_manager)
+/datum/warband_manager/proc/share_cache_with(datum/warband_manager/source_manager)
 	if(!source_manager)
 		return FALSE
 	
-	var/atom/movable/screen/warband/manager/root_source = source_manager
+	var/datum/warband_manager/root_source = source_manager
 	while(root_source.cache_source) 
 		root_source = root_source.cache_source 
 	
@@ -57,7 +57,7 @@
 	root_source.cache_dependents += src
 	return TRUE
 
-/atom/movable/screen/warband/manager/proc/get_grunt_cache()
+/datum/warband_manager/proc/get_grunt_cache()
 	if(cache_source)
 		return cache_source.assigned_grunt_cache
 	return assigned_grunt_cache

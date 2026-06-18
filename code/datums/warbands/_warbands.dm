@@ -44,7 +44,7 @@
 	var/title						// name used in the creation menu
 	var/name = "Warband"			// name used outside the creation menu and during desertions
 
-	// appears in treaties
+	// appears in treaties. purely flavor
 	var/treaty_name = "Warband"
 	var/treaty_desc = "Azuria bears no shortage of enemies."
 	var/icon = 'icons/roguetown/weapons/shields32.dmi'
@@ -52,7 +52,7 @@
 
 	var/desc = ""					// used for extra details
 	var/summary						// first description in a warband's info tab | followed up by desc
-	var/warning						// when a warband spawns, someone in the city is sent a warning letter w/details (its warband, aspects, etc)
+	var/warning						// a string | when a warband spawns, we collect these strings and send someone in the city a warning letter w/details (its warband, aspects, etc)
 	var/datum/map_template/warcamp	// a 45x45 map template
 	var/datum/storytellerlimit		// certain warbands are only available with certain storytellers | when storytellers are accounted, the manager will look at the current storyteller, the storyteller chosen at roundstart, and each prince's patron
 	var/rarity						// how many times the storytellerlimit needs to be met before a locked warband is unlocked
@@ -67,13 +67,21 @@
 	var/list/warlordclasses = list()
 	var/list/lieutenantclasses = list()
 	var/list/gruntclasses = list()
-	var/list/suppressed_classes = list()	// class type paths to hide from this selection's class/subclass panels
-	var/replaces_primaries = FALSE			// when TRUE, for each tier this datum grants into, the PRIMARY panel is restricted to those grants (blocks all other primaries)
-	var/spawns						// lost when an NPC is spawned | combined with the baseline spawns (400)
+
+	var/list/suppressed_classes = list()	// specific classes to override/hide from this selection's class/subclass panels | similar to suppress_all_other_classes, but much more targeted
+	var/suppress_all_other_classes = FALSE	// when TRUE, it overrides/hides ALL other primary classes in its affected role tier | the prime example of this is (/datum/warbands/aspects/patron)
+
+	var/universal_subclasses_enabled = FALSE	// enables universal classes for a warband | the chosen universal class is applied on top of the primary. currently used for Mercenaries	
+	var/list/universal_warlordclasses = list()
+	var/list/universal_lieutenantclasses = list()
+	var/list/universal_gruntclasses = list()
+
+
+	var/spawns // lost when an NPC is spawned | combined with the baseline spawns (400)
 	var/list/combatmusic = list()
 	var/datum/outskirts_wave/outskirts_wave
-	var/multiclass_enabled = FALSE	// When TRUE, the creation menu shows a second class picker | multiclassing results in both classes getting applied. currently used for Mercenaries
-	var/subclass_required = FALSE	// When TRUE, a subclass/multiclass is required
+
+	var/subclass_required = FALSE	// When TRUE, a selected subclass is mandatory
 	var/subclass_label = "SUBCLASS"
 
 	var/list/input_fields = list()
@@ -117,28 +125,28 @@
 
 // called by set_race_and_faith_locks() after locks are built
 // the standard restriction message fires at the end if nothing returns TRUE
-/datum/warbands/proc/on_locks_applied(atom/movable/screen/warband/manager/manager)
+/datum/warbands/proc/on_locks_applied(datum/warband_manager/manager)
 	return FALSE
 
 // called when the warband is confirmed by the warlord (stage 1 -> 2)
 // intensity: the selected intensity rank for this aspect (1 if not intensity-capable)
-/datum/warbands/proc/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/proc/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	return
 
 // called from equip_character after the warlord has been fully equipped and all stats applied
-/datum/warbands/proc/on_warlord_equip(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
+/datum/warbands/proc/on_warlord_equip(mob/living/carbon/human/warlord, datum/warband_manager/manager)
 	return
 
 // called immediately after the warlord's character is spawned
-/datum/warbands/proc/on_warlord_spawned(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
+/datum/warbands/proc/on_warlord_spawned(mob/living/carbon/human/warlord, datum/warband_manager/manager)
 	return
 
 // as above, but for grunts
-/datum/warbands/proc/on_grunt_spawned(mob/living/carbon/human/grunt, atom/movable/screen/warband/manager/manager)
+/datum/warbands/proc/on_grunt_spawned(mob/living/carbon/human/grunt, datum/warband_manager/manager)
 	return
 
 // as above, but for lieutenants
-/datum/warbands/proc/on_lieutenant_spawned(mob/living/carbon/human/lieutenant, atom/movable/screen/warband/manager/manager)
+/datum/warbands/proc/on_lieutenant_spawned(mob/living/carbon/human/lieutenant, datum/warband_manager/manager)
 	return
 
 // returns the selection point cost at a given intensity rank
@@ -154,7 +162,7 @@
 	return costs
 
 // sends quote and quote_followup to all lobby members when the warlord spawns
-/datum/warbands/subtypes/on_warlord_spawned(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
+/datum/warbands/subtypes/on_warlord_spawned(mob/living/carbon/human/warlord, datum/warband_manager/manager)
 	if(quote)
 		for(var/mob/living/member in manager.lobby_members)
 			to_chat(member, "<span style='color:#7a2525'><i>[quote]</i></span>")

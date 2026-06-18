@@ -14,5 +14,5 @@
 /datum/warbands/aspects/horde/get_points_at_intensity(intensity)
 	return -(1 + (intensity - 1) * 2)
 
-/datum/warbands/aspects/horde/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/aspects/horde/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	manager.squad_size_bonus += 1 * intensity

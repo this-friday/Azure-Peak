@@ -1,5 +1,6 @@
 /datum/antagonist/warband
 	var/is_lieutenant = FALSE
+	var/bypass_rarity = FALSE
 
 /datum/antagonist/warband/proc/mindwipe(var/datum/mind/owner)
 	for(var/datum/mind/found_mind in get_minds())
@@ -89,7 +90,7 @@
 
 	if(!owner.warband_ID)
 		for(var/datum/mind/potential_warlord in get_minds())
-			if(potential_warlord.special_role == "Warlord" && potential_warlord.warband_ID)
+			if(potential_warlord.special_role == ROLE_WARLORD && potential_warlord.warband_ID)
 				if(potential_warlord.warband_manager)
 					owner.warband_ID = potential_warlord.warband_ID
 					break
@@ -99,7 +100,7 @@
 		qdel(owner.current) // It's over. Go Home.
 		return
 
-	for(var/atom/movable/screen/warband/manager/listed_manager in SSwarbands.warband_managers)
+	for(var/datum/warband_manager/listed_manager in SSwarbands.warband_managers)
 		if(listed_manager.warband_ID == owner.warband_ID)
 			owner.warband_manager = listed_manager
 			listed_manager.lobby_members += owner.current
@@ -152,11 +153,11 @@
 /datum/objective/warband/aspirant/greatergood/check_completion()
 	if(!owner || !owner.warband_manager)
 		return FALSE
-	var/atom/movable/screen/warband/manager/warband = owner.warband_manager
+	var/datum/warband_manager/warband = owner.warband_manager
 	for(var/mob/living/carbon/human/member in warband.members)
 		if(!member.mind)
 			continue
-		if(member.mind.special_role == "Warlord")
+		if(member.mind.special_role == ROLE_WARLORD)
 			for(var/datum/objective/obj in member.mind.get_all_objectives())
 				if(istype(obj, /datum/objective/warband/warlord))
 					return obj.check_completion()
@@ -167,7 +168,7 @@
 /datum/objective/warband/aspirant/disorder/check_completion()
 	if(!owner || !owner.warband_manager)
 		return FALSE
-	var/atom/movable/screen/warband/manager/warband = owner.warband_manager
+	var/datum/warband_manager/warband = owner.warband_manager
 	return warband.disorder >= 4
 
 // order
@@ -175,7 +176,7 @@
 /datum/objective/warband/aspirant/order/check_completion()
 	if(!owner || !owner.warband_manager)
 		return FALSE
-	var/atom/movable/screen/warband/manager/warband = owner.warband_manager
+	var/datum/warband_manager/warband = owner.warband_manager
 	return warband.disorder < 3
 
 // wormtongue
@@ -183,14 +184,14 @@
 /datum/objective/warband/aspirant/wormtongue/check_completion()
 	if(!owner || !owner.warband_manager)
 		return FALSE
-	var/atom/movable/screen/warband/manager/warband = owner.warband_manager
+	var/datum/warband_manager/warband = owner.warband_manager
 	var/living_lieutenants = 0
 	for(var/mob/living/carbon/human/member in warband.members)
 		if(!member.mind)
 			continue
 		if(member.mind == owner)
 			continue
-		if(member.mind.special_role == "Lieutenant" || member.mind.special_role == "Aspirant Lieutenant")
+		if(member.mind.special_role == ROLE_WARLORD_LIEUTENANT || member.mind.special_role == ROLE_WARLORD_ASPIRANT)
 			if(member.stat != DEAD)
 				living_lieutenants++
 	return living_lieutenants == 0
@@ -216,4 +217,4 @@
 	explanation_text = "The Warlord must die."
 
 /datum/objective/warband/assassin/check_completion()
-	return !target || target.current.stat == DEAD
+	return !target?.current || target.current.stat == DEAD

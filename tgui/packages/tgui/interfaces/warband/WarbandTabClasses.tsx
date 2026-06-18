@@ -12,6 +12,7 @@ type ClassesTabProps = {
   handleSubclassSelect: (subclass: ClassType) => void;
   act: (action: string) => void;
   canModify?: boolean;
+  slotCounts?: Record<string, number>;
 };
 
 export const ClassesTab = ({
@@ -24,8 +25,11 @@ export const ClassesTab = ({
   handleSubclassSelect,
   act,
   canModify = true,
+  slotCounts = {},
 }: ClassesTabProps) => {
-  const subclassExempt = !!selectedClass?.ignores_multiclass_requirement;
+  const subclassExempt = !!selectedClass?.ignores_uni_class_requirement;
+  const classIsFull = (classe: ClassType) =>
+    classe.slots >= 0 && (slotCounts[classe.type] ?? 0) >= classe.slots;
   return (
     <Stack vertical fill>
       <Stack row-Reverse style={{ flex: 1 }}>
@@ -39,22 +43,27 @@ export const ClassesTab = ({
             <Stack vertical>
               {availableClasses.map((classe) => {
                 const isSelected = selectedClass?.type === classe.type;
+                const isFull = !isSelected && classIsFull(classe);
                 return (
                   <Button
                     key={classe.type}
                     onClick={() => {
-                      if (!canModify) return;
+                      if (!canModify || isFull) return;
                       handleClassSelect(classe);
                       act('interaction_sound');
                     }}
-                    disabled={!canModify}
-                    style={{ 
-                      backgroundColor: isSelected ? '#7a2525ff' : undefined, 
-                      whiteSpace: 'normal', 
+                    disabled={!canModify || isFull}
+                    style={{
+                      backgroundColor: isSelected ? '#7a2525ff' : undefined,
+                      whiteSpace: 'normal',
                       textAlign: 'left',
+                      opacity: isFull ? 0.5 : 1,
                     }}>
                     <Stack vertical>
-                      <span style={{ fontSize: '14px' }}>{classe.name || classe.alt_name}</span>
+                      <span style={{ fontSize: '14px' }}>
+                        {classe.name || classe.alt_name}
+                        {isFull && <span style={{ fontSize: '11px', color: '#d46060', marginLeft: '8px' }}>(FULL)</span>}
+                      </span>
                       <span style={{ fontSize: '12px', color: '#ccc' }}>{classe.desc}</span>
                     </Stack>
                   </Button>
@@ -74,26 +83,31 @@ export const ClassesTab = ({
           fill 
           style={{ flex: 1 }}
         >
-          {selectedWarband?.multiclass_enabled && !subclassExempt && filteredSubclasses.length > 0 ? (
+          {selectedWarband?.universal_subclasses_enabled && !subclassExempt && filteredSubclasses.length > 0 ? (
             <Stack vertical>
               {filteredSubclasses.map((subclass) => {
                 const isSelected = selectedSubclass?.type === subclass.type;
+                const isFull = !isSelected && classIsFull(subclass);
                 return (
                   <Button
                     key={subclass.type}
                     onClick={() => {
-                      if (!canModify) return;
+                      if (!canModify || isFull) return;
                       handleSubclassSelect(subclass);
                       act('interaction_sound');
                     }}
-                    disabled={!canModify}
-                    style={{ 
-                      backgroundColor: isSelected ? '#7a2525ff' : undefined, 
-                      whiteSpace: 'normal', 
+                    disabled={!canModify || isFull}
+                    style={{
+                      backgroundColor: isSelected ? '#7a2525ff' : undefined,
+                      whiteSpace: 'normal',
                       textAlign: 'left',
+                      opacity: isFull ? 0.5 : 1,
                     }}>
                     <Stack vertical>
-                      <span style={{ fontSize: '14px' }}>{subclass.name || subclass.alt_name}</span>
+                      <span style={{ fontSize: '14px' }}>
+                        {subclass.name || subclass.alt_name}
+                        {isFull && <span style={{ fontSize: '11px', color: '#d46060', marginLeft: '8px' }}>(FULL)</span>}
+                      </span>
                       <span style={{ fontSize: '12px', color: '#ccc' }}>{subclass.desc}</span>
                     </Stack>
                   </Button>
@@ -104,8 +118,8 @@ export const ClassesTab = ({
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
               <p style={{ color: '#7a2525ff' }}>
                 {subclassExempt
-                  ? 'THIS CLASS CANNOT MULTICLASS'
-                  : selectedWarband?.multiclass_enabled
+                  ? `THIS CLASS TAKES NO ${(selectedWarband?.subclass_label || 'SUBCLASS').toUpperCase()}`
+                  : selectedWarband?.universal_subclasses_enabled
                   ? `NO ${(selectedWarband.subclass_label || 'SUBCLASS').toUpperCase()}ES AVAILABLE`
                   : 'UNAVAILABLE FOR THIS WARBAND'}
               </p>

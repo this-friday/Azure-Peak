@@ -1,10 +1,24 @@
-//////////// LOBBY & WARBAND SELECTION
-/atom/movable/screen/warband/manager
+// the clickable "BEGIN" HUD element shown to lobby members
+/atom/movable/screen/warband_button
 	name = "BEGIN"
 	icon = 'icons/roguetown/hud/warband/warband_hud.dmi'
 	icon_state = "begin"
 	alpha = 0
 	screen_loc = "7.3,8"
+	var/datum/warband_manager/manager
+
+/atom/movable/screen/warband_button/Click()
+	manager?.ui_interact(usr)
+
+/atom/movable/screen/warband_button/Destroy()
+	manager = null
+	return ..()
+
+// this is where everything about an active warband is managed/tracked
+// tracks membership, active aspects, the lobby flow, etc. Everything
+/datum/warband_manager
+	var/name = "Warband"					// identifier for admin tooling & logs
+	var/atom/movable/screen/warband_button/button	// the lobby HUD button shown to members
 	var/list/storyinfluence = list()		// storyteller influences | decides what options are available
 
 	var/datum/warbands/selected_warband
@@ -16,6 +30,10 @@
 	var/list/ready_members = list()			// list of lobby_members who are readied up | includes their class
 	var/list/allies = list()				// players marked as allies
 	var/list/importantfigures = list()		// important figures in town | used in the 'know thy enemy' list in the creation menu | helps in plotting an initial gimmick
+
+	// for swapping roles mid-lobby/mid-creation
+	var/list/pending_swap_ckeys = list()	// ckeys with an active role-swap prompt (requester + target)
+	var/list/last_swap_request = list()		// ckey + the world.time of their last swap request
 
 	var/busy_summoning = FALSE				// active while the warband is polling for ghosts
 	var/list/last_action_time = list()		// for rate limits	
@@ -56,9 +74,9 @@
 	var/creation_start_time = 0
 	var/creation_timer_active = FALSE
 
-	var/list/assigned_grunt_cache = list()					// a cache holding pre-equipped goon NPCs
-	var/atom/movable/screen/warband/manager/cache_source	// if two opposing warbands have identical grunts, they share an NPC cache | this points to the manager we're sharing with
-	var/list/cache_dependents = list()						// list of other managers sharing our cache
+	var/list/assigned_grunt_cache = list()			// a cache holding pre-equipped goon NPCs
+	var/datum/warband_manager/cache_source			// if two opposing warbands have identical grunts, they share an NPC cache | this points to the manager we're sharing with
+	var/list/cache_dependents = list()				// list of other managers sharing our cache
 
 	// casus belli voting
 	var/list/casus_belli_proposals = list()
@@ -66,8 +84,9 @@
 
 	var/squad_size_bonus = 0			// flat bonus added to base squad size before any multipliers | set by aspects (e.g. CONSCRIPTS)
 	var/marked_assassin_count = 0		// tracks how many grunts have been marked as assassins | (/datum/warbands/aspects/marked)
-	var/list/aspect_intensities = list()	// assoc list: aspect type path (as string) -> selected intensity rank
-	var/list/selection_inputs = list()		// assoc list: type path string -> assoc list of field key -> value, for warbands/subtypes/aspects with inputs
+	var/list/aspect_intensities = list()	// assoc list: aspect type path (as a string) + selected intensity rank
+	var/list/selection_inputs = list()		// assoc list: type path string + assoc list of field key + value, for warbands/subtypes/aspects with inputs
+	var/list/taken_class_counts = list()	// assoc list: advclass type path + how many of this warband's spawned members took it | enforces maximum_possible_slots (although currently there isn't actually a slot limit applied to any warband class)
 
 ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// BASE PROCS
@@ -95,11 +114,43 @@
 
 */
 
-/atom/movable/screen/warband/manager/Initialize()
+/datum/warband_manager/New()
 	..()
+	button = new /atom/movable/screen/warband_button()
+	button.manager = src
 	if(!finalized)
 		storyteller_refresh()
 		figure_refresh()
+
+/datum/warband_manager/Destroy()
+	SStgui.close_uis(src)
+	SSwarbands.warband_managers -= src
+	if(SSwarbands.roundstart_manager == src)
+		SSwarbands.roundstart_manager = null
+	stop_creation_timer()
+	if(cache_source)
+		cache_source.cache_dependents -= src
+		cache_source = null
+	for(var/datum/warband_manager/dependent in cache_dependents)
+		dependent.cache_source = null
+	cache_dependents = null
+	QDEL_NULL(encounter_manager)
+	QDEL_NULL(button)
+	linked_faction = null
+	selected_warband = null
+	selected_subtype = null
+	selected_aspects = null
+	members = null
+	lobby_members = null
+	ready_members = null
+	allies = null
+	importantfigures = null
+	incoming_mobs = null
+	besieging_mobs = null
+	assigned_grunt_cache = null
+	casus_belli_proposals = null
+	QDEL_NULL(casus_belli_selection)
+	return ..()
 
 ///////////////////////////////////////////////
 /////////////////////////////////// GET MANAGER
@@ -108,14 +159,14 @@
 		return
 	if(talker.mind.warband_manager)
 		return talker.mind.warband_manager
-	for(var/atom/movable/screen/warband/manager/candidate in SSwarbands.warband_managers)
+	for(var/datum/warband_manager/candidate in SSwarbands.warband_managers)
 		if(candidate.warband_ID == talker.mind.warband_ID)
 			return candidate
 		if(talker in candidate.lobby_members)
 			return candidate
 	return
 
-/atom/movable/screen/warband/manager/proc/figure_refresh()
+/datum/warband_manager/proc/figure_refresh()
 	var/list/important_jobs = list(
 		/datum/job/roguetown/lord,
 		/datum/job/roguetown/priest,
@@ -146,7 +197,7 @@
 	
 	ran when a manager's timer first starts during start_creation_timer()
 */
-/atom/movable/screen/warband/manager/proc/storyteller_refresh()
+/datum/warband_manager/proc/storyteller_refresh()
 	storyinfluence.Cut()
 	var/active_storyteller = SSgamemode.current_storyteller
 	var/roundstart_storyteller_string = SSgamemode.selected_storyteller
@@ -168,7 +219,7 @@
 	checks for any patron & or faith locks
 	if the given mob doesn't match them, fixes the discrepancy
 */
-/atom/movable/screen/warband/manager/proc/lock_check(mob/living/carbon/human/user, spawning_class_path)
+/datum/warband_manager/proc/lock_check(mob/living/carbon/human/user, spawning_class_path)
 	var/class_path = warband_class_for(spawning_class_path)
 	if(class_path && initial(class_path:ignore_locks))
 		if(user.patron)
@@ -212,7 +263,7 @@
 	stores them in the manager's racelocks and faithlocks lists
 
 */
-/atom/movable/screen/warband/manager/proc/set_race_and_faith_locks()
+/datum/warband_manager/proc/set_race_and_faith_locks()
 	racelocks = list()
 	faithlocks = list()
 	
@@ -303,30 +354,38 @@
 	search all rally points for the envoy's stored character
 	puts the envoy back in their stored character, and then delete the envoy
 */
-/atom/movable/screen/warband/manager/proc/return_envoy(mob/living/carbon/human/envoy, mob/returning_character, obj/return_recruitmentpoint, abandoned = FALSE)
+/datum/warband_manager/proc/return_envoy(mob/living/carbon/human/envoy, mob/returning_character, obj/return_recruitmentpoint, abandoned = FALSE)
 	// USING A STORED CHARACTER
 	// aka: home <- envoy
 	// requires the recruitment point & the stored/returning character
 	if(returning_character && return_recruitmentpoint)
-		for(var/mob/living/carbon/human/stored_character in return_recruitmentpoint.contents)
-			for(var/mob/living/potential_envoy in members)
-				if(potential_envoy.canon_client.key == returning_character.canon_client.key && potential_envoy.mind.special_role == "Warlord's Envoy")
-					potential_envoy.visible_message(span_boldred("[potential_envoy] suddenly collapses. They won't be getting up."))
-					stored_character.forceMove(return_recruitmentpoint.loc)
-					returning_character.key = potential_envoy.key
-					returning_character.forceMove(return_recruitmentpoint.loc)
-			for(var/mob/living/carbon/spirit/ghost in GLOB.player_list) // if the envoy isn't found, we check the ghosts
-				if(ghost.canon_client.key == returning_character.canon_client.key && ghost.mind.special_role == "Warlord's Envoy")
-					stored_character.forceMove(return_recruitmentpoint.loc)
-					returning_character.forceMove(return_recruitmentpoint.loc)					
-					returning_character.key = ghost.key
+		var/returning_key = returning_character.canon_client?.key
+		if(!returning_key)
+			returning_character.forceMove(return_recruitmentpoint.loc) // their player is long gone, so we just spit the body out regardless
+			return
+		for(var/mob/living/potential_envoy in members)
+			if(potential_envoy.canon_client?.key == returning_key && potential_envoy.mind?.special_role == ROLE_WARLORD_ENVOY)
+				potential_envoy.visible_message(span_boldred("[potential_envoy] suddenly collapses. They won't be getting up."))
+				returning_character.forceMove(return_recruitmentpoint.loc)
+				returning_character.key = potential_envoy.key
+				members -= potential_envoy
+				return
+		for(var/mob/living/carbon/spirit/ghost in GLOB.player_list) // if the envoy isn't found, we check the ghosts
+			if(ghost.canon_client?.key == returning_key && ghost.mind?.special_role == ROLE_WARLORD_ENVOY)
+				returning_character.forceMove(return_recruitmentpoint.loc)
+				returning_character.key = ghost.key
+				return
+		returning_character.forceMove(return_recruitmentpoint.loc)
 
 	// USING A LINKED MOB
 	// aka: envoy -> home
 	else
-		var/mob/living/carbon/human/target_character = envoy?.mind.original_char
+		var/mob/living/carbon/human/target_character = envoy?.mind?.original_char
+		if(!target_character)
+			return
 		target_character.key = envoy.key
-		target_character.forceMove(target_character.loc.loc)
+		if(isobj(target_character.loc)) // stowed inside a rally point, so step them out beside it
+			target_character.forceMove(get_turf(target_character.loc))
 		members -= envoy
 		if(abandoned)
 			return
@@ -342,7 +401,7 @@
 	varies depending on whether or not they were just an ally or an Actual Member of the warband
 
 */
-/atom/movable/screen/warband/manager/proc/exile(mob/initial_target, mob/living/carbon/human/user, menu_name, personal = FALSE)
+/datum/warband_manager/proc/exile(mob/initial_target, mob/living/carbon/human/user, menu_name, personal = FALSE)
 	var/faction_tag = "warband_[warband_ID]"
 	var/personal_faction_tag
 	var/mob/exiled_creecher = initial_target
@@ -366,7 +425,7 @@
 		to_chat(user, span_warning("They're dead. That's exile enough."))
 		return
 		
-	if(exiled_creecher.mind && exiled_creecher.mind.special_role == "Warlord's Envoy")
+	if(exiled_creecher.mind && exiled_creecher.mind.special_role == ROLE_WARLORD_ENVOY)
 		to_chat(user, span_warning("No point in killing the messenger."))
 		return
 
@@ -375,7 +434,7 @@
 		return FALSE
 
 	// for warlords exiling a re-associated exiled lieutenant or grunt
-	if(user.mind && user.mind.special_role == "Warlord" && exiled_creecher.mind && (user.mind.warband_ID in exiled_creecher.mind.warband_exile_IDs))
+	if(user.mind && user.mind.special_role == ROLE_WARLORD && exiled_creecher.mind && (user.mind.warband_ID in exiled_creecher.mind.warband_exile_IDs))
 		if(exiled_creecher in user.mind.warband_manager.allies)
 			to_chat(user, span_red("[exiled_creecher.real_name] is branded as an exile yet again."))
 			if(faction_tag in exiled_creecher.faction)
@@ -428,10 +487,10 @@
 
 		// against other warband members
 		if(target.mind && (target in members))
-			if(user.mind.special_role == "Warlord" || (target in user.mind.subordinates))
-				var/readycheck = input(user, "Am I sure I want to exile [target.real_name]? This will be final.") in list("EXILE", "Cancel")
+			if(user.mind.special_role == ROLE_WARLORD || (target in user.mind.subordinates))
+				var/readycheck = tgui_alert(user, "Am I sure I want to exile [target.real_name]? This will be final.", "EXILE", list("EXILE", "Cancel"))
 				if(readycheck == "EXILE")
-					if(target.mind.special_role == "Grunt")
+					if(target.mind.special_role == ROLE_WARLORD_GRUNT)
 						if(target in user.mind.subordinates) // if they're exiled by their own boss, ignore the deliberation phase
 							target.abandon_warband(grunt_kick = TRUE, autoresolve = TRUE)
 							target.faction -= personal_faction_tag
@@ -468,7 +527,7 @@
 	cleans nulls out of the members & ally list
 
 */
-/atom/movable/screen/warband/manager/proc/clean_members()
+/datum/warband_manager/proc/clean_members()
 	for(var/member in members)
 		if(!member)
 			members -= member
@@ -477,20 +536,20 @@
 			allies -= ally
 
 // if the lobby is absolutely Deep Fried, we'll send everyone back as a ghost
-/atom/movable/screen/warband/manager/proc/cancel_lobby(mob/lobby_member)
+/datum/warband_manager/proc/cancel_lobby(mob/lobby_member)
 	to_chat(lobby_member, span_userdanger("The lobby system failed catastrophically. Go home."))
 	GLOB.chosen_names -= lobby_member.real_name
 	lobby_members -= lobby_member
 	lobby_member.ghostize(FALSE)
 
-/atom/movable/screen/warband/manager/proc/initialize_outskirts_encounter()
+/datum/warband_manager/proc/initialize_outskirts_encounter()
 	encounter_manager = new /datum/outskirts_encounter()
 	encounter_manager.linked_warband = src
 	encounter_manager.custom_wave = choose_outskirts_wave()
 	encounter_manager.outskirts_locked = TRUE
 	return encounter_manager
 
-/atom/movable/screen/warband/manager/proc/finalize_outskirts_encounter()
+/datum/warband_manager/proc/finalize_outskirts_encounter()
 	if(!encounter_manager)
 		initialize_outskirts_encounter()
 	encounter_manager.find_defender_entry()
@@ -498,7 +557,7 @@
 	encounter_manager.spawn_objective()
 	return TRUE
 
-/atom/movable/screen/warband/manager/proc/choose_outskirts_wave()
+/datum/warband_manager/proc/choose_outskirts_wave()
 	var/datum/outskirts_wave/chosen_wave
 	if(selected_aspects)
 		for(var/datum/warbands/aspects/aspect in selected_aspects)
@@ -526,11 +585,11 @@
 	heals the loaded character to clear the stun & blindness
 	makes them visible
 */
-/atom/movable/screen/warband/manager/proc/end_intro(mob/living/user)
+/datum/warband_manager/proc/end_intro(mob/living/user)
 	if(!user || !user.client)
 		return
-	for(var/atom/movable/screen/warband/manager/loaded_manager in user.client.screen)
-		user.client.screen -= loaded_manager
+	for(var/atom/movable/screen/warband_button/loaded_button in user.client.screen)
+		user.client.screen -= loaded_button
 	user.mind.warbandsetup = FALSE
 	user.invisibility = INVISIBILITY_NONE
 	user.fully_heal()
@@ -540,12 +599,12 @@
 		animate(text, alpha = 0, time = 50)
 		addtimer(CALLBACK(src, PROC_REF(remove_intro), user.client, text), 5 SECONDS)
 
-/atom/movable/screen/warband/manager/proc/remove_intro(client/user, atom/movable/screen/introtext/text)
+/datum/warband_manager/proc/remove_intro(client/user, atom/movable/screen/introtext/text)
 	if(user)
 		user.screen -= text
 	qdel(text)
 
-/atom/movable/screen/warband/manager/proc/apply_casus_belli_to_treaty(obj/item/treaty/T)
+/datum/warband_manager/proc/apply_casus_belli_to_treaty(obj/item/treaty/T)
 	if(!casus_belli_selection || !T)
 		return
 	var/datum/treaty/terms/cb_copy = new casus_belli_selection.type()
@@ -563,10 +622,18 @@
 		cb_copy.receiver = casus_belli_selection.receiver
 	if(casus_belli_selection.obj_target)
 		cb_copy.obj_target = casus_belli_selection.obj_target
+	var/static/list/standard_term_keys = list("custom_name", "text", "number", "target", "receiver", "obj_target")
+	for(var/datum/treaty/input_field/field in casus_belli_selection.input_fields)
+		if(field.client_only || (field.key in standard_term_keys))
+			continue
+		if(!isnull(casus_belli_selection.vars[field.key]))
+			cb_copy.vars[field.key] = casus_belli_selection.vars[field.key]
+	if(length(casus_belli_selection.extra))
+		cb_copy.extra = casus_belli_selection.extra.Copy()
 	T.active_terms += cb_copy
 
 // returns the type path if it's a registered warband class, else null | callers read metadata via initial(path:var)
-/atom/movable/screen/warband/manager/proc/warband_class_for(class_path)
+/datum/warband_manager/proc/warband_class_for(class_path)
 	if(SSwarbands.all_warband_class_types[class_path] && ispath(class_path, /datum/advclass/warband))
 		return class_path
 	return
@@ -576,7 +643,7 @@
 /*
 	returns how many spawns a single allied NPC (goon) costs to summon
 */
-/atom/movable/screen/warband/manager/proc/get_npc_spawn_cost(base_cost = 1)
+/datum/warband_manager/proc/get_npc_spawn_cost(base_cost = 1)
 	for(var/datum/warbands/aspects/aspect in selected_aspects)
 		if(istype(aspect, ASPECT_BADSPAWN))
 			return base_cost * 2
@@ -585,7 +652,7 @@
 /////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ENVOY SUMMONING
 
-/atom/movable/screen/warband/manager/proc/summon_envoy(mob/living/carbon/human/user, turf/spawn_loc, atom/storage_point, race_choice, depth_choice)
+/datum/warband_manager/proc/summon_envoy(mob/living/carbon/human/user, turf/spawn_loc, atom/storage_point, race_choice, depth_choice)
 	var/mob/living/carbon/human/envoy
 	switch(depth_choice)
 		if("Simple Envoy")
@@ -615,14 +682,14 @@
 	transfer_treaties(user, envoy)
 	equip_envoy(envoy)
 	SSjob.AssignRole(envoy, "Warlord's Envoy")
-	envoy.mind.special_role = "Warlord's Envoy"
+	envoy.mind.special_role = ROLE_WARLORD_ENVOY
 	spawns-- // an envoy costs a single spawn
 	if(storage_point)
 		storage_point.contents += user
 	return envoy
 
 // moves any treaties the summoner is carrying into the envoy's hands
-/atom/movable/screen/warband/manager/proc/transfer_treaties(mob/living/carbon/human/from_mob, mob/living/carbon/human/to_mob)
+/datum/warband_manager/proc/transfer_treaties(mob/living/carbon/human/from_mob, mob/living/carbon/human/to_mob)
 	for(var/obj/item/treaty/carried_treaty in from_mob.contents)
 		if(from_mob.transferItemToLoc(carried_treaty, to_mob.loc))
 			to_mob.put_in_hands(carried_treaty)
@@ -633,7 +700,7 @@
 			bag_treaty.forceMove(to_mob.loc)
 			to_mob.put_in_hands(bag_treaty)
 
-/atom/movable/screen/warband/manager/proc/apply_simple_envoy_appearance(mob/living/carbon/human/envoy)
+/datum/warband_manager/proc/apply_simple_envoy_appearance(mob/living/carbon/human/envoy)
 	var/obj/item/bodypart/head/head = envoy.get_bodypart(BODY_ZONE_HEAD)
 	var/hair_choice = /datum/sprite_accessory/hair/head/troubadour
 
@@ -660,14 +727,14 @@
 		organ_eyes.accessory_colors = picked_eye_color + picked_eye_color
 
 // equips an envoy with the envoy advclass kit
-/atom/movable/screen/warband/manager/proc/equip_envoy(mob/envoy, used_slot)
+/datum/warband_manager/proc/equip_envoy(mob/envoy, used_slot)
 	var/datum/advclass/warband/envoy/envoy_class = new /datum/advclass/warband/envoy
 	envoy.cmode_music = combatmusic
 	envoy.job = envoy_class.name
 	envoy_class.equipme(envoy, FALSE)
 
 // returns a random rally point belonging to this warband, or null
-/atom/movable/screen/warband/manager/proc/get_random_recruit_point()
+/datum/warband_manager/proc/get_random_recruit_point()
 	var/list/recruit_points = list()
 	for(var/obj/structure/fluff/warband/warband_recruit/point in SSwarbands.warband_machines)
 		if(point.warband_ID == warband_ID)
@@ -676,26 +743,26 @@
 		return pick(recruit_points)
 	return
 
-///////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// GOON HELPERS
 
 // returns (creating if needed) the trail_follow component that herds a player's NPC squad
-/atom/movable/screen/warband/manager/proc/get_squad_component(mob/user)
+/datum/warband_manager/proc/get_squad_component(mob/user)
 	var/datum/component/trail_follow/squad = user.GetComponent(/datum/component/trail_follow)
 	if(!squad)
 		squad = user.AddComponent(/datum/component/trail_follow)
 	return squad
 
 // TRUE if the given squad component is currently herding any goons
-/atom/movable/screen/warband/manager/proc/squad_has_goons(datum/component/trail_follow/squad)
+/datum/warband_manager/proc/squad_has_goons(datum/component/trail_follow/squad)
 	for(var/mob/friend in squad.members)
 		if(istype(friend, /mob/living/carbon/human/species/human/northern/goon))
 			return TRUE
 	return FALSE
 
 // abandons every goon currently herded by the given squad component
-/atom/movable/screen/warband/manager/proc/abandon_npc_squad(datum/component/trail_follow/squad)
-	for(var/mob/living/carbon/human/species/human/northern/goon/abandoned_grunt in squad.members)
+/datum/warband_manager/proc/abandon_npc_squad(datum/component/trail_follow/squad)
+	for(var/mob/living/carbon/human/species/human/northern/goon/abandoned_grunt in squad.members.Copy())
 		if(!abandoned_grunt)
 			squad.members -= abandoned_grunt
 			continue
@@ -703,7 +770,7 @@
 		squad.members -= abandoned_grunt
 
 // spawns a fresh squad of goons at spawn_loc
-/atom/movable/screen/warband/manager/proc/deploy_npc_squad(mob/living/carbon/human/user, turf/spawn_loc, datum/component/trail_follow/squad, base_cost = 1)
+/datum/warband_manager/proc/deploy_npc_squad(mob/living/carbon/human/user, turf/spawn_loc, datum/component/trail_follow/squad, base_cost = 1)
 	var/grunt_cost = get_npc_spawn_cost(base_cost)
 	var/deployed = 0
 	for(var/grunts_spawned = 1, grunts_spawned <= user.mind.squad_size && spawns >= grunt_cost, grunts_spawned++)
@@ -711,7 +778,7 @@
 		new_grunt.patron = user.patron
 		new_grunt.faction |= list("warband_[warband_ID]", "[user.real_name]_faction")
 		new_grunt.warband_ID = warband_ID
-		squad.members |= new_grunt
+		squad.track_member(new_grunt)
 		spawns -= grunt_cost
 		deployed++
 	return deployed

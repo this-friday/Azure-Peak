@@ -9,5 +9,5 @@
 	warning = "...of a trained, lethal foe."
 	points = -1
 
-/datum/warbands/aspects/battletested/on_grunt_spawned(mob/living/carbon/human/grunt, atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/battletested/on_grunt_spawned(mob/living/carbon/human/grunt, datum/warband_manager/manager)
 	ADD_TRAIT(grunt, TRAIT_COMBAT_AWARE, TRAIT_GENERIC)

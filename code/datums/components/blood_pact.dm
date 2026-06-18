@@ -18,6 +18,11 @@
 	// when a mob dies or yields, their own component announces and cleans up both sides
 	RegisterSignal(parent, COMSIG_LIVING_DEATH, PROC_REF(on_death))
 	RegisterSignal(parent, COMSIG_LIVING_SURRENDER, PROC_REF(on_yield))
+	RegisterSignal(opponent, COMSIG_PARENT_QDELETING, PROC_REF(on_opponent_deleted))
+
+/datum/component/blood_pact/proc/on_opponent_deleted(datum/source)
+	SIGNAL_HANDLER
+	opponent = null
 
 /datum/component/blood_pact/proc/on_death(mob/living/source)
 	announce_winner(opponent_name, parent_name, "death")

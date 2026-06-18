@@ -129,10 +129,11 @@
 			theirskill = UH.get_skill_level(/datum/skill/combat/unarmed)
 	var/prob2defend = U.defprob
 	var/ignore_DE_bonus = FALSE
+	var/underwhelming_attacker = HAS_TRAIT(user, TRAIT_UNDERWHELMING) // underwhelming attackers don't put dodge on cooldown
 	var/is_in_cone = L.can_see_cone(user)
 	if(!is_in_cone && H)
 		is_in_cone = H?.get_tempo_bonus(TEMPO_TAG_NOLOS_DODGE)
-	if(!is_in_cone)
+	if(!is_in_cone && !underwhelming_attacker)
 		L.changeNext_def(CLAMP(dodgetime + 2, 0, CLICK_CD_DODGE))
 		L.changeMaxDodge(-2)
 	var/has_trait = H?.check_dodge_skill()
@@ -224,7 +225,7 @@
 		if(has_trait && H.mind && !ignore_DE_bonus && H.STASPD > 10)
 			prob2defend = 90	//We cap it out if we have Dodge Expert as a Player.
 
-		if(dodgetime <= CLICK_CD_DODGE && !ignore_DE_bonus && has_trait && H.mind)
+		if(dodgetime <= CLICK_CD_DODGE && !ignore_DE_bonus && has_trait && H.mind && !underwhelming_attacker)
 
 			var/mainh = get_active_held_item()
 			var/offh = get_inactive_held_item()
@@ -346,7 +347,7 @@
 	var/ignore_penalty = FALSE
 	if((L.fixedeye && L.goodluck(5)))
 		ignore_penalty = TRUE
-	if(!ignore_penalty && !ignore_DE_bonus && has_trait)
+	if(!ignore_penalty && !ignore_DE_bonus && has_trait && !underwhelming_attacker)
 		var/max_mod = 0
 		max_mod = ourskill - theirskill
 

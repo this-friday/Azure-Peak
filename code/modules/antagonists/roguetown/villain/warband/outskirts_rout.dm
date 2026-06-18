@@ -130,7 +130,7 @@
 ///////////////////////////////////////////////// ATTEMPT DEFENDER CLEANUP
 /*
 	dead/unconscious defenders are skipped and removed from the wave list
-	cancels AI actions and performs a 6-second do_after for departure
+	cancels AI actions and starts a 6-second timer for departure
 
 	on success: finalizes cleanup
 	on failure: adds mob back to pending queue for retry
@@ -146,15 +146,22 @@
 	M.ai_controller?.clear_blackboard_key(BB_TRAVEL_DESTINATION)
 	M.ai_controller?.CancelActions()
 	M.visible_message(span_warning("[M] begins to depart the battlefield..."))
+	addtimer(CALLBACK(src, PROC_REF(resolve_defender_departure), M), 6 SECONDS)
 
-	var/success = do_after(M, 6 SECONDS, target = M)
-	
-	if(success)
-		M.visible_message(span_warning("[M] departs the battlefield."))
-		finalize_defender_cleanup(M)
-	else
+// the departure only goes through if the goon is still standing and hasn't been dragged back into a fight
+/datum/outskirts_encounter/proc/resolve_defender_departure(mob/living/carbon/human/M)
+	if(QDELETED(src))
+		return
+	if(!M || QDELETED(M) || M.stat != CONSCIOUS)
+		current_wave -= M
+		check_cleanup_completion()
+		return
+	if(M.ai_controller?.blackboard[BB_BASIC_MOB_CURRENT_TARGET])
 		M.visible_message(span_warning("[M]'s departure is halted!"))
 		pending_cleanup |= M
+		return
+	M.visible_message(span_warning("[M] departs the battlefield."))
+	finalize_defender_cleanup(M)
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// PROCESS CLEANUP QUEUE

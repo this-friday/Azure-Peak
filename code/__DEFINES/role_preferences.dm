@@ -22,8 +22,10 @@
 #define ROLE_ASCENDANT			"Ascendant"
 #define ROLE_WRETCH				"Wretch"
 #define ROLE_WARLORD			"Warlord"
-#define ROLE_WARLORD_LIEUTENANT "Warlord's Lieutenant"
+#define ROLE_WARLORD_LIEUTENANT "Lieutenant"
+#define ROLE_WARLORD_ASPIRANT	"Aspirant Lieutenant"
 #define ROLE_WARLORD_GRUNT		"Grunt"
+#define ROLE_WARLORD_ENVOY		"Warlord's Envoy"
 #define ROLE_UNBOUND_DEATHKNIGHT "Unbound Death Knight"
 #define ROLE_DARK_ITINERANT "Dark Itinerant"
 

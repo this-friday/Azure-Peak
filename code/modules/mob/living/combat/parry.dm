@@ -42,11 +42,12 @@
 	if(intenty && !intenty.canparry)
 		return FALSE
 
-	last_parry = world.time
-	if(!istype(rmb_intent, /datum/rmb_intent/riposte))
-		var/parrytime = setparrytime
-		parrytime -= get_tempo_bonus(TEMPO_TAG_PARRYCD_BONUS)
-		changeNext_def(parrytime)
+	if(!HAS_TRAIT(user, TRAIT_UNDERWHELMING)) // underwhelming attackers don't put parry on cooldown
+		last_parry = world.time
+		if(!istype(rmb_intent, /datum/rmb_intent/riposte))
+			var/parrytime = setparrytime
+			parrytime -= get_tempo_bonus(TEMPO_TAG_PARRYCD_BONUS)
+			changeNext_def(parrytime)
 	
 	var/drained = BASE_PARRY_STAMINA_DRAIN
 	var/weapon_parry = FALSE

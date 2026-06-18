@@ -10,13 +10,13 @@
 	warning = "...of an inner retinue of backstabbing scum."
 	points = 1
 
-/datum/warbands/aspects/envy/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/aspects/envy/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	for(var/mob/living/carbon/human/member in manager.lobby_members)
-		if(member.mind.special_role != "Lieutenant" && member.mind.special_role != "Aspirant Lieutenant")
+		if(member.mind.special_role != ROLE_WARLORD_LIEUTENANT && member.mind.special_role != ROLE_WARLORD_ASPIRANT)
 			continue
 
-		var/was_already_aspirant = (member.mind.special_role == "Aspirant Lieutenant")
-		member.mind.special_role = "Aspirant Lieutenant"
+		var/was_already_aspirant = (member.mind.special_role == ROLE_WARLORD_ASPIRANT)
+		member.mind.special_role = ROLE_WARLORD_ASPIRANT
 
 		var/datum/antagonist/warband/lieutenant/lieu_antag
 		for(var/datum/antagonist/antag in member.mind.antag_datums)

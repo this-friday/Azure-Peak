@@ -54,6 +54,7 @@ export const CasusBelliPanel = ({
     target: '', receiver: '', obj_target: '', intermediateTarget: '',
   });
   const [showVoteResetWarning, setShowVoteResetWarning] = useState(false);
+  const [editingProposalId, setEditingProposalId] = useState<string | null>(null);
 
   const updateDraftState = (key: string, val: any) =>
     setDraftState((prev) => ({ ...prev, [key]: val }));
@@ -118,7 +119,12 @@ export const CasusBelliPanel = ({
         payload[field.key] = val;
       }
     }
-    act('propose_casus_belli', payload);
+    if (editingProposalId) {
+      act('edit_casus_belli', { ...payload, proposal_id: editingProposalId });
+    } else {
+      act('propose_casus_belli', payload);
+    }
+    setEditingProposalId(null);
     setShowVoteResetWarning(false);
     setView('list');
   };
@@ -129,6 +135,29 @@ export const CasusBelliPanel = ({
       custom_name: '', text: '', number: 1,
       target: '', receiver: '', obj_target: '', intermediateTarget: '',
     });
+    setEditingProposalId(null);
+    setView('draft');
+  };
+
+  // warlord-only: reopen an existing proposal in the draft form, pre-filled with its current details
+  const openEditDraft = (proposal: CasusBelliProposal) => {
+    const term = availableTerms.find((t) => t.type === proposal.term_type);
+    if (!term) return;
+    const seeded: Record<string, any> = {
+      custom_name: '', text: '', number: 1,
+      target: '', receiver: '', obj_target: '', intermediateTarget: '',
+    };
+    for (const field of term.inputs ?? []) {
+      if (field.client_only) continue;
+      const val = (proposal as any)[`term_${field.key}`];
+      if (val !== undefined && val !== null) seeded[field.key] = val;
+    }
+    if (proposal.term_name && proposal.term_name !== term.name) {
+      seeded.custom_name = proposal.term_name;
+    }
+    setDraftingTerm(term);
+    setDraftState(seeded);
+    setEditingProposalId(proposal.proposal_id);
     setView('draft');
   };
 
@@ -178,7 +207,7 @@ export const CasusBelliPanel = ({
 
     return (
       <Section
-        title={<span style={{ color: '#4db84d' }}>🔒 CHOSEN CASUS BELLI</span>}
+        title={<span style={{ color: '#4db84d' }}>CHOSEN CASUS BELLI</span>}
         fill scrollable
       >
         <Box mb={1}>
@@ -195,7 +224,7 @@ export const CasusBelliPanel = ({
           )}
         </Box>
 
-        {(term.display_fields?.length || term.text || term.target || term.receiver || term.obj_target || term.number || infoBlocks.length) && (
+        {!!(term.display_fields?.length || term.text || term.target || term.receiver || term.obj_target || term.number || infoBlocks.length) && (
           <>
             {divider}
             {term.display_fields?.length ? (
@@ -282,9 +311,10 @@ export const CasusBelliPanel = ({
 
   // draft view
   if (view === 'draft' && draftingTerm) {
+    const isEditing = !!editingProposalId;
     return (
       <Section
-        title={<span style={{ color: '#7a2525ff' }}>{isWarlord ? 'DRAFT CASUS BELLI' : 'PROPOSE A TERM'}</span>}
+        title={<span style={{ color: '#7a2525ff' }}>{isEditing ? 'EDIT PROPOSAL' : isWarlord ? 'DRAFT CASUS BELLI' : 'PROPOSE A TERM'}</span>}
         fill scrollable
         style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}
       >
@@ -293,6 +323,12 @@ export const CasusBelliPanel = ({
           <Box bold color="#e9ca9e">{draftingTerm.name}</Box>
 
           <Box fontSize="0.9em" color="#b1a390">{draftingTerm.desc}</Box>
+
+          {isEditing && (
+            <Box fontSize="0.82em" color="#c08a3e">
+              Editing an existing proposal. All votes on it will reset.
+            </Box>
+          )}
 
           <DynamicInputs
             inputs={draftingTerm.inputs ?? []}
@@ -304,11 +340,19 @@ export const CasusBelliPanel = ({
           <Stack mt={1}>
             <Stack.Item grow={1}>
               <Button fluid color="good" icon="pen" onClick={handleDraftSubmit} disabled={!isDraftValid}>
-                {isWarlord ? 'CONFIRM CASUS BELLI' : 'SUBMIT PROPOSAL'}
+                {isEditing ? 'SAVE CHANGES' : isWarlord ? 'CONFIRM CASUS BELLI' : 'SUBMIT PROPOSAL'}
               </Button>
             </Stack.Item>
             <Stack.Item grow={1}>
-              <Button fluid color="bad" icon="times" onClick={() => setView('browse')}>BACK</Button>
+              <Button
+                fluid color="bad" icon="times"
+                onClick={() => {
+                  setView(isEditing ? 'list' : 'browse');
+                  setEditingProposalId(null);
+                }}
+              >
+                BACK
+              </Button>
             </Stack.Item>
           </Stack>
 
@@ -343,8 +387,7 @@ export const CasusBelliPanel = ({
                   : isUserProposal ? 'proposal'
                   : null;
 
-                // votes are frozen once confirmed
-                const voteDisabled = locked || (!isWarlord && !!userVoteConfirmed);
+                const voteDisabled = locked;
                 const pendingCount = proposal.pending_count ?? 0;
 
                 return (
@@ -363,6 +406,13 @@ export const CasusBelliPanel = ({
                       }
                     }}
                     disabled={isWarlord ? locked : voteDisabled}
+                    tooltip={!isWarlord && !voteDisabled
+                      ? (isUserVote
+                        ? 'Click again to withdraw your vote.'
+                        : userVote
+                          ? 'Click to move your vote here.'
+                          : 'Click to vote for this proposal.')
+                      : undefined}
                     style={{
                       whiteSpace: 'normal', height: 'auto', padding: '8px 12px',
                       backgroundColor: isWarlordSelected
@@ -393,6 +443,22 @@ export const CasusBelliPanel = ({
                             <span style={{ fontSize: '11px', color: BADGE_CONFIG[badge].color, fontWeight: BADGE_CONFIG[badge].bold ? 'bold' : undefined }}>
                               {BADGE_CONFIG[badge].label}
                             </span>
+                          </Stack.Item>
+                        )}
+                        {isWarlord && !locked && (
+                          <Stack.Item>
+                            <Button
+                              icon="pen"
+                              compact
+                              tooltip="Edit this proposal. Its votes will reset."
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditDraft(proposal);
+                                act('interaction_sound');
+                              }}
+                            >
+                              EDIT
+                            </Button>
                           </Stack.Item>
                         )}
                       </Stack>

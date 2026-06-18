@@ -36,15 +36,13 @@
 	antag_datum = /datum/antagonist/warband/warlord
 
 /datum/round_event_control/antagonist/solo/warlord/get_antag_amount()
-	var/grunts_per_lt = GRUNTS_PER_LIEUTENANT + max(0, (get_active_player_count() - 40) / 15)
-	grunts_per_lt = min(grunts_per_lt, GRUNTS_PER_LIEUTENANT_MAX)
-	return 1 + LIEUTENANTS_PER_WARLORD + (LIEUTENANTS_PER_WARLORD * grunts_per_lt)
+	return 1 + LIEUTENANTS_PER_WARLORD + (LIEUTENANTS_PER_WARLORD * warband_grunts_per_lieutenant())
 
 // when we grab mobs to serve as antagonists at roundstart, soilson & warden have instantaneous, uninterruptable input() dialog boxes that aren't behind class selection (which we otherwise COULD interrupt)
 // this gives us runtimes, so we're just excluding them for now
 /datum/round_event_control/antagonist/solo/warlord/New()
 	..()
-	restricted_roles += list("Soilson", "Warden")
+	restricted_roles += list("Soilson", "Warden", "Hag")
 
 /datum/round_event/antagonist/solo/warlord
 	var/datum/mind/warlord_mind
@@ -74,7 +72,7 @@
 
 	// scale grunts per lieutenant based on active player count
 	// +1 for every 15 active players past the 40-player baseline
-	var/grunts_per_lt = GRUNTS_PER_LIEUTENANT + max(0, (get_active_player_count() - 40) / 15)
+	var/grunts_per_lt = warband_grunts_per_lieutenant()
 
 	// fill lieutenants before any grunts
 	var/lt_end = min(setup_minds.len, LIEUTENANTS_PER_WARLORD)
@@ -102,15 +100,14 @@
 
 
 /datum/round_event/antagonist/solo/warlord/proc/process_candidate(datum/mind/target_mind, role_name, datum_path, turf/loc, unique_number = 0)
-	target_mind.current.loc = loc // send them to The Box
+	target_mind.current.forceMove(loc) // send them to The Box
 	var/datum/job/J = SSjob.GetJob(target_mind.current.job)
 	J?.current_positions = max(J?.current_positions-1, 0)
 	SSjob.AssignRole(target_mind.current, role_name)
 	target_mind.add_antag_datum(datum_path)
-	if(unique_number)
-		var/datum/antagonist/warlord_unit = target_mind.has_antag_datum(datum_path)
-		if(warlord_unit)
+	var/datum/antagonist/warband/warlord_unit = target_mind.has_antag_datum(datum_path)
+	if(warlord_unit)
+		if(unique_number)
 			warlord_unit.unique_number = unique_number
-			
-	if(bypass_rarity && target_mind.warband_manager)
-		target_mind.warband_manager.bypass_rarity = TRUE
+		if(bypass_rarity)
+			warlord_unit.bypass_rarity = TRUE

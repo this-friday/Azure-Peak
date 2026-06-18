@@ -10,7 +10,7 @@
 */
 /mob/living/carbon/human/proc/desert()
 	set name = "DESERT WARBAND"
-	set category = "Warband"
+	set category = "RoleUnique.Warband"
 
 	if(stat == DEAD)
 		to_chat(src, span_boldred("It's too late..."))
@@ -19,13 +19,13 @@
 
 /mob/living/carbon/human/proc/abandon_warband(kicked = FALSE, grunt_kick = FALSE, autoresolve = FALSE)
 	var/disorder = mind.warband_manager.disorder
-	var/initial_ID	= mind.warband_ID
+	var/initial_ID = mind.warband_ID
 	var/old_faction_string = "warband_[mind.warband_ID]"
 
 	var/troops_available = mind.warband_manager.spawns
 
 	var/stolen_troop_percentage
-	if(mind.special_role == "Aspirant Lieutenant") // aspirant rebellions are done to greater effect
+	if(mind.special_role == ROLE_WARLORD_ASPIRANT) // aspirant rebellions are done to greater effect
 		stolen_troop_percentage = 30
 	else
 		stolen_troop_percentage = 3
@@ -72,7 +72,7 @@
 
 // desertion w/announcement
 /mob/living/carbon/human/proc/manual_desertion(stolen_troops, troops_available, old_faction_string, initial_ID)
-	var/calltext = input("You are preparing to DESERT your Warband. This will be a public declaration. What will you say?", "DESERTION") as text|null
+	var/calltext = tgui_input_text(src, "You are preparing to DESERT your Warband. This will be a public declaration. What will you say?", "DESERTION")
 	if(!calltext)
 		return
 	visible_message(span_boldred("[src] blows into a warhorn!"))
@@ -81,7 +81,7 @@
 	// if this being a round-wide announcement would be too annoying, it could be restricted to only display to warband members
 	// but atm i think it'd be fun to let everyone in on the drama
 
-	if(!mind.warband_ID == initial_ID) // if the initial ID doesn't match, they likely got kicked while they were preparing the message
+	if(mind.warband_ID != initial_ID) // if the initial ID doesn't match, they likely got kicked while they were preparing the message
 		to_chat(src, span_userdanger("I've already been exiled."))
 		return
 	desertion_results(stolen_troops, troops_available, old_faction_string, initial_ID)
@@ -99,13 +99,13 @@
 
 	mind.warband_manager.members -= src
 
-	var/atom/movable/screen/warband/manager/new_warband_manager
-	new_warband_manager = new /atom/movable/screen/warband/manager
+	var/datum/warband_manager/new_warband_manager
+	new_warband_manager = new /datum/warband_manager
 	new_warband_manager.schism_level = mind.warband_manager.schism_level + 1
-	mind.special_role = "Warlord"
+	mind.special_role = ROLE_WARLORD
 	SSmapping.retainer.warlords |= mind
-	mind.warband_ID = SSwarbands.warband_managers.len + 1
-	new_warband_manager.warband_ID = mind.warband_ID
+	SSwarbands.register_manager(new_warband_manager)
+	mind.warband_ID = new_warband_manager.warband_ID
 	mind.warband_exile_IDs += initial_ID
 	mind.warband_manager.disorder ++
 
@@ -127,7 +127,6 @@
 		goon.warband_ID = mind.warband_ID
 	
 	new_warband_manager.members += src
-	SSwarbands.warband_managers += new_warband_manager
 
 	switch(advjob) // ideally it'd be fun to give each Feud lieutenant their own schism path, but we don't have enough bands for this atm
 		if("Preacher") // a preacher in schism creates a sect

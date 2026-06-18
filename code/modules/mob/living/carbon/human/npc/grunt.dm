@@ -59,7 +59,7 @@
 	if(squad_leader)
 		var/datum/component/trail_follow/squad = squad_leader.GetComponent(/datum/component/trail_follow)
 		if(squad)
-			squad.remove_follower(src)
+			squad.remove_follower(src, wake = FALSE)
 			squad.members -= src
 	squad_leader = null
 	saved_mask = null
@@ -76,16 +76,12 @@
 	// if that's ever made to Not Be The Case this harddel hint should probably be removed
 	return QDEL_HINT_HARDDEL
 
-// costs roughly the same CPU as equipping a mob (if they're wounded)
+// costs roughly the same CPU as equipping a mob
 // but we're still avoiding hard deleting OR creating a fresh mob, so this is ok. i think. yeah it's fine
 /mob/living/carbon/human/species/human/northern/goon/proc/recycle()
-	if(health < maxHealth)
-		fully_heal()
-	else
-		setOxyLoss(0, 0)
-		setToxLoss(0, 0)
-		updatehealth()
+	fully_heal(admin_revive = TRUE)
 	revive(FALSE, TRUE)
+	ADD_TRAIT(src, TRAIT_UNDERWHELMING, TRAIT_GENERIC) // restore it if an outskirts deployment (or anything else) stripped it
 	full_repair()
 	if(ai_controller)
 		ai_controller.can_idle = TRUE
@@ -106,16 +102,22 @@
 	moveToNullspace()
 	if(squad_leader)
 		var/datum/component/trail_follow/squad_component = squad_leader.GetComponent(/datum/component/trail_follow)
-		squad_component.remove_follower(src)
+		squad_component.remove_follower(src, wake = FALSE)
 		squad_component.members -= src
 		squad_leader = null
 	reequip_extremities()
 	refresh_eyes()
-	for(var/atom/movable/screen/warband/manager/warband_manager in SSwarbands.warband_managers)
+	for(var/datum/warband_manager/warband_manager in SSwarbands.warband_managers)
 		if(warband_manager.warband_ID == warband_ID)
 			var/list/cache_to_use = warband_manager.get_grunt_cache()
 			cache_to_use += src
 			break
+
+// when the Shatter Morale warhorn wears off, they regain the Underwhelming trait
+/mob/living/carbon/human/species/human/northern/goon/proc/become_underwhelming()
+	if(ai_controller?.blackboard[BB_OUTSKIRTS_CACHED_PATH]) // unless they're in an outskirts encounter, in which case they should stay oppressive
+		return
+	ADD_TRAIT(src, TRAIT_UNDERWHELMING, TRAIT_GENERIC)
 
 /mob/living/carbon/human/species/human/northern/goon/proc/full_repair()
 	for(var/obj/item/I in contents)
@@ -145,18 +147,21 @@
 		put_in_l_hand(new saved_l_weapon())
 
 	// extremities
-	if(saved_mask && !istype(wear_mask,	saved_mask)) 
+	if(saved_mask && !istype(wear_mask,	saved_mask))
 		equip_to_slot_or_del(new saved_mask(), SLOT_WEAR_MASK)
-	if(saved_mouth && !istype(mouth, saved_mouth)) 
+	if(saved_mouth && !istype(mouth, saved_mouth))
 		equip_to_slot_or_del(new saved_mouth(), SLOT_MOUTH)
-	if(saved_neck && !istype(wear_neck, saved_neck)) 
+	if(saved_neck && !istype(wear_neck, saved_neck))
 		equip_to_slot_or_del(new saved_neck(), SLOT_NECK)
-	if(saved_head && !istype(head, saved_head)) 
+	if(saved_head && !istype(head, saved_head))
 		equip_to_slot_or_del(new saved_head(), SLOT_HEAD)
-	if(saved_gloves	&& !istype(gloves, saved_gloves)) 
+	if(saved_gloves	&& !istype(gloves, saved_gloves))
 		equip_to_slot_or_del(new saved_gloves(), SLOT_GLOVES)
-	if(saved_shoes && !istype(shoes, saved_shoes)) 
+	if(saved_shoes && !istype(shoes, saved_shoes))
 		equip_to_slot_or_del(new saved_shoes(), SLOT_SHOES)
+
+	for(var/obj/item/equipped_item in get_equipped_items() + held_items)
+		ADD_TRAIT(equipped_item, TRAIT_NODROP, TRAIT_GENERIC)
 
 /mob/living/carbon/human/species/human/northern/goon/after_creation()
 	..()
@@ -167,6 +172,7 @@
 	ADD_TRAIT(src, TRAIT_LEECHIMMUNE, INNATE_TRAIT)
 	ADD_TRAIT(src, TRAIT_BREADY, TRAIT_GENERIC)
 	ADD_TRAIT(src, TRAIT_HEAVYARMOR, TRAIT_GENERIC)
+	ADD_TRAIT(src, TRAIT_UNDERWHELMING, TRAIT_GENERIC)
 	equipOutfit(new /datum/outfit/job/roguetown/human/species/human/northern/goon/base_grunt_stats)
 
 /mob/living/carbon/human/species/human/northern/goon/proc/equip_for_warband()

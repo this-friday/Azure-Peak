@@ -227,10 +227,10 @@
 	if(!mind)
 		return
 	if(mind.warband_ID != 0)
-		for(var/atom/movable/screen/warband/manager/warband_manager in SSwarbands.warband_managers)
+		for(var/datum/warband_manager/warband_manager in SSwarbands.warband_managers)
 			warband_manager.members -= src
 	if(mind.warband_recruiter_name)
-		for(var/atom/movable/screen/warband/manager/warband_manager in SSwarbands.warband_managers)
+		for(var/datum/warband_manager/warband_manager in SSwarbands.warband_managers)
 			warband_manager.allies -= src
 			for(var/mob/living/lieutenant in warband_manager.members)
 				lieutenant.mind.subordinates -= src

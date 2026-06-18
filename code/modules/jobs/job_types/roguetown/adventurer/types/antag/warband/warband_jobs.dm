@@ -1,6 +1,6 @@
 ////////////////////////////////////
 /datum/job/roguetown/warband_lieutenant
-	title = "Warlord's Lieutenant"
+	title = "Lieutenant"
 	faction = "Station"
 	total_positions = 0
 	spawn_positions = 0

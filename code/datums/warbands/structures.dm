@@ -1,6 +1,6 @@
 /obj/structure/fluff/warband
 	var/warband_ID = 0
-	var/atom/movable/screen/warband/manager/linked_warband
+	var/datum/warband_manager/linked_warband
 	max_integrity = 0
 
 /obj/structure/fluff/warband/Initialize()
@@ -19,23 +19,27 @@
 
 /obj/structure/fluff/warband/campaign_planner/attack_hand(mob/user)
 	. = ..()
-	if(user.mind.special_role == "Warlord" || user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant" || user.mind.special_role == "Grunt" || user.mind.special_role == "Warlord's Envoy")
+	if(!user.mind || !linked_warband)
+		return
+	if(IS_WARBAND_MEMBER_ROLE(user.mind))
 		if(user.mind.warband_ID == warband_ID)
-			var/list/campaign_options = list()		
-			campaign_options += "HELP"		
+			var/datum/outskirts_encounter/encounter = linked_warband.encounter_manager // schism warbands don't have one until they scout a path
+			var/list/campaign_options = list()
+			campaign_options += "HELP"
 			campaign_options += "View Troops"
 			campaign_options += "View Allies"
-			campaign_options += "View Morale"		
-			if(user.mind.special_role == "Warlord" || user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant" || user.mind.special_role == "Warlord's Envoy")
+			campaign_options += "View Morale"
+			if(IS_WARBAND_OFFICER(user.mind) || user.mind.special_role == ROLE_WARLORD_ENVOY)
 				campaign_options += "Prepare Treaty"
-			if(user.mind.special_role == "Warlord")
+			if(IS_WARBAND_WARLORD(user.mind))
 				campaign_options += "Exile Member"
-				if(linked_warband.encounter_manager.outskirts_locked)
-					campaign_options += "Stand Down Outskirts Defenses"
-				else if(!linked_warband.encounter_manager.encounter_disabled)
-					campaign_options += "Raise Outskirts Defenses"
+				if(encounter)
+					if(encounter.outskirts_locked)
+						campaign_options += "Stand Down Outskirts Defenses"
+					else if(!encounter.encounter_disabled)
+						campaign_options += "Raise Outskirts Defenses"
 
-			var/campaign_choice = input(user, "What shall I do?", "Warband Recruitment") as null|anything in campaign_options
+			var/campaign_choice = tgui_input_list(user, "What shall I do?", "Warband Recruitment", campaign_options)
 
 			switch(campaign_choice)
 				if("HELP")
@@ -44,6 +48,9 @@
 					if(!COOLDOWN_FINISHED(user.mind, treaty_cooldown))
 						var/time_left = COOLDOWN_TIMELEFT(user.mind, treaty_cooldown)
 						to_chat(user, span_warning("I've recently prepared a treaty. I should wait another [round(time_left / 10, 1)] seconds."))
+						return
+					if(!linked_warband.linked_faction)
+						to_chat(user, span_warning("Our warband bears no recognized name yet. There's no one to draft a treaty for."))
 						return
 					var/obj/item/treaty/spawned_treaty = new /obj/item/treaty(loc)
 					new /obj/item/natural/feather(loc)
@@ -66,7 +73,7 @@
 					if(!viable_member_list.len)
 						to_chat(user, span_warning("There are no other members to exile."))
 						return
-					var/mob/living/exile_choice = input(user, "Who must go?", "EXILE") as null|anything in viable_member_list
+					var/mob/living/exile_choice = tgui_input_list(user, "Who must go?", "EXILE", viable_member_list)
 					if(exile_choice)
 						linked_warband.exile(null, user, exile_choice)
 						return
@@ -101,33 +108,37 @@
 
 					return
 				if("Stand Down Outskirts Defenses")
+					if(!encounter)
+						return
 					if(!linked_warband.outskirts_established)
 						to_chat(user, span_warning("We haven't established our outskirts yet."))
 						return
-					if(linked_warband.encounter_manager.encounter_active)
+					if(encounter.encounter_active)
 						to_chat(user, span_warning("There's still a battle happening in the outskirts. I cannot lower our defenses."))
 						return
-					if(linked_warband.encounter_manager.attacker_rout_active)
+					if(encounter.attacker_rout_active)
 						to_chat(user, span_warning("Our foe is currently being routed from the field. I can't stand down our defenses just yet."))
 						return
-				
-					var/confirm = alert(user, "Stand down the outskirts defenses? This will allow anyone to enter the warcamp.", "Stand Down Outskirts", "Yes", "No")
+
+					var/confirm = tgui_alert(user, "Stand down the outskirts defenses? This will allow anyone to enter the warcamp.", "Stand Down Outskirts", list("Yes", "No"))
 					if(confirm != "Yes")
 						return
-					linked_warband.encounter_manager.cancel_march()
-					linked_warband.encounter_manager.outskirts_locked = FALSE
+					encounter.cancel_march()
+					encounter.outskirts_locked = FALSE
 					to_chat(user, span_notice("The troops on our outskirts have stood down. Anyone may enter the warcamp."))
 					return
 				if("Raise Outskirts Defenses")
-					if(linked_warband.encounter_manager.encounter_disabled)
+					if(!encounter)
+						return
+					if(encounter.encounter_disabled)
 						to_chat(user, span_warning("Our defensive line is shattered. We cannot reform our ranks."))
 						return
-					
-					var/confirm = alert(user, "Raise the outskirts defenses? This will lock the warcamp from intruders.", "Raise Outskirts Defenses", "Yes", "No")
+
+					var/confirm = tgui_alert(user, "Raise the outskirts defenses? This will lock the warcamp from intruders.", "Raise Outskirts Defenses", list("Yes", "No"))
 					if(confirm != "Yes")
 						return
-					if(!linked_warband.encounter_manager.encounter_disabled)
-						linked_warband.encounter_manager.outskirts_locked = TRUE
+					if(!encounter.encounter_disabled)
+						encounter.outskirts_locked = TRUE
 						to_chat(user, span_notice("The outskirts defenses have been raised. The warcamp is now secured."))
 						return
 			return
@@ -180,23 +191,27 @@
 	var/given_warband_ID = user.mind.warband_ID
 	if(linked_warband.spawns <= 0)
 		to_chat(user, span_warning("We've been completely decimated. No one remains to heed my call."))
-		return FALSE 
+		return FALSE
 	if(linked_warband.busy_summoning == TRUE)
 		to_chat(user, span_warning("There's already been a call for our men to rally. I'll need to wait for a moment."))
 		return FALSE
 	if(linked_warband.lobby_members.len)
 		to_chat(user, span_warning("I need to be patient. My men are still preparing themselves."))
+		return FALSE
 	if(linked_warband.spawned_lieutenants >= LIEUTENANTS_PER_WARLORD)
 		to_chat(user, span_warning("There are no more capable Lieutenants left."))
-		return FALSE 
-	to_chat(user, span_green("The summons are sent."))
+		return FALSE
+	// the flag is taken here and released in exactly one place, no matter how the attempt ends inside
 	linked_warband.busy_summoning = TRUE
-	sleep(60)	//FIXNOTE: don't leave this in
+	. = do_summon_lieutenant(user, given_warband_ID)
+	linked_warband.busy_summoning = FALSE
+
+/obj/structure/fluff/warband/warband_recruit/proc/do_summon_lieutenant(mob/user, given_warband_ID)
+	to_chat(user, span_green("The summons are sent."))
 	var/turf/spawnpoint = get_turf(src)
 	var/list/candidates = pollGhostCandidates("Do you want to play as one of the [user.advjob]'s Lieutenants?", ROLE_WARLORD_LIEUTENANT, null, null, 10 SECONDS, POLL_IGNORE_WARBAND_LIEUTENANT)
 	if(!LAZYLEN(candidates))
 		to_chat(user, span_warning("The summons go unanswered."))
-		linked_warband.busy_summoning = FALSE
 		return TRUE
 
 	var/mob/candidate = pick(candidates)
@@ -218,10 +233,9 @@
 	target.mind.warband_manager = linked_warband
 	target.mind.warbandsetup = TRUE
 	target.key = candidate.key
-	SSjob.AssignRole(target, "Warlord's Lieutenant")
+	SSjob.AssignRole(target, ROLE_WARLORD_LIEUTENANT)
 	target.mind.add_antag_datum(/datum/antagonist/warband/lieutenant)
 	linked_warband.spawns--
-	linked_warband.busy_summoning = FALSE
 	return TRUE
 
 ///////////////////////////////////////////////////////////////
@@ -233,25 +247,27 @@
 	var/given_warband_ID = user.mind.warband_ID
 	if(linked_warband.spawns <= 0)
 		to_chat(user, span_warning("We've been completely decimated. No one remains to heed my call."))
-		return FALSE 
+		return FALSE
 	if(linked_warband.lobby_members.len)
 		to_chat(user, span_warning("I need to be patient. My men are still preparing themselves."))
 		return FALSE
-	var/grunts_per_lt = GRUNTS_PER_LIEUTENANT + max(0, (get_active_player_count() - 40) / 15) // minimum of 2, with +1 for every 15 active players beyond 40
-	if(length(user.mind.subordinates) >= grunts_per_lt)
+	if(length(user.mind.subordinates) >= warband_grunts_per_lieutenant())
 		to_chat(user, span_warning("I have no Veterans left to call."))
 		return FALSE
 	if(linked_warband.busy_summoning == TRUE)
 		to_chat(user, span_warning("There's already been a call for our men to rally. I'll need to wait for a moment."))
 		return FALSE
+	// the flag is taken here and released in exactly one place, no matter how the attempt ends inside
 	linked_warband.busy_summoning = TRUE
-	to_chat(user, span_green("The summons are sent."))	
-	sleep(60)	//FIXNOTE: don't leave this in
+	. = do_summon_veteran(user, given_warband_ID)
+	linked_warband.busy_summoning = FALSE
+
+/obj/structure/fluff/warband/warband_recruit/proc/do_summon_veteran(mob/user, given_warband_ID)
+	to_chat(user, span_green("The summons are sent."))
 	var/turf/spawnpoint = get_turf(src)
 	var/list/candidates = pollGhostCandidates("Do you want to play as one of the [user.advjob]'s Veteran Soldiers?", ROLE_WARLORD_GRUNT, null, null, 10 SECONDS, POLL_IGNORE_WARBAND_VETERAN)
 	if(!LAZYLEN(candidates))
 		to_chat(user, span_warning("The summons go unanswered."))
-		linked_warband.busy_summoning = FALSE
 		return FALSE
 
 	var/mob/candidate = pick(candidates)
@@ -281,7 +297,6 @@
 		target.mind.warband_recruiter_name = user.real_name
 		target.faction |= "[user.real_name]_faction" // included in their lieutenant's personal faction
 	linked_warband.spawns--
-	linked_warband.busy_summoning = FALSE
 	return TRUE
 
 
@@ -294,37 +309,39 @@
 */
 /obj/structure/fluff/warband/warband_recruit/attack_hand(mob/living/carbon/human/user)
 	. = ..()
+	if(!user.mind || !linked_warband)
+		return
 	if(disabled && user.mind.warband_ID == warband_ID)
 		if(do_after(user, 90, target = src))
 			disabled = FALSE
 			alpha = 255
 			to_chat(user, span_nicegreen("I've restored the rally point!"))
 			return
-	if(user.mind.special_role == "Warlord" || user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant" || user.mind.special_role == "Grunt" || user.mind.special_role == "Warlord's Envoy")
+	if(IS_WARBAND_MEMBER_ROLE(user.mind))
 		if(user.mind.warband_ID == warband_ID)
 			var/list/summon_options = list()
-			if(user.mind.special_role == "Warlord")
-				summon_options += "Summon LIEUTENANT"
-			if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant")
-				summon_options += "Summon VETERAN SOLDIER"
-			if(user.mind.special_role == "Warlord" || user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant")
+			if(IS_WARBAND_WARLORD(user.mind))
+				summon_options += "Summon LIEUTENANT (Player)"
+			if(IS_WARBAND_LIEUTENANT(user.mind))
+				summon_options += "Summon VETERAN (Player)"
+			if(IS_WARBAND_OFFICER(user.mind))
 				summon_options += "Summon GOONS (NPCs)"
-			if(user.mind.special_role == "Warlord's Envoy")
+			if(user.mind.special_role == ROLE_WARLORD_ENVOY)
 				summon_options += "Stow Envoy"
-			if(user.mind.special_role == "Warlord" || user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant")
+			if(IS_WARBAND_OFFICER(user.mind))
 				summon_options += "Summon ENVOY"
-			var/summon_choice = input(user, "Who should be summoned?", "Warband Recruitment") as null|anything in summon_options
+			var/summon_choice = tgui_input_list(user, "Who should be summoned?", "Warband Recruitment", summon_options)
 
 			switch(summon_choice)
-				if("Summon LIEUTENANT")
+				if("Summon LIEUTENANT (Player)")
 					summon_lieutenant(user)
-				if("Summon VETERAN SOLDIER")
+				if("Summon VETERAN (Player)")
 					summon_veteran(user)
 					return
 				if("Summon ENVOY")
 					if(linked_warband.spawns > 0)
 						var/list/depth_options = list("Simple Envoy","Use a Character Slot")
-						var/depth_choice = input(user, "How should they look?", "Warband Recruitment") as anything in depth_options
+						var/depth_choice = tgui_input_list(user, "How should they look?", "Warband Recruitment", depth_options)
 						switch(depth_choice)
 							if("Use a Character Slot")
 								linked_warband.select_pref_slot(user)
@@ -332,8 +349,9 @@
 								linked_warband.load_appearance(user, envoy)
 							if("Simple Envoy")
 								var/list/races = list("Humen","Half-Elf","Dwarf","Elf","Aasimar")
-								var/race_choice = input(user, "What species should they be?", "Warband Recruitment") as anything in races
-								linked_warband.summon_envoy(user, loc, src, race_choice, depth_choice)
+								var/race_choice = tgui_input_list(user, "What species should they be?", "Warband Recruitment", races)
+								if(race_choice)
+									linked_warband.summon_envoy(user, loc, src, race_choice, depth_choice)
 					else
 						to_chat(user, span_userdanger("No reinforcements remain."))					
 				if("Summon GOONS (NPCs)")
@@ -350,7 +368,7 @@
 
 					if(linked_warband.squad_has_goons(squad))
 						var/list/choices = list("ABANDON OLD SQUAD","CANCEL")
-						var/abandon_choice = input(user, "You've already deployed a squad. Abandon them?", "Warband Recruitment") as anything in choices
+						var/abandon_choice = tgui_input_list(user, "You've already deployed a squad. Abandon them?", "Warband Recruitment", choices)
 						if(abandon_choice == "ABANDON OLD SQUAD")
 							linked_warband.abandon_npc_squad(squad)
 						return
@@ -387,8 +405,8 @@
 	user.visible_message(span_info("[user] [destruction_doafter]"))
 	if(do_after(user, 90, target = src))
 		if(contents.len)
-			for(var/mob/living/stored_character in contents)
-				linked_warband.return_envoy(null, TRUE, stored_character, src)
+			for(var/mob/living/stored_character in contents.Copy())
+				linked_warband.return_envoy(null, stored_character, src)
 				to_chat(user, span_nicegreen("[stored_character] is pulled out!"))
 		disabled = TRUE
 		alpha = 50
@@ -406,37 +424,42 @@
 
 /obj/effect/solid_invisible_barrier/warband_spawnbarrier
 	var/warband_ID = 0
-	var/atom/movable/screen/warband/manager/linked_warband
+	var/datum/warband_manager/linked_warband
 
 /obj/effect/solid_invisible_barrier/warband_spawnbarrier/Initialize()
 	. = ..()
 	SSwarbands.warband_machines += src
 
+/obj/effect/solid_invisible_barrier/warband_spawnbarrier/Destroy()
+	SSwarbands.warband_machines -= src
+	linked_warband = null
+	return ..()
+
 /obj/effect/solid_invisible_barrier/warband_spawnbarrier/CanPass(atom/movable/mover, turf/target)
-	if(linked_warband.outskirts_established)
-		return TRUE // once the outskirts are established, anyone can pass through
+	if(!linked_warband || linked_warband.outskirts_established)
+		return TRUE // once the outskirts are established (or before the barrier is linked), anyone can pass through
 
 	if(!isliving(mover))
 		return TRUE
-	
+
 	var/mob/living/carbon/human/user = mover
-	
+
 	if(!istype(user))
 		return TRUE
 
 	if(user.fixedeye)
 		return TRUE
-	
+
 	if(!user.mind || !user.mind.special_role)
 		return TRUE
 
 	if(user.mind.warband_ID != src.warband_ID)
 		return TRUE // if they don't match warband IDs, we let them through (as they likely deserted)
-	
+
 	var/user_role = user.mind.special_role
-	
+
 	// envoys and grunts can pass freely
-	if(user_role == "Warlord's Envoy" || user_role == "Grunt")
+	if(user_role == ROLE_WARLORD_ENVOY || user_role == ROLE_WARLORD_GRUNT)
 		return TRUE
 
 	return FALSE
@@ -446,8 +469,7 @@
 	if(isliving(AM))
 		var/mob/living/carbon/human/user = AM
 		if(istype(user) && user.mind)
-			var/user_role = user.mind.special_role
-			if((user_role == "Warlord" || user_role == "Lieutenant" || user_role == "Aspirant Lieutenant") && user.mind.warband_ID == warband_ID)
+			if(IS_WARBAND_OFFICER(user.mind) && user.mind.warband_ID == warband_ID)
 				if(!user.fixedeye)
 					to_chat(user, span_notice("I shouldn't leave so soon. I should allow our veterans and envoys to scout a path, first. \n \
 											<span style='color:#4f4733'>(Directly control an Envoy by interacting with a Rally Point)</span> \n \
@@ -460,7 +482,7 @@
 /obj/structure/fluff/traveltile/warband
 	name = "travel"
 	var/warband_ID = 0
-	var/atom/movable/screen/warband/manager/linked_warband
+	var/datum/warband_manager/linked_warband
 
 /obj/structure/fluff/traveltile/warband/Destroy()
 	linked_warband = null
@@ -475,18 +497,20 @@
 
 /obj/structure/fluff/traveltile/warband/azure_to_intermission/perform_travel(obj/structure/fluff/traveltile/T, mob/living/carbon/human/L)
 	..()
+	if(!linked_warband)
+		return
 	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (L in linked_warband.allies)
-	
+
 	if(is_friendly)
 		return // members and allies don't get tracked
-	
+
 	if(!(L in linked_warband.incoming_mobs))
 		linked_warband.incoming_mobs += L
 		to_chat(L, span_warning("I feel eyes upon me. I've entered hostile territory."))
 		for(var/mob/officer in src.linked_warband.members)
 			if(!officer || !officer.mind)
 				continue
-			if(officer.mind.special_role == "Warlord" || officer.mind.special_role == "Lieutenant" || officer.mind.special_role == "Aspirant Lieutenant")
+			if(IS_WARBAND_OFFICER(officer.mind))
 				to_chat(officer, span_warning("Our scouts report lurkers in our camp's outskirts. They've spotted [linked_warband.incoming_mobs.len] potential foe(s)."))
 		if(linked_warband.combatmusic && linked_warband.combatmusic.len)
 			if(L.cmode_music_override != linked_warband.combatmusic)
@@ -499,8 +523,9 @@
 
 /obj/structure/fluff/traveltile/warband/intermission_to_azure/perform_travel(obj/structure/fluff/traveltile/T, mob/living/carbon/human/L)
 	..()
-	linked_warband.incoming_mobs -= L
-	linked_warband.besieging_mobs -= L
+	if(linked_warband)
+		linked_warband.incoming_mobs -= L
+		linked_warband.besieging_mobs -= L
 	if(L.originalcmode)
 		L.restore_original_cmode_music()
 
@@ -514,6 +539,8 @@
 
 /obj/structure/fluff/traveltile/warband/intermission_to_outskirts/perform_travel(obj/structure/fluff/traveltile/T, mob/living/carbon/human/L)
 	..()
+	if(!linked_warband)
+		return
 	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (L in linked_warband.allies)
 	if(is_friendly)
 		return
@@ -523,67 +550,73 @@
 /obj/structure/fluff/traveltile/warband/intermission_to_outskirts/try_living_travel(obj/structure/fluff/traveltile/T, mob/living/L)
 	if(!L.mind)
 		return FALSE
-		
-	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (L in linked_warband.allies)
+
+	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (linked_warband && (L in linked_warband.allies))
 	if(is_friendly)
 		return ..()
-	
-	if(linked_warband.encounter_manager.attacker_rout_active)
+
+	var/datum/outskirts_encounter/encounter = linked_warband?.encounter_manager
+	if(!encounter) // an unfinished warband has no defensive line to speak of
+		return ..()
+
+	if(encounter.attacker_rout_active)
 		to_chat(L, span_warning("It's too soon for another assault."))
 		return FALSE
 
 	// there's a 90 second window for attackers to enter an outskirts encounter
-	if(linked_warband.encounter_manager.encounter_active && linked_warband.encounter_manager.encounter_start_time > 0)
-		var/time_elapsed = world.time - linked_warband.encounter_manager.encounter_start_time
+	if(encounter.encounter_active && encounter.encounter_start_time > 0)
+		var/time_elapsed = world.time - encounter.encounter_start_time
 		if(time_elapsed >= 90 SECONDS)
 			to_chat(L, span_warning("It's too late to enter the fray."))
 			return FALSE
 
-	if(!linked_warband.encounter_manager.outskirts_locked)
+	if(!encounter.outskirts_locked)
 		return ..()
 
-	if(linked_warband.encounter_manager.prep_started)
+	if(encounter.prep_started)
 		var/time_left = max(0, (linked_warband.outskirts_prep_timer - world.time) / 10)
 		to_chat(L, span_warning("The march has already begun. We are [round(time_left)] seconds away."))
 		return FALSE
 
-	if(linked_warband.encounter_manager.encounter_disabled)
+	if(encounter.encounter_disabled)
 		to_chat(L, span_warning("It's too soon for another assault."))
 		return FALSE
 
-	if(linked_warband.encounter_manager.encounter_active)
+	if(encounter.encounter_active)
 		to_chat(L, span_warning("Battle rages ahead!"))
 		return ..()
 
 	if(HAS_TRAIT(L, TRAIT_ZOMBIE_SPEECH))
 		return FALSE
 
-	var/confirm = alert(L, "Begin the march to the enemy warcamp? We would arrive in around 3 minutes.", "Initiate Battle", "Yes", "No")
+	var/march_minutes = round(encounter.prep_time / (1 MINUTES))
+	var/confirm = tgui_alert(L, "Begin the march to the enemy warcamp? We would arrive in around [march_minutes] minute(s).", "Initiate Battle", list("Yes", "No"))
 	if(confirm != "Yes")
 		return FALSE
-	if(linked_warband.encounter_manager.prep_started)
+	if(encounter.prep_started)
 		var/time_left = max(0, (linked_warband.outskirts_prep_timer - world.time) / 10)
 		to_chat(L, span_warning("The march has already begun. We are [round(time_left)] seconds away."))
 		return FALSE // in case someone hit yes while someone else was mid-prompt
-	if(!linked_warband.encounter_manager.outskirts_locked)
+	if(!encounter.outskirts_locked)
 		to_chat(L, span_warning("Surprisingly enough, the path seems clear."))
 		return FALSE // in case the defenses are lowered mid-prompt
-	visible_message(span_boldwarning("[L] begins the long march to the enemy's line. We will arrive in three minutes."))
-	linked_warband.outskirts_prep_timer = world.time + 3 MINUTES
-	linked_warband.encounter_manager.begin_march()	
+	visible_message(span_boldwarning("[L] begins the long march to the enemy's line. We will arrive in [march_minutes] minute(s)."))
+	linked_warband.outskirts_prep_timer = world.time + encounter.prep_time
+	encounter.begin_march()
 	return FALSE
 
 /obj/structure/fluff/traveltile/warband/intermission_to_outskirts/attack_hand(mob/user)
 	if(!istype(user, /mob/living/carbon/human))
 		return
-	
+
 	var/mob/living/carbon/human/H = user
+	var/datum/outskirts_encounter/encounter = linked_warband?.encounter_manager
 
 	// check if there's an active prep phase that can be cancelled
-	if(linked_warband.encounter_manager.prep_started && !linked_warband.encounter_manager.encounter_active)
-		var/choice = alert(H, "Call off the march to the outskirts?", "Cancel March", "Yes", "No")
+	if(encounter?.prep_started && !encounter.encounter_active)
+		var/choice = tgui_alert(H, "Call off the march to the outskirts?", "Cancel March", list("Yes", "No"))
 		if(choice == "Yes")
-			if(linked_warband.encounter_manager.cancel_march())
+			if(encounter.cancel_march())
 				visible_message(span_notice("[H] calls off the march to the outskirts."))
 				return
 		else
@@ -597,18 +630,23 @@
 
 /obj/structure/fluff/traveltile/warband/outskirts_to_intermission/perform_travel(obj/structure/fluff/traveltile/T, mob/living/carbon/human/L)
 	..()
-	linked_warband.besieging_mobs -= L
+	if(linked_warband)
+		linked_warband.besieging_mobs -= L
 
 /obj/structure/fluff/traveltile/warband/outskirts_to_intermission/try_living_travel(obj/structure/fluff/traveltile/T, mob/living/L)
-	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (L in linked_warband.allies)
+	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (linked_warband && (L in linked_warband.allies))
 	if(is_friendly)
 		return ..()
 
 	if(HAS_TRAIT(L, TRAIT_ZOMBIE_SPEECH))
 		return ..() // always let zombies leave
 
-	if(linked_warband.encounter_manager.attacker_rout_active && (L in linked_warband.besieging_mobs) && linked_warband.encounter_manager.rout_start_time > 0)
-		var/time_since_rout = world.time - linked_warband.encounter_manager.rout_start_time
+	var/datum/outskirts_encounter/encounter = linked_warband?.encounter_manager
+	if(!encounter)
+		return ..()
+
+	if(encounter.attacker_rout_active && (L in linked_warband.besieging_mobs) && encounter.rout_start_time > 0)
+		var/time_since_rout = world.time - encounter.rout_start_time
 		if(time_since_rout >= 80 SECONDS)
 			if(!L || !L.mind)
 				return FALSE
@@ -628,17 +666,21 @@
 
 
 /obj/structure/fluff/traveltile/warband/outskirts_to_camp/try_living_travel(obj/structure/fluff/traveltile/T, mob/living/L)
-	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (L in linked_warband.allies)
+	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (linked_warband && (L in linked_warband.allies))
 	if(is_friendly)
 		return ..()
 
-	if(linked_warband.encounter_manager.outskirts_locked || linked_warband.encounter_manager.encounter_active)
+	var/datum/outskirts_encounter/encounter = linked_warband?.encounter_manager
+	if(!encounter) // an unfinished warband has no camp defenses to speak of
+		return ..()
+
+	if(encounter.outskirts_locked || encounter.encounter_active)
 		if(!L || !L.mind)
 			return FALSE
 		to_chat(L, span_warning("The camp's defenses hold strong. I can't slip by."))
 		return FALSE
 
-	if(!linked_warband.encounter_manager.encounter_active || linked_warband.encounter_manager.encounter_disabled)
+	if(!encounter.encounter_active || encounter.encounter_disabled)
 		linked_warband.besieging_mobs -= L
 		return ..()
 	
@@ -653,13 +695,18 @@
 
 // a mirror of the envoy spawning logic for rally points, in case someone decides to leave the spawn room early
 /obj/structure/fluff/traveltile/warband/camp_to_outskirts/attack_hand(mob/user)
+	if(!linked_warband)
+		return ..()
 	if(linked_warband.outskirts_established)
 		if(user.mind && user.mind.warband_ID != warband_ID)
 			linked_warband.besieging_mobs |= user
 		return ..()
-	
-	if(user.mind.special_role == "Warlord's Envoy")
-		var/readycheck = alert(user, "The road ahead could be dangerous. I won't be able to return immediately.", "VENTURE FORTH?", "I AM READY", "WAIT")
+
+	if(!user.mind)
+		return
+
+	if(user.mind.special_role == ROLE_WARLORD_ENVOY)
+		var/readycheck = tgui_alert(user, "The road ahead could be dangerous. I won't be able to return immediately.", "VENTURE FORTH?", list("I AM READY", "WAIT"))
 		if(readycheck == "I AM READY")
 			if(chosen_landmark)
 				to_chat(user, span_warning("The Rot prevented a simple walk down Azuria's main road. This is the safest route from my Warcamp."))
@@ -670,14 +717,14 @@
 		return
 
 	// if they don't match the warband ID, we assume they rebelled VERY early into the round (for whatever reason) and just let them leave
-	if(user.mind.warband_ID != warband_ID || user.mind.special_role == "Grunt") // we'll let grunts leave too	
+	if(user.mind.warband_ID != warband_ID || user.mind.special_role == ROLE_WARLORD_GRUNT) // we'll let grunts leave too	
 		if(chosen_landmark)
 			user.forceMove(chosen_landmark.loc)
 			return
 
-	if(user.mind && (user.mind.special_role == "Warlord" || user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant"))
+	if(IS_WARBAND_OFFICER(user.mind))
 		if(user.mind.warband_ID == warband_ID)
-			var/create_envoy = alert(user, "I can't leave yet. I need to send out an Envoy.", "BECOME ENVOY", "BECOME ENVOY", "No")
+			var/create_envoy = tgui_alert(user, "I can't leave yet. I need to send out an Envoy.", "BECOME ENVOY", list("BECOME ENVOY", "No"))
 
 			if(create_envoy == "BECOME ENVOY")
 				if(linked_warband.spawns <= 0)
@@ -685,7 +732,7 @@
 					return
 	
 				var/list/depth_options = list("Simple Envoy", "Use a Character Slot")
-				var/depth_choice = input(user, "How should the Envoy look?", "Envoy Creation") as anything in depth_options
+				var/depth_choice = tgui_input_list(user, "How should the Envoy look?", "Envoy Creation", depth_options)
 				switch(depth_choice)
 					if("Use a Character Slot")
 						linked_warband.select_pref_slot(user)
@@ -693,14 +740,15 @@
 						linked_warband.load_appearance(user, envoy)
 					if("Simple Envoy")
 						var/list/races = list("Humen","Half-Elf","Dwarf","Elf","Aasimar")
-						var/race_choice = input(user, "What species should they be?", "Envoy Creation") as anything in races
-						linked_warband.summon_envoy(user, get_turf(user), linked_warband.get_random_recruit_point(), race_choice, depth_choice)
+						var/race_choice = tgui_input_list(user, "What species should they be?", "Envoy Creation", races)
+						if(race_choice)
+							linked_warband.summon_envoy(user, get_turf(user), linked_warband.get_random_recruit_point(), race_choice, depth_choice)
 				return
 	to_chat(user, span_warning("I can't leave yet. I need to send out an ENVOY first."))
 	return
 
 /obj/structure/fluff/traveltile/warband/proc/summon_grunt_squad_at_tile(mob/living/carbon/human/user)
-	var/atom/movable/screen/warband/manager/user_warband = user.mind.warband_manager
+	var/datum/warband_manager/user_warband = user.mind.warband_manager
 	var/datum/component/trail_follow/squad = user_warband.get_squad_component(user)
 
 	if(!COOLDOWN_FINISHED(user.mind, squad_spawn_cooldown))

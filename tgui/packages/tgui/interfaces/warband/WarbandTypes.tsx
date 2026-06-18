@@ -16,15 +16,18 @@ export type WarbandDatumBase = {
   inputs?: import('./TreatyTypes').InputFieldDescriptor[];
   selection_inputs?: Record<string, any>;
   suppressed_classes?: string[];
-  replaces_primaries?: boolean;
+  suppress_all_other_classes?: boolean;
   rarity_locked?: boolean;
+  universal_warlordclasses?: string[];
+  universal_lieuclasses?: string[];
+  universal_gruntclasses?: string[];
 };
 
 export type WarbandType = WarbandDatumBase & {
   subtyperequired: boolean;
   subtypes: string[][];
   aspects: string[];
-  multiclass_enabled: boolean;
+  universal_subclasses_enabled: boolean;
   subclass_required: boolean;
   subclass_label?: string;
   max_aspects: number;
@@ -51,9 +54,8 @@ export type ClassType = {
   rarity: number;
   slots: number;
   type: string;
-  multiclass_capable: boolean;
   ignore_locks?: boolean;
-  ignores_multiclass_requirement?: boolean;
+  ignores_uni_class_requirement?: boolean;
   classes?: string[];
 };
 
@@ -69,6 +71,9 @@ export type NobleType = {
   special_role?: string;
   in_lobby?: boolean;
   is_ready?: boolean;
+  ready_class?: string | null;
+  ready_subclass?: string | null;
+  ref?: string;
 };
 
 export type CasusBelliTerm = {
@@ -144,5 +149,6 @@ export type Data = {
   manager_faithlock_names?: string[];
   manager_racelocks?: string[];
   manager_racelock_names?: string[];
+  class_slot_counts?: Record<string, number>;
   bypass_rarity?: boolean;
 };

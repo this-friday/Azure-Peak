@@ -50,6 +50,14 @@
 	"bog"		= list(/datum/map_template/intermission/bog_a) \
 )
 
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////// ROLES
+
+#define IS_WARBAND_WARLORD(M) ((M)?.special_role == ROLE_WARLORD)
+#define IS_WARBAND_LIEUTENANT(M) ((M)?.special_role == ROLE_WARLORD_LIEUTENANT || (M)?.special_role == ROLE_WARLORD_ASPIRANT)
+#define IS_WARBAND_OFFICER(M) (IS_WARBAND_WARLORD(M) || IS_WARBAND_LIEUTENANT(M))
+#define IS_WARBAND_MEMBER_ROLE(M) (IS_WARBAND_OFFICER(M) || (M)?.special_role == ROLE_WARLORD_GRUNT || (M)?.special_role == ROLE_WARLORD_ENVOY)
+
 ////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// DATUMS
 

@@ -28,13 +28,28 @@
 	var/march_timer
 
 	var/datum/outskirts_wave/custom_wave
-	var/atom/movable/screen/warband/manager/linked_warband	
+	var/datum/warband_manager/linked_warband	
 	var/obj/effect/landmark/outskirts_objective/objective
 	var/obj/structure/fluff/traveltile/warband/outskirts_to_intermission/attacker_entry
 	var/obj/structure/fluff/traveltile/warband/outskirts_to_camp/defender_entry
 
 	var/list/attack_npcs = list()	// defending npcs going through the 'attack' loop in their decision tree
 	var/list/cached_objective_path
+
+/datum/outskirts_encounter/Destroy()
+	if(march_timer)
+		deltimer(march_timer)
+		march_timer = null
+	QDEL_NULL(objective)
+	linked_warband = null
+	custom_wave = null
+	attacker_entry = null
+	defender_entry = null
+	current_wave = null
+	pending_cleanup = null
+	attack_npcs = null
+	cached_objective_path = null
+	return ..()
 
 //////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// CANCEL MARCH
@@ -149,7 +164,7 @@
 	for(var/mob/living/carbon/human/defender in linked_warband.members)
 		if(!defender || !defender.mind)
 			continue
-		if(defender.mind.special_role == "Warlord" || defender.mind.special_role == "Lieutenant" || defender.mind.special_role == "Aspirant Lieutenant")
+		if(defender.mind.special_role == ROLE_WARLORD || defender.mind.special_role == ROLE_WARLORD_LIEUTENANT || defender.mind.special_role == ROLE_WARLORD_ASPIRANT)
 			to_chat(defender, span_boldwarning("Our scouts report a skirmish in our camp's outskirts! We are beset by [src.linked_warband.incoming_mobs.len] attackers!"))
 	
 	prep_started = FALSE
@@ -193,7 +208,8 @@
 	name = "threshold"
 
 /obj/effect/landmark/outskirts_objective/Destroy()
-	linked_encounter.objective = null
+	if(linked_encounter && linked_encounter.objective == src)
+		linked_encounter.objective = null
 	linked_encounter = null
 	starting_position = null
 	return ..()

@@ -12,7 +12,7 @@
 	points = 1
 
 // STR: 8 | SPD: 10 | CON: 10
-/datum/warbands/aspects/figurehead/on_warlord_equip(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/figurehead/on_warlord_equip(mob/living/carbon/human/warlord, datum/warband_manager/manager)
 	if(warlord.mind)
 		for(var/obj/effect/proc_holder/spell/sweep_spell in warlord.mind.spell_list)
 			if(sweep_spell.name == "Sweep")
@@ -28,5 +28,5 @@
 	if(warlord.STACON > 10)
 		warlord.STACON = 10
 
-/datum/warbands/aspects/figurehead/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/aspects/figurehead/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	manager.disorder -= 1

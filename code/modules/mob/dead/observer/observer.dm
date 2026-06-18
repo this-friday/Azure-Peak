@@ -468,7 +468,8 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 	set hidden = 1
 	if(!client)
 		return
-	if(mind && mind.special_role == "Warlord's Envoy")
+	// envoys re-entering their corpses are intercepted & returned to their original character
+	if(mind && mind.special_role == ROLE_WARLORD_ENVOY)
 		if(!mind.current || mind.current.stat == DEAD)
 			mind.warband_manager.return_envoy(src, abandoned = TRUE)
 			return

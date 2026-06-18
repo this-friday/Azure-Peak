@@ -255,7 +255,7 @@
 	for(var/mob/living/carbon/human/defender in linked_warband.members)
 		if(!defender || !defender.mind)
 			continue
-		if(defender.mind.special_role == "Warlord" || defender.mind.special_role == "Lieutenant" || defender.mind.special_role == "Aspirant Lieutenant")
+		if(defender.mind.special_role == ROLE_WARLORD || defender.mind.special_role == ROLE_WARLORD_LIEUTENANT || defender.mind.special_role == ROLE_WARLORD_ASPIRANT)
 			to_chat(defender, span_warning("Our scouts report a wave of casualties in our outskirts."))
 
 /datum/outskirts_encounter/proc/spawn_wave_mob(turf/spawn_location, special_chance = 15)
@@ -284,6 +284,7 @@
 /datum/outskirts_encounter/proc/spawn_grunt_mob(turf/spawn_location)
 	var/mob/living/carbon/human/species/human/northern/goon/new_grunt = linked_warband.get_cached_grunt(spawn_location)
 	new_grunt.faction = list("warband_[linked_warband.warband_ID]")
+	REMOVE_TRAIT(new_grunt, TRAIT_UNDERWHELMING, TRAIT_GENERIC) // outskirts defenders aren't underwhelming
 	var/datum/ai_controller/controller = new_grunt.ai_controller
 	controller?.can_idle = FALSE
 	controller?.set_ai_status(AI_STATUS_ON)

@@ -23,7 +23,7 @@
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 
-/datum/warbands/sect/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/sect/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	var/patron_name = "the chosen patron"
 	if(manager.faithlocks.len)
 		var/patron_type = manager.faithlocks[1]
@@ -34,7 +34,7 @@
 		to_chat(member, "<span style='color:#e8bf67'>SECT RESTRICTION:</span> The Sect is in service to <span style='color:#e8bf67'>[patron_name]</span>. Your character must serve them.")
 		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
 
-/datum/warbands/sect/on_warlord_equip(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
+/datum/warbands/sect/on_warlord_equip(mob/living/carbon/human/warlord, datum/warband_manager/manager)
 	warlord.verbs += /mob/living/carbon/human/proc/enlighten
 	
 //////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@
 	patron_field.options = list("Astrata", "Noc", "Dendor", "Abyssor", "Ravox", "Necra", "Xylix", "Pestra", "Malum", "Eora")
 	input_fields += patron_field
 
-/datum/warbands/subtypes/ten/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/subtypes/ten/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	var/list/patron_name_to_type = list(
 		"Astrata" = /datum/patron/divine/astrata,
 		"Noc" = /datum/patron/divine/noc,
@@ -78,7 +78,7 @@
 		patron_name = pick(patron_name_to_type) // in absence of a choice (such as during a timeout), we pick a random one
 	manager.faithlocks = list(patron_name_to_type[patron_name])
 
-/datum/warbands/subtypes/ten/on_locks_applied(atom/movable/screen/warband/manager/manager)
+/datum/warbands/subtypes/ten/on_locks_applied(datum/warband_manager/manager)
 	return TRUE // sect sends its own message in on_warband_confirmed
 
 //////////////////////////////////////////////////////
@@ -104,7 +104,7 @@
 	patron_field.options = list("Zizo", "Graggar", "Matthios", "Baotha")
 	input_fields += patron_field
 
-/datum/warbands/subtypes/ascendant/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/subtypes/ascendant/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	var/list/patron_name_to_type = list(
 		"Zizo" = /datum/patron/inhumen/zizo,
 		"Graggar" = /datum/patron/inhumen/graggar,
@@ -117,7 +117,7 @@
 		patron_name = pick(patron_name_to_type)
 	manager.faithlocks = list(patron_name_to_type[patron_name])
 
-/datum/warbands/subtypes/ascendant/on_locks_applied(atom/movable/screen/warband/manager/manager)
+/datum/warbands/subtypes/ascendant/on_locks_applied(datum/warband_manager/manager)
 	return TRUE // sect sends its own message in on_warband_confirmed
 
 ///////////////////////////////////////////////////
@@ -141,10 +141,10 @@
 	patron_field.options = list("Psydon")
 	input_fields += patron_field
 
-/datum/warbands/subtypes/psydon/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/subtypes/psydon/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	manager.faithlocks = list(/datum/patron/old_god)
 
-/datum/warbands/subtypes/psydon/on_locks_applied(atom/movable/screen/warband/manager/manager)
+/datum/warbands/subtypes/psydon/on_locks_applied(datum/warband_manager/manager)
 	return TRUE // sect sends its own message in on_warband_confirmed
 
 /datum/warbands/subtypes/psydon/New()

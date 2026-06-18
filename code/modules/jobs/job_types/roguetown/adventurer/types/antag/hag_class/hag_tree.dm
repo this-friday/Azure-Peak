@@ -499,6 +499,19 @@
 	desc = "This moss makes you feel like you aren't standing before it anymore. You sense water.. The depths, true terror lingers at the edges of your mind."
 	color = "#037981"
 
+// Cleanse mosses
+/obj/item/alch/hag_moss/enchanted/cowardly
+	name = "Cowardly Moss"
+	boon_path = /datum/hag_boon/misc/cleanse_exile
+	desc = "An unassuming clump of moss. It shudders as light falls upon it. What's wrong, little guy?"
+	color = "#e8d8a0"
+
+/obj/item/alch/hag_moss/enchanted/dead
+	name = "Dead Moss"
+	boon_path = /datum/hag_boon/misc/cleanse_grave_seal
+	desc = "A clump of dry, dead moss."
+	color = "#6b5d7a"
+
 // Trait mosses
 /obj/item/alch/hag_moss/enchanted/random
 	name = "Unstable Moss"

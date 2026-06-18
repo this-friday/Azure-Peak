@@ -20,11 +20,9 @@
 	generate a faction for dealing w/treaties
 	receives the faction & initial territory's name from the selected warband & subtype datums
 */
-/atom/movable/screen/warband/manager/proc/choose_warband_faction(owner)
+/datum/warband_manager/proc/choose_warband_faction(owner)
 	var/chosen_name
 	var/chosen_desc
-	var/land_name
-	var/land_desc
 	var/datum/treaty_flavor/new_faction = new /datum/treaty_flavor/custom
 
 	if(selected_subtype) // look for a subtype first
@@ -38,8 +36,7 @@
 	if(!chosen_desc)
 		chosen_desc = selected_warband.treaty_desc
 
-	var/returned_faction = new_faction.generate_faction(owner, chosen_name, chosen_desc, land_name, land_desc, TRUE)
-	return returned_faction
+	return new_faction.generate_faction(owner, chosen_name, chosen_desc, stewardhidden = TRUE)
 
 /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SET IDS
@@ -50,7 +47,7 @@
 	called again when the warband spawns an outskirts & intermission map
 
 */
-/atom/movable/screen/warband/manager/proc/set_IDs()
+/datum/warband_manager/proc/set_IDs()
 	for(var/obj/structure/fluff/warband/warband_object in SSwarbands.warband_machines)
 		if(warband_object.warband_ID == 0)
 			warband_object.linked_warband = src
@@ -72,7 +69,7 @@
 /*
 	links together all of a warband's travel tiles with a shared warband_ID
 */
-/atom/movable/screen/warband/manager/proc/link_portals()
+/datum/warband_manager/proc/link_portals()
 	for(var/obj/structure/fluff/traveltile/warband/warband_tile in SSwarbands.warband_machines)
 		if(warband_tile.warband_ID == warband_ID)
 			if(warband_tile.type == /obj/structure/fluff/traveltile/warband/azure_to_intermission)
@@ -93,7 +90,7 @@
 
 // returns FALSE if a turf sits in an area we never want to spawn a warband into
 // currently just the wretch lair/cave, as we shouldn't really have anything to worry about beyond that
-/atom/movable/screen/warband/manager/proc/is_valid_wretch_turf(turf/T)
+/datum/warband_manager/proc/is_valid_wretch_turf(turf/T)
 	if(!T)
 		return FALSE
 	var/area/A = get_area(T)
@@ -104,7 +101,7 @@
 	return TRUE
 
 // picks a random valid wretch spawn landmark
-/atom/movable/screen/warband/manager/proc/get_random_wretch_landmark()
+/datum/warband_manager/proc/get_random_wretch_landmark()
 	var/list/candidates = list()
 	for(var/obj/effect/landmark/start/wretchlate/wretch in GLOB.start_landmarks_list)
 		if(is_valid_wretch_turf(get_turf(wretch)))
@@ -123,7 +120,7 @@
 	if there's no valid wretch landmark, we fall back on the Adventurer Spawn
 
 */
-/atom/movable/screen/warband/manager/proc/set_default_exit()
+/datum/warband_manager/proc/set_default_exit()
 	var/obj/effect/landmark/random_landmark = get_random_wretch_landmark()
 
 	if(!random_landmark)
@@ -143,7 +140,7 @@
 
 	if there's no room to spawn a fresh warcamp (e.g. prior warbands consumed all the warcamp landmarks), we flag the warband to spawn directly in the field at a wretch landmark
 */
-/atom/movable/screen/warband/manager/proc/choose_map(latespawn = FALSE)
+/datum/warband_manager/proc/choose_map(latespawn = FALSE)
 	var/warcamp_template_type
 
 	if(selected_aspects)
@@ -192,7 +189,7 @@
 	same process as map selection, but for music
 
 */
-/atom/movable/screen/warband/manager/proc/choose_combat_music()
+/datum/warband_manager/proc/choose_combat_music()
 	var/chosen_combatmusic
 	if(selected_aspects)
 		for(var/datum/warbands/aspects/aspect in selected_aspects)
@@ -221,12 +218,17 @@
 	chooses variables with priority & spawns the final result
 	for example, a map provided from an aspect is prioritized over one from a subtype, and a subtype map's prioritized over the base warband's map
 */
-/atom/movable/screen/warband/manager/proc/spawn_warband(mob/user, rebellion = FALSE)
+/datum/warband_manager/proc/spawn_warband(mob/user, rebellion = FALSE)
+	stop_creation_timer() // before choose_map: the template load sleeps, and the timeout must not fire mid-finalization
 	if(rebellion == FALSE) // if a warband is spawning via a lieutenant's desertion,
 		choose_map()
-	stop_creation_timer()
 	choose_combat_music()
-	for(var/atom/movable/screen/warband/manager/other_manager in SSwarbands.warband_managers)
+	// apply the band's & subtype's spawn pool contributions on top of the 400 baseline
+	if(selected_warband?.spawns)
+		spawns += selected_warband.spawns
+	if(selected_subtype?.spawns)
+		spawns += selected_subtype.spawns
+	for(var/datum/warband_manager/other_manager in SSwarbands.warband_managers)
 		if(other_manager == src)
 			continue
 		if(other_manager.finalized && has_compatible_cache(other_manager))
@@ -236,6 +238,22 @@
 	linked_faction = choose_warband_faction(user)
 	linked_faction.member_names += user.real_name
 	finalized = TRUE
+	announce_spawn_to_deadchat(user)
+
+/datum/warband_manager/proc/announce_spawn_to_deadchat(mob/warlord)
+	if(!selected_warband)
+		return
+	var/announcement = "[selected_warband.title]"
+	if(selected_subtype)
+		announcement += " ([selected_subtype.title])"
+	if(length(selected_aspects))
+		var/list/aspect_names = list()
+		for(var/datum/warbands/aspects/aspect in selected_aspects)
+			aspect_names += aspect.title
+		announcement += " | ASPECTS: [aspect_names.Join(", ")]"
+	if(casus_belli_selection)
+		announcement += " | CASUS BELLI: [casus_belli_selection.custom_name || casus_belli_selection.name]"
+	deadchat_broadcast(" has spawned: [announcement]", "<b>A WARBAND</b>", follow_target = warlord)
 
 /////////////////////////////////////////////////
 /////////////////////////////////// SEND WARNINGS
@@ -252,7 +270,7 @@
 	cancels immediately if the spawning Warband has taken the "Surprise" aspect
 
 */
-/atom/movable/screen/warband/manager/proc/send_warnings()
+/datum/warband_manager/proc/send_warnings()
 	for(var/datum/warbands/aspects/chosen_aspect in selected_aspects)
 		if(istype(chosen_aspect, /datum/warbands/aspects/surprise))
 			return // if the incoming warband has the Surprise aspect, no one's getting warned
@@ -272,7 +290,7 @@
 	var/list/general_candidates = list()
 
 	// roles in this list are blacklisted from being warned
-	var/list/warband_roles = list("Warlord", "Aspirant Lieutenant", "Lieutenant", "Grunt")
+	var/list/warband_roles = list(ROLE_WARLORD, ROLE_WARLORD_ASPIRANT, ROLE_WARLORD_LIEUTENANT, ROLE_WARLORD_GRUNT, ROLE_WARLORD_ENVOY)
 	for(var/mob/living/carbon/human/candidate in GLOB.player_list)
 		if(candidate.stat == DEAD || !candidate.client)
 			continue

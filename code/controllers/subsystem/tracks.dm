@@ -9,6 +9,7 @@ PROCESSING_SUBSYSTEM_DEF(tracks)
 	var/list/track_pool
 	var/list/structure_track_pool
 	var/list/thievescant_pool
+	var/list/warband_track_pool // left behind after a Warband character uses the Shortcut verb
 	var/pool_max_size 
 	var/tracks_recycled
 	var/tracks_created
@@ -17,6 +18,7 @@ PROCESSING_SUBSYSTEM_DEF(tracks)
 	track_pool = list()
 	structure_track_pool = list()
 	thievescant_pool = list()
+	warband_track_pool = list()
 
 	pool_max_size = 1000
 	tracks_recycled = 0
@@ -24,7 +26,7 @@ PROCESSING_SUBSYSTEM_DEF(tracks)
 
 /datum/controller/subsystem/processing/tracks/stat_entry()
 	if(processing)
-		return ..("P:[length(processing)] | Pool:[length(track_pool)+length(structure_track_pool)+length(thievescant_pool)] | R:[tracks_recycled] | N:[tracks_created]")
+		return ..("P:[length(processing)] | Pool:[length(track_pool)+length(structure_track_pool)+length(thievescant_pool)+length(warband_track_pool)] | R:[tracks_recycled] | N:[tracks_created]")
 
 /datum/controller/subsystem/processing/tracks/fire(resumed = 0)
 	if (!resumed)
@@ -66,6 +68,8 @@ PROCESSING_SUBSYSTEM_DEF(tracks)
 			pool = structure_track_pool
 		if(/obj/effect/track/thievescant)
 			pool = thievescant_pool
+		if(/obj/effect/track/warband_shortcut)
+			pool = warband_track_pool
 		else
 			pool = track_pool
 
@@ -98,6 +102,8 @@ PROCESSING_SUBSYSTEM_DEF(tracks)
 			pool = structure_track_pool
 		if(/obj/effect/track/thievescant)
 			pool = thievescant_pool
+		if(/obj/effect/track/warband_shortcut)
+			pool = warband_track_pool
 		else
 			pool = track_pool
 

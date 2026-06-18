@@ -38,7 +38,7 @@ export const WarbandDebug = (props) => {
   };
 
   return (
-    <Window title="Debug: Create Warband" width={360} height={280 + members.length * 26}>
+    <Window title="Create Warband" width={360} height={Math.min(280 + members.length * 26, 560)}>
       <Window.Content>
         <Section>
           <Stack vertical fill>
@@ -95,25 +95,27 @@ export const WarbandDebug = (props) => {
               </Box>
             )}
 
-            {members.map((m, i) => (
-              <Stack key={i} align="center">
-                <Stack.Item grow>
-                  <Box inline bold>
-                    {m.ckey}
-                  </Box>
-                  <Box inline color={ROLE_COLOR[m.role]} ml={1}>
-                    {m.role}
-                  </Box>
-                </Stack.Item>
-                <Stack.Item>
-                  <Button
-                    icon="times"
-                    color="transparent"
-                    onClick={() => act('remove_member', { index: i + 1 })}
-                  />
-                </Stack.Item>
-              </Stack>
-            ))}
+            <Box style={{ maxHeight: '260px', overflowY: 'auto' }}>
+              {members.map((m, i) => (
+                <Stack key={i} align="center">
+                  <Stack.Item grow>
+                    <Box inline bold>
+                      {m.ckey}
+                    </Box>
+                    <Box inline color={ROLE_COLOR[m.role]} ml={1}>
+                      {m.role}
+                    </Box>
+                  </Stack.Item>
+                  <Stack.Item>
+                    <Button
+                      icon="times"
+                      color="transparent"
+                      onClick={() => act('remove_member', { index: i + 1 })}
+                    />
+                  </Stack.Item>
+                </Stack>
+              ))}
+            </Box>
 
             <Stack.Divider />
 

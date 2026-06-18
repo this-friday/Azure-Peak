@@ -19,6 +19,11 @@
 
 	RegisterSignal(parent, COMSIG_LIVING_DEATH, PROC_REF(on_death))
 	RegisterSignal(parent, COMSIG_LIVING_TOD_CHANGE_DAWN, PROC_REF(on_tod_change))
+	RegisterSignal(partner, COMSIG_PARENT_QDELETING, PROC_REF(on_partner_deleted)) // don't hold a deleted mob in memory
+
+/datum/component/peace/proc/on_partner_deleted(datum/source)
+	SIGNAL_HANDLER
+	partner = null
 
 /datum/component/peace/proc/on_tod_change()
 	var/mob/living/holder = parent
@@ -46,6 +51,10 @@
 /datum/component/peace/proc/break_followup()
 	var/mob/living/holder = parent
 	if(!holder || QDELETED(holder) || holder.stat == DEAD)
+		return
+	if(partner && !QDELETED(partner) && partner.stat != DEAD) // partner was resurrected within the grace period
+		death_imminent = FALSE
+		to_chat(holder, span_notice("My lyfe steadies. [partner_name] has been returned to the living."))
 		return
 	holder.adjustOxyLoss(200)
 	cleanup()

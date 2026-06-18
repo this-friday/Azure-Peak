@@ -301,7 +301,7 @@
 				controller.clear_blackboard_key(future_path_blackboard_key) // Clear any future path as we have a fresh main path
 				SEND_SIGNAL(controller.pawn, COMSIG_AI_PATH_GENERATED, controller.movement_path)
 
-// called AFTER z-level path validation but BEFORE the basic_avoidance and A* blocks run
+// called AFTER z-level path validation but BEFORE the basic_avoidance (step_to) and A* blocks run
 // used to inject additional movement tiers (see dumb_hybrid_movement.dm)
 // returning TRUE performs the hooked movement tree & skips the rest of the processing
 // returning FALSE allows hybrid_pathing to proceed normally

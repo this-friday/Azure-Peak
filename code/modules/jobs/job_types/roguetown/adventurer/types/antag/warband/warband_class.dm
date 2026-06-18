@@ -8,30 +8,31 @@
 	var/rarity							// the required number of storyteller influences before a storyteller-limited class is unlocked
 	var/ignore_locks = FALSE			// class ignores an associated warband's faith/racelocks
 
-	var/multiclass_capable = FALSE					// when TRUE, this class appears in the subclass panel rather than the primary class panel for multiclass-enabled warbands
-	var/ignores_multiclass_requirement = FALSE		// when a class is associated with a warband that requires a multiclass, this allows them to ignore that
+	var/ignores_uni_class_requirement = FALSE		// when a class is associated with a warband that requires a universal class, this allows them to ignore that
 	var/use_subclasses = FALSE
 
-/* 
-	warbands use two different subclass methods: "Multiclass" and "Subclass"
+/*
+	warbands use two different subclass methods: "Universal Class" and "Subclass"
 		CLASSIC SUBCLASS
 			- the classic subclass method, where we just rely on a class datum's subtypes
 			- a class datum's subtypes are selectable in its class tab
 			- flag it with the use_subclasses variable
 			- see /datum/advclass/warband/mercenary/warlord/patron for an example
 
-		MULTICLASS
-			- Multiclassing is so specific to the Mercenary Warband (/datum/warbands/mercenary) that I can't really see it being used for anything else
+		UNIVERSAL CLASS (formerly "Multiclass")
+			- Universal classes are so specific to the Mercenary Warband (/datum/warbands/mercenary) that I can't really see them being used for anything else
 			- if you're thinking of adding subclasses, you're almost 100% thinking of the Classic method
 			- but for posterity's sake:
 				it equips two classes at once
-					the first class is taken from the base warband datum's class lists
-					the second class can be any class flagged multiclass_capable
+					the first class is taken from the source's primary class lists (warlordclasses/lieutenantclasses/gruntclasses)
+					the second class comes from the warband's & subtype's universal class lists
 
-					classes in the warband's Grunt list are given as secondary options to everyone (including Lieutenants and the Warlord)
-					classes in the warband's Lieutenant or Warlord lists are only given to them. the grunt classes are hidden
+					universal classes mirror the primary shape: one list per role tier (universal_warlordclasses/universal_lieutenantclasses/universal_gruntclasses)
+					grunt-tier entries are offered as secondary options to everyone (including Lieutenants and the Warlord)
+					warlord/lieutenant-tier entries are only offered to them, replacing the grunt-tier pool for that role
 
-			- requires multiclass_enabled on the WARBAND and multiclass_capable on the class
+			- requires universal_subclasses_enabled on the WARBAND, plus universal_*classes entries on the warband and/or its subtypes
+			- a primary class with its own subclass grants (use_subclasses or a classes list) overrides the universal pool
 
 */
 
@@ -73,8 +74,8 @@
 		if(target == user)
 			to_chat(user, span_warning("I cannot be further associated with myself than I already am."))
 			return FALSE
-	
-		if(target in manager.members)
+
+		if(manager && (target in manager.members))
 			to_chat(user, span_warning("[target.name] would follow me to the Underworld and back. Declaring them a mere 'associate' would be an insult."))
 			return FALSE
 
@@ -89,7 +90,7 @@
 				to_chat(user, span_green("My men will ignore the [target.name]."))
 				return TRUE
 
-		if(target.mind && target.mind.special_role == "Warlord's Envoy")
+		if(target.mind && target.mind.special_role == ROLE_WARLORD_ENVOY)
 			to_chat(user, span_warning("That's an Envoy."))
 			return
 
@@ -107,7 +108,7 @@
 			if(user.mind.warband_ID in target.mind.warband_exile_IDs) // if they're re-associating with an exile (warband ID is found in their exile ID list)
 				if(!(target in user.mind.subordinates)) // only do this if they aren't already a subordinate
 					// if a lieutenant's the one doing this, they become a personal ally
-					if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant") 
+					if(user.mind.special_role == ROLE_WARLORD_LIEUTENANT || user.mind.special_role == ROLE_WARLORD_ASPIRANT) 
 						for(var/mob/living/carbon/human/member in user.mind.warband_manager.members) 
 							to_chat(member, span_warning("The [user.job], [user.real_name], acts in defiance of [target.real_name]'s decree of exile and has ordered their men to treat [target.real_name] as an associate."))
 						if(!target.mind.warband_recruiter_name)
@@ -119,7 +120,7 @@
 						return
 
 					// if the warlord's the one doing this, they become a full ally
-					else if(user.mind.special_role == "Warlord")
+					else if(user.mind.special_role == ROLE_WARLORD)
 						user.mind.warband_manager.allies += target
 						to_chat(user, span_green("I have once again declared [target.name] an ally of our Warband."))
 						user.say("Leave that one unharmed.")
@@ -144,7 +145,7 @@
 			to_chat(target, span_green("The soldiers of the [user.mind.warband_manager.selected_warband.name] were ordered to leave me unharmed, by decree of their [user.job]."))
 			target.mind.warband_recruiter_name = user.real_name // allies are given the recruiter's name as a variable
 			for(var/mob/living/warlord in user.mind.warband_manager.members) // warlord should be made aware (unless they're the warlord, in which case they're already aware)
-				if(warlord.mind.special_role == "Warlord" && warlord != user)
+				if(warlord.mind.special_role == ROLE_WARLORD && warlord != user)
 					to_chat(warlord, span_warning("Word spreads that [user.real_name], my [user.job], ordered their men to give someone safety within our ranks."))
 		else
 			to_chat(user, span_warning("We cannot associate ourselves with that."))
@@ -249,7 +250,7 @@
 	if(istype(target, /atom/movable/screen/cmode))
 		if(!can_cast(caster) || !cast_check(FALSE, caster))
 			return FALSE
-		src.process_grunts(order_type = "neutral")
+		process_grunts(order_type = "neutral")
 		start_recharge()
 		return TRUE
 
@@ -257,9 +258,9 @@
 		if(!can_cast(caster) || !cast_check(FALSE, caster))
 			return FALSE
 		if(target.name == "strong")
-			src.process_grunts(order_type = "fight")
+			process_grunts(order_type = "fight")
 		else if(target.name == "defend")
-			src.process_grunts(order_type = "survive")
+			process_grunts(order_type = "survive")
 		start_recharge()
 		return TRUE
 
@@ -273,7 +274,7 @@
 			return FALSE
 		if(ishuman(caster))
 			var/mob/living/carbon/human/H = caster
-			if(H.mind && H.mind.special_role == "Warlord")
+			if(H.mind && H.mind.special_role == ROLE_WARLORD)
 				var/list/horn_sounds = list(
 					'sound/misc/warband/warband_warhorn1.ogg',
 					'sound/misc/warband/warband_warhorn2.ogg'
@@ -283,7 +284,7 @@
 				playsound(H, chosen_sound, 100, TRUE, 19, pressure_affected = FALSE, ignore_walls = TRUE)
 				H.visible_message(span_danger("[H] sounds their warhorn!"))
 				var/turf/origin_turf = get_turf(H)
-				for(var/mob/living/player in GLOB.player_list)
+				for(var/mob/living/player in GLOB.player_list) // this feels weird but it's how regular warhorns do it so i guess it's cool
 					if(player.stat == DEAD)
 						continue
 					if(isbrain(player))
@@ -333,6 +334,20 @@
 							addtimer(CALLBACK(P, TYPE_PROC_REF(/mob/living/carbon/human, restore_original_cmode_music)), 5 MINUTES)
 						if(!HAS_TRAIT(P, TRAIT_STEELHEARTED) && P.mind.warband_ID != H.mind.warband_ID && !(P in H.mind.warband_manager.allies))
 							P.add_stress(/datum/stressevent/warband_warhorn) // allies & the steelhearted are exempt from the stress hit
+
+				// temporarily removes the Underwhelming trait from every nearby goon
+				for(var/mob/living/carbon/officer in H.mind.warband_manager.members)
+					if(IS_WARBAND_OFFICER(officer.mind))
+						var/datum/component/trail_follow/officer_manager = officer.GetComponent(/datum/component/trail_follow)
+						if(!officer_manager)
+							officer_manager = officer.AddComponent(/datum/component/trail_follow)
+						for(var/mob/living/carbon/human/species/human/northern/goon/follower_npc in officer_manager.members)
+							if(follower_npc.stat != CONSCIOUS || follower_npc.warband_ID != H.mind.warband_ID)
+								continue // skip them if they're unconscious or swapped warbands
+							if(get_dist(follower_npc, origin_turf) > 40)
+								continue // skip them if they're too far away
+							REMOVE_TRAIT(follower_npc, TRAIT_UNDERWHELMING, TRAIT_GENERIC)
+							addtimer(CALLBACK(follower_npc, TYPE_PROC_REF(/mob/living/carbon/human/species/human/northern/goon, become_underwhelming)), 60 SECONDS, TIMER_UNIQUE | TIMER_OVERRIDE)
 
 				caster.mind.order_exhaustion = TRUE
 				addtimer(CALLBACK(caster, TYPE_PROC_REF(/mob/living/carbon/human, end_order_exhaustion)), 25 MINUTES)

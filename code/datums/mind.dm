@@ -139,7 +139,7 @@ GLOBAL_LIST_EMPTY(personal_objective_minds)
 	var/has_drug_delivery = FALSE
 
 	// warband variables
-	var/atom/movable/screen/warband/manager/warband_manager	// someone's warband
+	var/datum/warband_manager/warband_manager	// someone's warband
 	var/warband_ID = 0							// someone's warband_ID
 	var/list/warband_exile_IDs = list()			// when someone is exiled from a warband, we keep the ID of the warband they were exiled from
 	var/list/unresolved_exile_names = list()	// when a lieutenant's subordinate is exiled, they get a choice to resist the decree | if they haven't made the choice, the exile's name will be here

@@ -1,6 +1,10 @@
-/obj/item/treaty/burn()
-	// if(GLOB.tod == "dawn") FIXNOTE: uncommented 4 Ease Of Testing, don't leave this uncommented
-	treaty_submission()
+// treaties need to be burned at dawn to actually submit
+/obj/item/treaty/burn() // the Ignition miracle (/datum/action/cooldown/spell/astrata/ignition) can bypass this by calling treaty_submission() directly
+	if(GLOB.tod == "dawn")
+		treaty_submission()
+		return
+	visible_message(span_warning("The treaty chars and curls itself into ash. Nothing happens."))
+	return ..()
 
 // uses the target name provided by the treaty to return a mob
 /obj/item/treaty/proc/text_to_mob(target_name)
@@ -51,7 +55,7 @@
 
 	check_treaty_objectives()
 	SSwarbands.treaties -= src
-	src.moveToNullspace() // don't destroy it. send it into The Great Nowhere
+	moveToNullspace() // don't destroy it. send it into The Great Nowhere
 	SSwarbands.submitted_treaties += src // for posterity
 	return TRUE
 
@@ -69,8 +73,8 @@
 /obj/item/treaty/proc/check_treaty_objectives()
 	for(var/datum/treaty/terms/term in active_terms)
 		if(term.author)
-			var/is_lieutenant = (term.author.special_role == "Lieutenant" || term.author.special_role == "Aspirant Lieutenant")
-			var/is_warlord = (term.author.special_role == "Warlord")
+			var/is_lieutenant = (term.author.special_role == ROLE_WARLORD_LIEUTENANT || term.author.special_role == ROLE_WARLORD_ASPIRANT)
+			var/is_warlord = (term.author.special_role == ROLE_WARLORD)
 			if(is_lieutenant)
 				for(var/datum/objective/obj in term.author.get_all_objectives())
 					if(istype(obj, /datum/objective/warband/aspirant/standard))

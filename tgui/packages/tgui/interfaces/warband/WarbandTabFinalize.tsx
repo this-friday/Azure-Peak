@@ -166,7 +166,7 @@ export const FinalizeTab = ({
     if (!selectedWarband) return "NO WARBAND SELECTED";
     if (selectedWarband?.subtyperequired && !selectedSubtype) return "WARBAND REQUIRES A SELECTED SUBTYPE";
     if (!selectedClass) return "NO CLASS SELECTED";
-    if (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.ignores_multiclass_requirement && !selectedSubclass) {
+    if (selectedWarband?.universal_subclasses_enabled && selectedWarband?.subclass_required && !selectedClass?.ignores_uni_class_requirement && !selectedSubclass) {
       return `${(selectedWarband.subclass_label || 'SUBCLASS').toUpperCase()} REQUIRED`;
     }
     return null;
@@ -176,6 +176,7 @@ export const FinalizeTab = ({
   const readyDisabled = !canInteract || (!userReady && finalize_disabled);
 
   const lobbyMembers = alliesList.filter(a => a.in_lobby);
+  const fieldMembers = alliesList.filter(a => !a.in_lobby);
 
   const all_selections = {
     warband: selectedWarbandType,
@@ -299,7 +300,7 @@ export const FinalizeTab = ({
           scrollable fill
           style={{ flex: 2 }}
         >
-          {lobbyMembers.length > 0 ? (
+          {(lobbyMembers.length > 0 || fieldMembers.length > 0) ? (
             <Stack vertical>
               {lobbyMembers.map((ally, index) => {
                 const isReady = ally.is_ready;
@@ -308,10 +309,16 @@ export const FinalizeTab = ({
                   <Box
                     key={`${ally.name}-${index}`}
                     p={1}
+                    onClick={() => {
+                      if (!ally.ref) return;
+                      act('view_member', { ref: ally.ref });
+                      act('interaction_sound');
+                    }}
                     style={{
                       backgroundColor: isReady ? 'rgba(20,60,20,0.4)' : 'rgba(60,10,10,0.3)',
                       border: `1px solid ${isReady ? '#3a6a3a' : '#5a2020'}`,
                       marginBottom: '4px',
+                      cursor: ally.ref ? 'pointer' : undefined,
                     }}
                   >
                     <Stack align="center" justify="space-between">
@@ -324,6 +331,12 @@ export const FinalizeTab = ({
                             ? `${ally.special_role} — ${displayRole}`
                             : displayRole}
                         </Box>
+                        {!!ally.ready_class && (
+                          <Box style={{ fontSize: '12px', color: '#c9a347' }}>
+                            {ally.ready_class}
+                            {!!ally.ready_subclass && ` / ${ally.ready_subclass}`}
+                          </Box>
+                        )}
                       </Stack.Item>
                       <Stack.Item>
                         <Box
@@ -335,6 +348,49 @@ export const FinalizeTab = ({
                           }}
                         >
                           {isReady ? '✓ READY' : '— WAITING'}
+                        </Box>
+                      </Stack.Item>
+                    </Stack>
+                  </Box>
+                );
+              })}
+              {fieldMembers.map((ally, index) => {
+                const displayRole = ally.special_role === 'Aspirant Lieutenant' ? 'Lieutenant' : (ally.special_role || ally.job);
+                return (
+                  <Box
+                    key={`field-${ally.name}-${index}`}
+                    p={1}
+                    onClick={() => {
+                      if (!ally.ref) return;
+                      act('view_member', { ref: ally.ref });
+                      act('interaction_sound');
+                    }}
+                    style={{
+                      backgroundColor: 'rgba(30,30,40,0.35)',
+                      border: '1px solid #3a3a50',
+                      marginBottom: '4px',
+                      cursor: ally.ref ? 'pointer' : undefined,
+                    }}
+                  >
+                    <Stack align="center" justify="space-between">
+                      <Stack.Item grow={1}>
+                        <Box bold style={{ color: '#9aa6c0' }}>
+                          {ally.name}
+                        </Box>
+                        <Box style={{ fontSize: '12px', color: '#9a8878' }}>
+                          {displayRole !== ally.job ? `${displayRole} — ${ally.job}` : ally.job}
+                        </Box>
+                      </Stack.Item>
+                      <Stack.Item>
+                        <Box
+                          bold
+                          style={{
+                            fontSize: '12px',
+                            letterSpacing: '0.1em',
+                            color: '#7a8aa5',
+                          }}
+                        >
+                          ⚔ IN THE FIELD
                         </Box>
                       </Stack.Item>
                     </Stack>

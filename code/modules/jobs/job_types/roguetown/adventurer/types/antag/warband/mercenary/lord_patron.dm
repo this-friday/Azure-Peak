@@ -3,7 +3,7 @@
 	name = "Patron"
 	tutorial = "The PATRON serves as the Company's employer - and one who's almost certainly no warrior themselves. Nevertheless, if you wish something done right..."
 	ignore_locks = TRUE
-	ignores_multiclass_requirement = FALSE
+	ignores_uni_class_requirement = FALSE
 	use_subclasses = TRUE
 	traits_applied = list(TRAIT_FORMATIONFIGHTER, TRAIT_LAWEXPERT)
 	subclass_skills = list(
@@ -17,14 +17,12 @@
 /datum/advclass/warband/mercenary/warlord/patron/merchant
 	title = "MERCHANT"
 	tutorial = "A MERCHANT of common stock who made their fortune through trade."
-	multiclass_capable = TRUE
 	ignore_locks = TRUE
 	outfit = /datum/outfit/job/roguetown/warband/warband_patron/merchant
 
 /datum/advclass/warband/mercenary/warlord/patron/noble
 	title = "NOBLE"
 	tutorial = "A NOBLE born to a name and a crest. Bankrolls the Company as an extension of their house's ambitions."
-	multiclass_capable = TRUE
 	ignore_locks = TRUE
 	outfit = /datum/outfit/job/roguetown/warband/warband_patron/noble
 

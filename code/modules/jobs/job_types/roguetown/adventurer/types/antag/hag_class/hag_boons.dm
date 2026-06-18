@@ -75,6 +75,8 @@
 	can_spawn = FALSE
 	types = list(
 		/datum/hag_boon/curse_scar,
+		/datum/hag_boon/misc/cleanse_exile,
+		/datum/hag_boon/misc/cleanse_grave_seal,
 		/datum/hag_boon/trait/ritualist,
 		/datum/hag_boon/trait/webwalk,
 		/datum/hag_boon/trait/nightowl,
@@ -175,6 +177,10 @@
 		/datum/crafting_recipe/roguetown/alchemy/hag/prismatic_moss,
 		/datum/crafting_recipe/roguetown/alchemy/hag/gilded_moss,
 		/datum/crafting_recipe/roguetown/alchemy/hag/drowned_moss,
+
+		// --- Cleanse Mosses ---
+		/datum/crafting_recipe/roguetown/alchemy/hag/cowardly_moss,
+		/datum/crafting_recipe/roguetown/alchemy/hag/dead_moss,
 
 		// --- Items ---
 		/datum/crafting_recipe/roguetown/alchemy/hag/wyrd_cross,

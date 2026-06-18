@@ -1,7 +1,7 @@
 // lets an admin/gamemaster manually assemble a warband w/the ckeys they provide
 /client/proc/warband_gm_panel()
 	set name = "Warband - Spawner"
-	set category = "-GameMaster-"
+	set category = "Game Master"
 	if(!holder)
 		return
 	var/datum/warband_spawner_ui/D = new()
@@ -18,9 +18,9 @@
 		ui.open()
 
 /datum/warband_spawner_ui/ui_status(mob/user)
-	if(user)
+	if(user?.client?.holder)
 		return UI_INTERACTIVE
-	return ..()
+	return UI_CLOSE
 
 /datum/warband_spawner_ui/ui_close()
 	qdel(src)
@@ -41,6 +41,8 @@
 	. = ..()
 	if(.)
 		return
+	if(!ui.user?.client?.holder)
+		return TRUE
 
 	switch(action)
 		if("add_member")
@@ -71,15 +73,15 @@
 /datum/warband_spawner_ui/proc/create_warband(mob/admin_mob, bypass = FALSE)
 	if(SSwarbands.warband_managers_busy)
 		to_chat(admin_mob, span_warning("The Warband subsystem is occupied."))
-		return FALSE // we don't want two being created at once
-	SSwarbands.warband_managers_busy = TRUE
-
+		return FALSE
+		
 	var/turf/spawn_loc
 	for(var/obj/effect/landmark/start/warlord/the_box in GLOB.landmarks_list)
 		spawn_loc = get_turf(the_box)
 		break
 
 	if(!spawn_loc)
+		to_chat(admin_mob, span_warning("No warlord spawn landmark exists on this map. Put a /obj/effect/landmark/start/warlord/ somewhere."))
 		return FALSE
 
 	var/datum/mind/warlord_mind
@@ -104,40 +106,32 @@
 			member_in_joinscreen.close_spawn_windows()
 
 	if(!warlord_mind)
+		to_chat(admin_mob, span_warning("A warband needs a Warlord."))
 		return FALSE
 
 	var/datum/round_event/antagonist/solo/warlord/event = new()
 	event.bypass_rarity = bypass
 
 	event.process_candidate(warlord_mind, "Warlord", /datum/antagonist/warband/warlord, spawn_loc)
+	
+	addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(warband_gm_process_subordinates), event, warlord_mind, lieutenant_minds, grunt_minds, spawn_loc), 2 SECONDS)
 
-	var/expected_warband_id
-	var/atom/movable/screen/warband/manager/target_manager
-	if(!SSwarbands.roundstart_manager_claimed && SSwarbands.roundstart_manager)
-		target_manager = SSwarbands.roundstart_manager
-		expected_warband_id = target_manager.warband_ID
-	else
-		expected_warband_id = SSwarbands.next_warband_id
-		for(var/atom/movable/screen/warband/manager/chosen_manager in SSwarbands.warband_managers)
-			if(chosen_manager.warband_ID == expected_warband_id)
-				target_manager = chosen_manager
-				break
+	message_admins("[key_name(admin_mob)] created a warband via the Gamemaster panel.")
+	return TRUE
 
-	if(bypass && target_manager)
-		target_manager.bypass_rarity = TRUE
+/proc/warband_gm_process_subordinates(datum/round_event/antagonist/solo/warlord/event, datum/mind/warlord_mind, list/lieutenant_minds, list/grunt_minds, turf/spawn_loc)
+	if(!event || !warlord_mind)
+		return
+	var/warband_id = warlord_mind.warband_ID
 
 	var/lt_num = 1
 	for(var/datum/mind/lt_mind in lieutenant_minds)
 		if(lt_mind.current)
-			lt_mind.warband_ID = expected_warband_id
+			lt_mind.warband_ID = warband_id
 			event.process_candidate(lt_mind, "Lieutenant", /datum/antagonist/warband/lieutenant, spawn_loc, lt_num++)
 
 	var/grunt_num = 1
 	for(var/datum/mind/grunt_mind in grunt_minds)
 		if(grunt_mind.current)
-			grunt_mind.warband_ID = expected_warband_id
+			grunt_mind.warband_ID = warband_id
 			event.process_candidate(grunt_mind, "Grunt", /datum/antagonist/warband/grunt, spawn_loc, grunt_num++)
-
-	SSwarbands.warband_managers_busy = FALSE
-	message_admins("[key_name(admin_mob)] created a warband via the Gamemaster panel.")
-	return TRUE

@@ -25,14 +25,23 @@
 			the baseline warband verbs (shortcut & communicate)
 
 */
-/atom/movable/screen/warband/manager/proc/spawn_character(classpath, mob/user, subclasspath, is_leader, is_latespawn = FALSE)
-	if(warband_class_for(classpath) && initial(classpath:ignores_multiclass_requirement))
+/datum/warband_manager/proc/spawn_character(classpath, mob/user, subclasspath, is_leader, is_latespawn = FALSE)
+	if(!ispath(classpath, /datum/advclass))
+		classpath = /datum/advclass/warband/standard/grunt/veteran // fallback to John Soldier if we're missing a classpath
+	if(subclasspath && !ispath(subclasspath, /datum/advclass))
+		subclasspath = null
+	if(warband_class_for(classpath) && initial(classpath:ignores_uni_class_requirement))
 		subclasspath = null
 	var/datum/advclass/class_path = new classpath()
 	var/datum/advclass/subclass_path = subclasspath ? new subclasspath() : null
 
+	// record the picks against the warband's slot limits (maximum_possible_slots)
+	taken_class_counts[classpath] += 1
+	if(subclasspath)
+		taken_class_counts[subclasspath] += 1
+
 	var/role = user.mind.special_role
-	var/is_lieutenant = (role == "Lieutenant" || role == "Aspirant Lieutenant")
+	var/is_lieutenant = (role == ROLE_WARLORD_LIEUTENANT || role == ROLE_WARLORD_ASPIRANT)
 
 	if(is_leader)
 		var/turf/warlord_landmark_turf
@@ -93,13 +102,13 @@
 			user.verbs += /mob/living/carbon/human/proc/accept_kick
 
 	switch(role)
-		if("Grunt")
+		if(ROLE_WARLORD_GRUNT)
 			assign_grunt(grunt = user)
 			selected_warband?.on_grunt_spawned(user, src)
 			selected_subtype?.on_grunt_spawned(user, src)
 			for(var/datum/warbands/aspects/aspect in selected_aspects)
 				aspect.on_grunt_spawned(user, src)
-		if("Lieutenant", "Aspirant Lieutenant")
+		if(ROLE_WARLORD_LIEUTENANT, ROLE_WARLORD_ASPIRANT)
 			assign_grunt(lieutenant = user)
 			selected_warband?.on_lieutenant_spawned(user, src)
 			selected_subtype?.on_lieutenant_spawned(user, src)
@@ -114,7 +123,7 @@
 	makes any aspect tweaks to their stats
 
 */
-/atom/movable/screen/warband/manager/proc/equip_character(datum/advclass/class, datum/advclass/subclass, isleader, mob/living/carbon/human/user)
+/datum/warband_manager/proc/equip_character(datum/advclass/class, datum/advclass/subclass, isleader, mob/living/carbon/human/user)
 	user.cmode_music_override = combatmusic
 	user.advjob = class.name
 	class.equipme(user)
@@ -134,7 +143,7 @@
 			linked_faction.member_names += user.real_name
 			if(!(linked_faction in user.mind.associated_factions))
 				user.mind.associated_factions += linked_faction
-			if(user.mind.special_role == "Lieutenant" || user.mind.special_role == "Aspirant Lieutenant") // and if they're a lieutenant we also give them one of their own
+			if(user.mind.special_role == ROLE_WARLORD_LIEUTENANT || user.mind.special_role == ROLE_WARLORD_ASPIRANT) // and if they're a lieutenant we also give them one of their own
 				var/datum/treaty_flavor/lieu_faction = new /datum/treaty_flavor()
 				lieu_faction.generate_faction(user, stewardhidden = TRUE)
 				user.mind.associated_factions |= lieu_faction
@@ -155,22 +164,22 @@
 	2. grunt provided: when a grunt spawns, find them a lieutenant. add their name to the grunt's mind.warband_recruiter_name entry, and add themselves to the lieutenant's mind.subordinates
 	
 */
-/atom/movable/screen/warband/manager/proc/assign_grunt(mob/living/carbon/human/lieutenant, mob/living/carbon/human/grunt)
-	var/grunts_per_lt = GRUNTS_PER_LIEUTENANT + max(0, (get_active_player_count() - 40) / 15)
+/datum/warband_manager/proc/assign_grunt(mob/living/carbon/human/lieutenant, mob/living/carbon/human/grunt)
+	var/grunts_per_lt = warband_grunts_per_lieutenant()
 
 	// MODE 1: a lieutenant spawns
 	if(lieutenant && !grunt)
 		if(!lieutenant.mind)
 			return
 
-		if(lieutenant.mind.special_role != "Lieutenant" && lieutenant.mind.special_role != "Aspirant Lieutenant")
+		if(lieutenant.mind.special_role != ROLE_WARLORD_LIEUTENANT && lieutenant.mind.special_role != ROLE_WARLORD_ASPIRANT)
 			return
 
 		var/list/unassigned_grunts = list()
 		for(var/mob/living/carbon/human/member in members)
 			if(!member.mind)
 				continue
-			if(member.mind.special_role == "Grunt" && !member.mind.warband_recruiter_name)
+			if(member.mind.special_role == ROLE_WARLORD_GRUNT && !member.mind.warband_recruiter_name)
 				unassigned_grunts += member
 		if(!unassigned_grunts.len)
 			to_chat(lieutenant, span_greenteamradio("My subordinates are yet to arrive."))
@@ -190,7 +199,7 @@
 	
 	// MODE 2: a grunt spawns
 	if(grunt && !lieutenant)
-		if(!grunt.mind || grunt.mind.special_role != "Grunt")
+		if(!grunt.mind || grunt.mind.special_role != ROLE_WARLORD_GRUNT)
 			return
 		if(grunt.mind.warband_latespawn)
 			return // if they're a latespawn, they should already be given subordinate status by the spawn structure
@@ -198,7 +207,7 @@
 		for(var/mob/living/carbon/human/member in members)
 			if(!member.mind)
 				continue
-			if(member.mind.special_role == "Lieutenant" || member.mind.special_role == "Aspirant Lieutenant")
+			if(member.mind.special_role == ROLE_WARLORD_LIEUTENANT || member.mind.special_role == ROLE_WARLORD_ASPIRANT)
 				if(member.mind.subordinates.len < grunts_per_lt)
 					available_lieutenants += member
 		
@@ -231,7 +240,7 @@
 	this is effectively just the 'change character' button in the pref menu
 
 */
-/atom/movable/screen/warband/manager/proc/select_pref_slot(mob/user)
+/datum/warband_manager/proc/select_pref_slot(mob/user)
 	var/list/choices = list()
 	var/datum/preferences/prefs = user.client.prefs
 
@@ -252,7 +261,7 @@
 	if(!choices.len)
 		return
 
-	var/choice_slot = input(user, "CHOOSE A HERO", "ROGUETOWN") as null|anything in choices
+	var/choice_slot = tgui_input_list(user, "CHOOSE A HERO", "ROGUETOWN", choices)
 	if(!choice_slot)
 		return
 
@@ -265,7 +274,7 @@
 	applies the client's active character slot to the current mob
 
 */ 
-/atom/movable/screen/warband/manager/proc/load_appearance(mob/living/carbon/human/user, mob/living/carbon/human/target)
+/datum/warband_manager/proc/load_appearance(mob/living/carbon/human/user, mob/living/carbon/human/target)
 	user.client.prefs.copy_to(target)
 	target.dna.update_dna_identity()
 	statwipe(target)
@@ -278,18 +287,25 @@
 
 */
 
-/atom/movable/screen/warband/manager/proc/statwipe(mob/living/carbon/human/user)
+/datum/warband_manager/proc/statwipe(mob/living/carbon/human/user)
 	// skillwipe
-	if(!user.skills || !user.skills.known_skills) 
-		return 
+	if(!user.skills || !user.skills.known_skills)
+		return
 	user.skills.known_skills = list()
 	user.skills.skill_experience = list()
 
 	// traitwipe
-	if(user.status_traits) 
+	if(user.status_traits)
 		for(var/trait in user.status_traits)
-			if(trait != "hearing_sensitive")
-				user.status_traits -= trait
+			if(trait == "hearing_sensitive")
+				continue
+			if(!user.status_traits)
+				break
+			var/list/trait_sources = user.status_traits[trait]
+			if(!trait_sources)
+				continue
+			for(var/source in trait_sources)
+				REMOVE_TRAIT(user, trait, source)
 
 	// statwipe
 	user.STASTR = 10
@@ -298,6 +314,7 @@
 	user.STAWIL = 10
 	user.STAINT = 10
 	user.STAPER = 10
+	user.STALUC = 10
 
 	// spellwipe
 	user.actions = list()
@@ -312,9 +329,12 @@
 	after a tiny delay, gives recently-spawned warlords & lieutenants a free treaty
 
 */
-/atom/movable/screen/warband/manager/proc/give_treaty(mob/living/carbon/human/user)
-	var/user_role = user.mind.special_role
-	if(user_role != "Warlord" && user_role != "Lieutenant" && user_role != "Aspirant Lieutenant")
+/datum/warband_manager/proc/give_treaty(mob/living/carbon/human/user)
+	if(!user || !user.mind)
+		return
+	if(!IS_WARBAND_OFFICER(user.mind))
+		return
+	if(!linked_faction)
 		return
 	
 	var/obj/item/treaty/new_treaty = new /obj/item/treaty(user.loc)
@@ -335,12 +355,12 @@
 	warlords will always receive double the expected squad size
 
 */
-/atom/movable/screen/warband/manager/proc/determine_squad_size(mob/user, datum/advclass/primary_class)
+/datum/warband_manager/proc/determine_squad_size(mob/user, datum/advclass/primary_class)
 	var/calculated_size = selected_warband?.get_base_squad_size(user, primary_class) || 4
 
 	calculated_size += squad_size_bonus	// applied before doubling so the warlord's multiplier scales it correctly
  
-	if(user.mind.special_role == "Warlord")
+	if(user.mind.special_role == ROLE_WARLORD)
 		calculated_size *= 2
 
 	user.mind.squad_size = calculated_size

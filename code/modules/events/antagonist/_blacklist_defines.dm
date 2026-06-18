@@ -16,5 +16,6 @@
 		"Bandit",\
 		"Wretch",\
 		"Gnoll",\
+		"Hag",\
 		"Veteran",\
 	)

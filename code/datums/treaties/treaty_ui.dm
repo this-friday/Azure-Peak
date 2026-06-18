@@ -157,8 +157,11 @@
 
 	switch(action)
 		if("sign_term")
-			var/term_index = text2num(params["index"]) + 1
-			if(!term_index || term_index < 1 || term_index > active_terms.len)
+			var/term_index = text2num(params["index"])
+			if(isnull(term_index)) // a missing index shouldn't fall through to term 1
+				return
+			term_index++
+			if(term_index < 1 || term_index > active_terms.len)
 				return
 			var/datum/treaty/terms/term_to_sign = active_terms[term_index]
 			if(term_to_sign.signed)
@@ -184,35 +187,12 @@
 						if(!is_authority && ispath(user.mind?.original_char?.job_path, auth))
 							is_authority = TRUE
 							break
-				// if a term has a 'target' listed as an authority & they match the term's .target name, they're an authority
+				// if a term lists its 'target'/'receiver' as an authority, the named character (or the named faction's owner) may sign
 				if(!is_authority && auth_list.Find("target"))
-					if(term_to_sign.target == user_name || (original_name && term_to_sign.target == original_name))
-						is_authority = TRUE
-					else
-						for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
-							if(faction.name == term_to_sign.target)
-								if(ismob(faction.owner) && faction.owner == user)
-									is_authority = TRUE
-								else if(faction.owner == user_name || (original_name && faction.owner == original_name))
-									is_authority = TRUE
-								else if(ispath(faction.job_owner, user.job_path) || (user.mind?.original_char && ispath(faction.job_owner, user.mind.original_char.job_path)))
-									is_authority = TRUE
-								break
+					is_authority = is_party_authority(user, term_to_sign.target, user_name, original_name)
 
-				// if a term has a 'target' listed as an authority & they match the term's .target name, they're an authority
 				if(!is_authority && auth_list.Find("receiver"))
-					if(term_to_sign.receiver == user_name || (original_name && term_to_sign.receiver == original_name))
-						is_authority = TRUE
-					else
-						for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
-							if(faction.name == term_to_sign.receiver)
-								if(ismob(faction.owner) && faction.owner == user)
-									is_authority = TRUE
-								else if(faction.owner == user_name || (original_name && faction.owner == original_name))
-									is_authority = TRUE
-								else if(ispath(faction.job_owner, user.job_path) || (user.mind?.original_char && ispath(faction.job_owner, user.mind.original_char.job_path)))
-									is_authority = TRUE
-								break
+					is_authority = is_party_authority(user, term_to_sign.receiver, user_name, original_name)
 
 				// if a term has 'Minister' listed as an authority for a Reformation term (/datum/treaty/terms/regime_change), we check if they're a viable authority for this
 				if(!is_authority && auth_list.Find("Minister"))
@@ -257,9 +237,12 @@
 				break
 
 		if("edit_term")
-			var/term_index = text2num(params["index"]) + 1
+			var/term_index = text2num(params["index"])
 			var/term_name = params["name"]
-			if(!term_name || !term_index || term_index < 1 || term_index > active_terms.len)
+			if(!term_name || isnull(term_index))
+				return
+			term_index++
+			if(term_index < 1 || term_index > active_terms.len)
 				return
 			for(var/datum/treaty/terms/prototype in terms)
 				if(prototype.name != term_name)
@@ -303,8 +286,11 @@
 				visible_message(span_warning("[usr] adds something to the treaty."))
 
 		if("remove_term")
-			var/term_index = text2num(params["index"]) + 1
-			if(!term_index || term_index < 1 || term_index > active_terms.len)
+			var/term_index = text2num(params["index"])
+			if(isnull(term_index))
+				return
+			term_index++
+			if(term_index < 1 || term_index > active_terms.len)
 				return
 			var/datum/treaty/terms/term_to_remove = active_terms[term_index]
 			active_terms.Remove(term_to_remove)

@@ -36,7 +36,7 @@
 /datum/antagonist/warband/lieutenant/proc/aspirant_roll()
 	var/final_aspirant_chance = 50
 	if(owner.warband_manager)
-		var/atom/movable/screen/warband/manager/source_warband_manager = owner.warband_manager
+		var/datum/warband_manager/source_warband_manager = owner.warband_manager
 		final_aspirant_chance = source_warband_manager.aspirant_chance
 	if(prob(final_aspirant_chance))
 		aspirant = TRUE
@@ -48,7 +48,7 @@
 /datum/antagonist/warband/lieutenant/greet()
 	..()
 	if(aspirant)
-		owner.special_role = "Aspirant Lieutenant"
+		owner.special_role = ROLE_WARLORD_ASPIRANT
 		to_chat(owner.current, span_userdanger("I mustn't forget myself. My service is simply a means to an end."))
 		var/atom/movable/screen/introtext/aspirant/intro_text = new /atom/movable/screen/introtext/aspirant
 		var/list/intro_sounds = list(
@@ -62,7 +62,7 @@
 		animate(intro_text, alpha = 255, time = 50)
 		forge_objectives()
 		return
-	owner.special_role = name
+	owner.special_role = ROLE_WARLORD_LIEUTENANT // the role define, not the datum's display name
 	to_chat(owner.current, span_userdanger("My Warlord calls upon my service."))
 	var/list/intro_sounds = list(
 		'sound/misc/warband/selection_introc.ogg'
@@ -77,7 +77,7 @@
 
 /datum/antagonist/warband/grunt/greet()
 	..()
-	owner.special_role = name
+	owner.special_role = ROLE_WARLORD_GRUNT // the role define, not the datum's display name
 	to_chat(owner.current, span_userdanger("My Lieutenant calls upon my service."))
 	var/list/intro_sounds = list(
 		'sound/misc/warband/selection_introc.ogg'

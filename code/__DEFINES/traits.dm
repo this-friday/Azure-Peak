@@ -34,8 +34,8 @@
 #define TRAIT_MEDIUMARMOR "Maille Training"
 #define TRAIT_HEAVYARMOR "Plate Training"
 #define TRAIT_DODGEEXPERT "Expert Dodger"
-#define TRAIT_LAWEXPERT "Eye for Detail"
-#define TRAIT_FORMATIONFIGHTER "Formation Fighter"
+#define TRAIT_LAWEXPERT "Eye for Detail" // view the full details of treaties
+#define TRAIT_FORMATIONFIGHTER "Formation Fighter" // tileswap with allied NPCs
 #define TRAIT_NO_XP "Old Dog"
 #define TRAIT_DECEIVING_MEEKNESS "Deceiving Meekness"
 #define TRAIT_CRITICAL_RESISTANCE "Critical Resistance"
@@ -287,6 +287,7 @@
 #define TRAIT_SILVER_WEAK "Silver Weakness"
 #define TRAIT_PALLID "Pallid"
 #define TRAIT_ASSASSIN	"Assassin"
+#define TRAIT_UNDERWHELMING "Underwhelming" // attacks from Underwhelming mobs don't reset the target's dodge/parry readiness
 #define TRAIT_EQUESTRIAN "Equestrian"
 #define TRAIT_REGROW_LIMBS "Regrow Limbs"
 // ARMOR / CLOTHING GIVEN TRAITS (GIVEN BY WEARING CLOTHES/ARMOR PIECES)

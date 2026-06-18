@@ -102,3 +102,28 @@
 /datum/component/sunlight_vulnerability/exile/proc/simple_sunlight_damage(mob/living/carbon/human/H)
 	H.fire_act(1, burn_damage)
 
+
+// a variant for those resurrected from a treaty-sealed grave (/datum/component/grave_seal)
+/datum/component/sunlight_vulnerability/grave_seal
+
+/datum/component/sunlight_vulnerability/grave_seal/check_sunlight(mob/living/source)
+	var/mob/living/carbon/human/H = source
+	if(!H || H.stat == DEAD || H.advsetup)
+		return
+	if(GLOB.tod != "day")
+		in_sunlight = FALSE
+		return
+	if(isturf(H.loc))
+		var/turf/T = H.loc
+		if(T.can_see_sky())
+			if(!in_sunlight)
+				in_sunlight = TRUE
+				to_chat(H, span_userdanger("The Sun rejects my stolen lyfe! My sealed grave calls me back!"))
+			H.fire_act(1, burn_damage)
+		else
+			if(in_sunlight)
+				to_chat(H, span_notice("The scorching gaze of the Sun-Tyrant burns me no more."))
+			in_sunlight = FALSE
+	else
+		in_sunlight = FALSE
+

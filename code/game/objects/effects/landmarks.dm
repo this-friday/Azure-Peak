@@ -424,12 +424,12 @@ INITIALIZE_IMMEDIATE(/obj/effect/landmark)
 /obj/effect/landmark/start/warlord
 	icon_state = "arrow"
 	delete_after_roundstart = FALSE
-	jobspawn_override = list("Warlord","Warlord's Lieutenant","Grunt")
+	jobspawn_override = list("Warlord","Lieutenant","Grunt")
 
 /obj/effect/landmark/start/warlordlate
 	icon_state = "arrow"
 	delete_after_roundstart = FALSE
-	jobspawn_override = list("Warlord","Warlord's Lieutenant","Grunt")
+	jobspawn_override = list("Warlord","Lieutenant","Grunt")
 
 
 /obj/effect/landmark/start/nukeop_leader

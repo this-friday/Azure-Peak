@@ -11,4 +11,4 @@
 	warning = "...of rumors that the company's employer has personally taken to the field."
 	points = 1 // partial buff in the form of a Squad Size increase, so this is only a +1
 	warlordclasses = list(/datum/advclass/warband/mercenary/warlord/patron)
-	replaces_primaries = TRUE
+	suppress_all_other_classes = TRUE // they're the only available class for warlords

@@ -95,8 +95,7 @@
 
 //This is a gargantuan, clunky proc that is meant to tally stats and weapon properties for the potential disarm.
 //For future coders: Feel free to change this, just make sure someone like Struggler statpack doesn't get 3-fold advantage.
-/mob/living/carbon/human/proc/clash(mob/user, obj/item/IM, obj/item/IU)
-	var/mob/living/carbon/human/HU = user
+/mob/living/carbon/human/proc/get_clash_odds(mob/living/carbon/human/HU, obj/item/IM, obj/item/IU)
 	var/instantloss = FALSE
 	var/instantwin = FALSE
 
@@ -162,6 +161,17 @@
 	if(has_vendetta() && HU.has_vendetta())
 		prob_us = max(prob_us, prob_opp)
 		prob_opp = max(prob_us, prob_opp)
+
+	return list("us" = prob_us, "opp" = prob_opp, "instantloss" = instantloss, "instantwin" = instantwin)
+
+/mob/living/carbon/human/proc/clash(mob/user, obj/item/IM, obj/item/IU)
+	var/mob/living/carbon/human/HU = user
+
+	var/list/odds = get_clash_odds(HU, IM, IU)
+	var/instantloss = odds["instantloss"]
+	var/instantwin = odds["instantwin"]
+	var/prob_us = odds["us"]
+	var/prob_opp = odds["opp"]
 
 	if((!instantloss && !instantwin) || (instantloss && instantwin))	//We are both using normal weapons OR we're both using memes. Either way, proceed as normal.
 		visible_message(span_boldwarning("[src] and [HU] clash!"))

@@ -2,6 +2,7 @@
 	title = "SENTINEL"
 	name = "Sentinel"
 	tutorial = "Pity the infidel who dares to cross grounds overseen by the mighty, all-seeing SENTINEL."
+	maximum_possible_slots = 1
 	outfit = /datum/outfit/job/roguetown/warband/sect/lieutenant/sentinel
 	traits_applied = list(TRAIT_KEENEARS, TRAIT_LAWEXPERT, TRAIT_FORMATIONFIGHTER, TRAIT_HEAVYARMOR, TRAIT_GOODLOVER)
 	subclass_stats = list(

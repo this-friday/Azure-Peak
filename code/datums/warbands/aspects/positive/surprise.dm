@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
-// prevents /atom/movable/screen/warband/manager/proc/send_warnings() from going off
+// prevents /datum/warband_manager/proc/send_warnings() from going off
 
 /datum/warbands/aspects/surprise
 	title = "SURPRISE"

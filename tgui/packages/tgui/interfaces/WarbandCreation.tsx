@@ -9,7 +9,7 @@ import { ClassesTab } from './warband/WarbandTabClasses';
 import { CreationTab } from './warband/WarbandTabCreation';
 import { FinalizeTab } from './warband/WarbandTabFinalize';
 import { WorldTab } from './warband/WarbandTabWorld';
-import { formatTime } from './warband/WarbandUtils';
+import { formatTime, missingRequiredInput } from './warband/WarbandUtils';
 
 const sectionHeaderStyle = `
   .Section__title {
@@ -40,6 +40,7 @@ export const WarbandCreation = () => {
     manager_faithlock_names,
     manager_racelocks,
     manager_racelock_names,
+    class_slot_counts,
     lobby_chat_muted,
     lobby_mute_remaining,
   } = useWarbandData();
@@ -63,16 +64,22 @@ export const WarbandCreation = () => {
   const [activeTab, setActiveTab] = useState('creation');
   const lockedWarbandType = (creation_stage >= 2 ? backend_warband?.[0]?.type : null) ?? null;
 
+  const missingInput = missingRequiredInput(
+    selectedWarband, selectedSubtype, selectedAspects,
+    selectionInputStates, aspectIntensities,
+  );
+
   const stage1_complete = !!(
     selectedWarband &&
     pointCounter >= 0 &&
-    (!selectedWarband?.subtyperequired || selectedSubtype)
+    (!selectedWarband?.subtyperequired || selectedSubtype) &&
+    !missingInput
   );
 
   const finalize_disabled =
     pointCounter < 0 || !selectedWarband || !selectedClass ||
     (selectedWarband?.subtyperequired && !selectedSubtype) ||
-    (selectedWarband?.multiclass_enabled && selectedWarband?.subclass_required && !selectedClass?.ignores_multiclass_requirement && !selectedSubclass);
+    (selectedWarband?.universal_subclasses_enabled && selectedWarband?.subclass_required && !selectedClass?.ignores_uni_class_requirement && !selectedSubclass);
 
   const pointsColor = pointCounter > 0 ? '#2ee62eff' : (pointCounter < 0 ? '#FF0000' : '#4b504bff');
   const canFinalize = is_warlord || warlord_spawned;
@@ -136,43 +143,60 @@ export const WarbandCreation = () => {
   );
 
   const muteRemainingLabel = lobby_chat_muted ? formatTime(lobby_mute_remaining) : '2:00';
-  const renderLobbyMuteControl = () => {
-    if (is_warlord) {
-      return (
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '12px' }}>
-          <Button
-            icon={lobby_chat_muted ? 'volume-xmark' : 'volume-high'}
-            onClick={() => act('mute_lobby_chat')}
-            tooltip={lobby_chat_muted
-              ? 'Lift the silence on the warband lobby.'
-              : 'Shut everybody else up for 2 minutes.'}
-            style={{
-              height: '40px',
-              backgroundColor: lobby_chat_muted ? '#7a1f1f' : '#2a0808',
-              border: `1px solid ${lobby_chat_muted ? '#e8bf67' : '#682222ff'}`,
-              color: lobby_chat_muted ? '#e8bf67' : '#c9c9c9',
-              fontWeight: 'bold',
-              display: 'flex', alignItems: 'center',
-            }}
-          >
-            {lobby_chat_muted
-              ? `LOBBY SILENCED - ${muteRemainingLabel}`
-              : 'SILENCE LOBBY - 2:00'}
-          </Button>
-        </div>
-      );
-    }
-    if (lobby_chat_muted) {
-      return (
-        <div style={{
-          marginLeft: 'auto', paddingRight: '12px', display: 'flex', alignItems: 'center',
-          color: '#e8bf67', fontWeight: 'bold',
-        }}>
-          LOBBY SILENCED BY WARLORD - {formatTime(lobby_mute_remaining)}
-        </div>
-      );
-    }
-    return null;
+  const renderLobbyControls = () => {
+    const swapButton = creation_stage === 1 && !warlord_spawned && (
+      <Button
+        icon="right-left"
+        onClick={() => act('request_role_swap')}
+        tooltip="Ask another lobby member to trade roles with you."
+        style={{
+          height: '40px',
+          backgroundColor: '#2a0808',
+          border: '1px solid #682222ff',
+          color: '#c9c9c9',
+          fontWeight: 'bold',
+          display: 'flex', alignItems: 'center',
+          marginRight: '8px',
+        }}
+      >
+        SWAP ROLE
+      </Button>
+    );
+    const muteControl = is_warlord ? (
+      <Button
+        icon={lobby_chat_muted ? 'volume-xmark' : 'volume-high'}
+        onClick={() => act('mute_lobby_chat')}
+        tooltip={lobby_chat_muted
+          ? 'Lift the silence on the warband lobby.'
+          : 'Shut everybody else up for 2 minutes.'}
+        style={{
+          height: '40px',
+          backgroundColor: lobby_chat_muted ? '#7a1f1f' : '#2a0808',
+          border: `1px solid ${lobby_chat_muted ? '#e8bf67' : '#682222ff'}`,
+          color: lobby_chat_muted ? '#e8bf67' : '#c9c9c9',
+          fontWeight: 'bold',
+          display: 'flex', alignItems: 'center',
+        }}
+      >
+        {lobby_chat_muted
+          ? `LOBBY SILENCED - ${muteRemainingLabel}`
+          : 'SILENCE LOBBY - 2:00'}
+      </Button>
+    ) : lobby_chat_muted ? (
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        color: '#e8bf67', fontWeight: 'bold',
+      }}>
+        LOBBY SILENCED BY WARLORD - {formatTime(lobby_mute_remaining)}
+      </div>
+    ) : null;
+    if (!swapButton && !muteControl) return null;
+    return (
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '12px' }}>
+        {swapButton}
+        {muteControl}
+      </div>
+    );
   };
 
   return (
@@ -194,7 +218,7 @@ export const WarbandCreation = () => {
               TIME REMAINING: <span style={{ color: getTimerColor() }}>{formatTime(time_remaining)}</span>
             </span>
           </div>
-          {renderLobbyMuteControl()}
+          {renderLobbyControls()}
         </Stack>
 
         <div style={{ background: 'linear-gradient(to left, #000000 0%, #3c0d0d 100%)', borderBottom: '2px solid #160303', marginBottom: '4px' }}>
@@ -222,11 +246,12 @@ export const WarbandCreation = () => {
             selectedSubclass={selectedSubclass} availableClasses={availableClasses}
             filteredSubclasses={filteredSubclasses} handleClassSelect={handleClassSelect}
             handleSubclassSelect={handleSubclassSelect} act={act} canModify={canInteractClasses}
+            slotCounts={class_slot_counts}
           />
         )}
         {activeTab === 'world' && (
           <WorldTab
-            nobleList={nobleList} alliesList={alliesList} act={act}
+            nobleList={nobleList} act={act}
             proposals={casusBelliProposals} availableTerms={allTerms}
             userProposal={userProposal} userVote={userVote} userVoteConfirmed={userVoteConfirmed}
             warlordSelectedProposal={warlordSelectedProposal}

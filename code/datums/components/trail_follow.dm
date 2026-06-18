@@ -10,6 +10,10 @@
 
 /datum/component/trail_follow/Initialize()
 	RegisterSignal(parent, COMSIG_MOVABLE_MOVED, PROC_REF(on_leader_moved))
+	var/mob/living/leader = parent
+	leader.AddElement(/datum/element/relay_attackers)
+	RegisterSignal(parent, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(on_leader_attacked))
+	RegisterSignal(parent, COMSIG_MOB_DEATH, PROC_REF(on_leader_death))
 
 /datum/component/trail_follow/Destroy()
 	clear_followers()
@@ -38,28 +42,70 @@
 
 	move_squad_waypoint()
 
+/datum/component/trail_follow/proc/track_member(mob/living/carbon/human/species/human/northern/goon/new_member)
+	members |= new_member
+	RegisterSignal(new_member, COMSIG_PARENT_QDELETING, PROC_REF(on_member_deleted), override = TRUE)
+
+/datum/component/trail_follow/proc/on_member_deleted(datum/source)
+	SIGNAL_HANDLER
+	members -= source
+	followers -= source
+
 /datum/component/trail_follow/proc/add_follower(mob/living/carbon/human/species/human/northern/goon/new_member)
-	members |= new_member	// permanently record them as part of this leader's squad
+	track_member(new_member)
 	new_member.squad_leader = parent
+	
+	var/mob/living/leader = parent
+	leader.AddElement(/datum/element/relay_attackers) // re-assert the attack relay on the leader
 
 	if(!(new_member in followers))
 		followers |= new_member // mark them as an active waypoint follower
-		RegisterSignal(new_member, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(remove_follower))
+		RegisterSignal(new_member, COMSIG_ATOM_WAS_ATTACKED, PROC_REF(on_follower_attacked))
 
 	new_member.ai_controller?.CancelActions()
-	new_member.ai_controller?.set_ai_status(AI_STATUS_OFF)
-	return
+	new_member.ai_controller?.clear_blackboard_key(BB_BASIC_MOB_CURRENT_TARGET)
+	new_member.ai_controller?.clear_blackboard_key(BB_HIGHEST_THREAT_MOB)
+	if(new_member.ai_controller?.blackboard[BB_MOB_AGGRO_TABLE])
+		new_member.ai_controller.blackboard[BB_MOB_AGGRO_TABLE] = list()
+	new_member.ai_controller?.set_ai_status(AI_STATUS_OFF) 	// we want the AI fully asleep during the march
+	return													// the goon's set_ai_status() override keeps it off until they leave the squad
 
 // the mob stops following the leader
 // beyond that, they stay in the Members list of the squad
-/datum/component/trail_follow/proc/remove_follower(mob/living/carbon/human/species/human/northern/goon/member)
+/datum/component/trail_follow/proc/remove_follower(mob/living/carbon/human/species/human/northern/goon/member, wake = TRUE)
 	if(!(member in followers))
 		return
 	followers -= member
 	member.squad_leader = null
 	UnregisterSignal(member, COMSIG_ATOM_WAS_ATTACKED)
 	member.ai_controller?.clear_blackboard_key(BB_TRAVEL_DESTINATION)
-	member.ai_controller?.set_ai_status(AI_STATUS_ON)
+	if(wake) // wake = FALSE skips turning the AI back on, if we're shelving the goon (recycle/deletion)
+		member.ai_controller?.set_ai_status(AI_STATUS_ON)
+
+// being attacked knocks a goon out of the follow so they can defend themselves
+/datum/component/trail_follow/proc/on_follower_attacked(mob/living/carbon/human/species/human/northern/goon/member, atom/attacker, damage)
+	SIGNAL_HANDLER
+	if(!(member in followers))
+		return
+	var/mob/living/carbon/human/leader = parent
+	if(leader)
+		to_chat(leader, span_warning("[member] breaks from my formation to fight!"))
+	remove_follower(member)
+
+// an attack on the leader scatters the whole follow, so the squad defends them instead of marching on
+/datum/component/trail_follow/proc/on_leader_attacked(datum/source, atom/attacker, damage)
+	SIGNAL_HANDLER
+	if(attacker == parent) // self-inflicted hits shouldn't scatter the squad
+		return
+	if(!followers.len)
+		return
+	var/mob/living/carbon/human/leader = parent
+	to_chat(leader, span_warning("My goons break formation to defend me!"))
+	clear_followers()
+
+/datum/component/trail_follow/proc/on_leader_death(datum/source)
+	SIGNAL_HANDLER
+	clear_followers()
 
 /datum/component/trail_follow/proc/lose_follower(mob/living/carbon/human/species/human/northern/goon/goon)
 	var/mob/living/carbon/human/leader = parent
@@ -68,7 +114,7 @@
 	remove_follower(goon)
 
 /datum/component/trail_follow/proc/clear_followers()
-	for(var/mob/living/carbon/human/M in followers)
+	for(var/mob/living/carbon/human/M in followers) // remove_follower mutates the list
 		remove_follower(M)
 
 // drop any portal whose entry tile is no longer part of the live waypoint trail

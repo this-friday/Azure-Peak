@@ -1,12 +1,14 @@
 //////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// TERM: SEAL GRAVE
 /*
-	slaps the target mob with the DNR trait, preventing them from getting resurrected
+	when the target dies, they are considered "sealed". if they're resurrected afterwards, they get a variant of sunlight vulnerability
+	state is tracked by /datum/component/grave_seal
 
+	can potentially be cleansed by a Hag, via /datum/hag_boon/misc/cleanse_grave_seal
 */
 /datum/treaty/terms/seal_grave
 	name = "Seal Grave"
-	desc = "Their death shall be final. Neither medicine nor miracle shall return them to lyfe."
+	desc = "Their death shall be final. Should they resurrect, they'll burn beneath sunlight."
 	hint = "...something about seals...?"
 	authorities = list("target", /datum/job/roguetown/lord, /datum/job/roguetown/priest)
 	minimum_signatures = 2
@@ -26,12 +28,12 @@
 /datum/treaty/terms/seal_grave/apply(obj/item/treaty/treaty)
 	if(!target)
 		return
-		
-	var/mob/living/dnr_target = treaty.text_to_mob(target)
-	
-	if(dnr_target)
-		ADD_TRAIT(dnr_target, TRAIT_DNR, TRAIT_GENERIC)
-		return "The coming grave of [target] is sealed by divine sanction. Should they die, they cannot be resurrected."
+
+	var/mob/living/seal_target = treaty.text_to_mob(target)
+
+	if(seal_target)
+		seal_target.AddComponent(/datum/component/grave_seal)
+		return "The grave of [target] is considered sealed. Should they die, any resurrection shall result in a damned lyfe."
 	else
 		treaty.visible_message(span_danger("...but one of the terms yet remains in the flame. '[target]''s grave couldn't be sealed."))
 	return

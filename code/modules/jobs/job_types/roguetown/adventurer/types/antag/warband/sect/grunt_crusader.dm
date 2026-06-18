@@ -32,8 +32,9 @@
 /datum/outfit/job/roguetown/warband/sect/grunt/crusader/pre_equip(mob/living/carbon/human/H)
 	..()
 
-	head = /obj/item/clothing/head/roguetown/helmet/heavy/crusader
-	cloak = /obj/item/clothing/cloak/cape/crusader
+	head = /obj/item/clothing/head/roguetown/helmet/sallet/visored/iron
+	backr = /obj/item/clothing/cloak/cape/crusader
+	cloak = /obj/item/clothing/cloak/tabard/stabard/crusader/undivided/generic
 	belt = /obj/item/storage/belt/rogue/leather
 	pants = /obj/item/clothing/under/roguetown/chainlegs/iron
 	shirt = /obj/item/clothing/suit/roguetown/armor/gambeson/heavy
@@ -62,11 +63,9 @@
 		id = /obj/item/clothing/neck/roguetown/psicross/dendor
 	
 	if(H.patron.type == /datum/patron/divine/abyssor)
-		head = /obj/item/clothing/head/roguetown/helmet/sallet/visored
 		id = /obj/item/clothing/neck/roguetown/psicross/abyssor
 
 	if(H.patron.type == /datum/patron/divine/ravox)
-		head = /obj/item/clothing/head/roguetown/helmet/heavy/ravoxhelm
 		id = /obj/item/clothing/neck/roguetown/psicross/ravox
 	
 	if(H.patron.type == /datum/patron/divine/necra)
@@ -82,8 +81,6 @@
 
 	if(H.patron.type == /datum/patron/divine/malum)
 		id = /obj/item/clothing/neck/roguetown/psicross/malum
-		cloak = /obj/item/clothing/cloak/templar/malumite
-		backr = /obj/item/clothing/cloak/cape/crusader
 	
 	if(H.patron.type == /datum/patron/divine/xylix)
 		id = /obj/item/clothing/neck/roguetown/psicross/xylix
@@ -96,7 +93,6 @@
 	if(H.patron.type == /datum/patron/inhumen/zizo)
 		head = /obj/item/clothing/head/roguetown/helmet/heavy/zizo
 		armor = /obj/item/clothing/suit/roguetown/armor/plate/full/zizo
-		backr = /obj/item/clothing/cloak/cape/crusader
 		id = /obj/item/clothing/neck/roguetown/psicross/inhumen/aalloy
 
 	if(H.patron.type == /datum/patron/inhumen/baotha)
@@ -149,3 +145,7 @@
 			if("HALBERD")
 				r_hand = /obj/item/rogueweapon/halberd
 				beltl = /obj/item/rogueweapon/sword/short
+
+/obj/item/clothing/cloak/tabard/stabard/crusader/undivided/generic
+	name = "crusader's tabard"
+	color = "#C5BDB2"

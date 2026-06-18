@@ -3,6 +3,7 @@ import { Box, Button, Section, Stack } from 'tgui-core/components';
 
 import { DynamicInputs } from './TreatyInputs';
 import { AspectType, SubType, WarbandType } from './WarbandTypes';
+import { missingRequiredInput } from './WarbandUtils';
 
 type CreationTabProps = {
   filteredWarbands: WarbandType[];
@@ -427,6 +428,11 @@ export const CreationTab = ({
     if (pointCounter < 0) return "MUST HAVE 0 OR MORE ASPECT POINTS";
     if (!selectedWarband) return "SELECT A WARBAND";
     if (selectedWarband?.subtyperequired && !selectedSubtype) return "THIS WARBAND REQUIRES A SUBTYPE";
+    const missingInput = missingRequiredInput(
+      selectedWarband, selectedSubtype, selectedAspects,
+      selectionInputStates, aspectIntensities,
+    );
+    if (missingInput) return missingInput;
     return null;
   };
 

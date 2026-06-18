@@ -13,7 +13,7 @@
 	warning = "...of what could in fact be the largest army they've ever seen."
 	points = -2
 
-/datum/warbands/aspects/war/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/aspects/war/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	manager.disorder += 10
 	manager.spawns += 500
 	manager.squad_size_bonus += 2

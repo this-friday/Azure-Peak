@@ -55,7 +55,7 @@
 /*
 	when a treaty is spawned by a warband, this proc adds any unique terms the warband might have
 */
-/obj/item/treaty/proc/add_unique_terms(atom/movable/screen/warband/manager/warband_manager)
+/obj/item/treaty/proc/add_unique_terms(datum/warband_manager/warband_manager)
 	var/datum/warbands/warband = warband_manager.selected_warband
 	if(warband)
 		if(istype(warband, /datum/warbands/wizard))
@@ -137,3 +137,25 @@
 				job_titles[authority] = "[authority]"
 		return job_titles[authority]
 	return authority
+
+// used by sign_term when a term lists "target"/"receiver" among its authorities
+/obj/item/treaty/proc/is_party_authority(mob/living/user, party_name, user_name, original_name)
+	if(!party_name)
+		return FALSE
+
+	// PERSONAL AUTHORITY
+	if(party_name == user_name || (original_name && party_name == original_name))
+		return TRUE
+	
+	// FACTION AUTHORITY (currently just flavor)
+	for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
+		if(faction.name != party_name)
+			continue
+		if(ismob(faction.owner) && faction.owner == user)
+			return TRUE
+		if(faction.owner == user_name || (original_name && faction.owner == original_name))
+			return TRUE
+		if(ispath(faction.job_owner, user.job_path) || (user.mind?.original_char && ispath(faction.job_owner, user.mind.original_char.job_path)))
+			return TRUE
+		return FALSE // the first faction bearing the name decides
+	return FALSE

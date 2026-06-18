@@ -115,5 +115,3 @@
 
 /datum/treaty/terms/proc/on_signatures_reset()
 	return
-
-

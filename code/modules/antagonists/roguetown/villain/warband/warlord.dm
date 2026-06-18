@@ -11,7 +11,7 @@
 	hidden_job = TRUE
 
 /datum/antagonist/warband/warlord
-	name = "Warlord"
+	name = "Warband" // for clarity in the actual antag pref selection, as you're rolling for all 3 warband roles
 	roundend_category = "Warlord"
 	antagpanel_category = "Warlord"
 	job_rank = ROLE_WARLORD
@@ -44,30 +44,26 @@
 	newmob.mind = owner
 	owner.current = newmob
 	SSmapping.retainer.warlords |= newmob.mind
-	newmob.mind.special_role = name
-	if(!SSwarbands.roundstart_manager_claimed)
-		newmob.mind.warband_ID = SSwarbands.roundstart_manager.warband_ID
-	else
-		newmob.mind.warband_ID = SSwarbands.next_warband_id
+	newmob.mind.special_role = ROLE_WARLORD
+	create_warband_manager(newmob, newmob.mind)
 	newmob.faction |= list("warband_[newmob.mind.warband_ID]")
 	newmob.mind.warbandsetup = TRUE
 	addtimer(CALLBACK(src, PROC_REF(greet)), 1 SECONDS)
-	addtimer(CALLBACK(src, PROC_REF(create_warband_manager), newmob, newmob.mind), 1 SECONDS)
 
 
 // creates a warband manager for the warlord & syncs its ID with the warlord's mind
 /datum/antagonist/warband/warlord/proc/create_warband_manager(mob/living/new_warlord, datum/mind/owner)
-	var/atom/movable/screen/warband/manager/pregame_manager
+	var/datum/warband_manager/pregame_manager
 
 	if(!SSwarbands.roundstart_manager_claimed && SSwarbands.roundstart_manager)
 		pregame_manager = SSwarbands.roundstart_manager
 		SSwarbands.roundstart_manager_claimed = TRUE
-		owner.warband_ID = pregame_manager.warband_ID
 	else
-		pregame_manager = new /atom/movable/screen/warband/manager()
-		pregame_manager.warband_ID = SSwarbands.next_warband_id++
-		SSwarbands.warband_managers += pregame_manager
-		owner.warband_ID = pregame_manager.warband_ID
+		pregame_manager = new /datum/warband_manager()
+		SSwarbands.register_manager(pregame_manager)
+	owner.warband_ID = pregame_manager.warband_ID
+	if(bypass_rarity)
+		pregame_manager.bypass_rarity = TRUE
 	if(!pregame_manager.creation_timer_active)
 		pregame_manager.start_creation_timer()
 	pregame_manager.lobby_members += owner.current

@@ -10,5 +10,5 @@
 	warning = "...of a warband in open disarray. It's a miracle they got here at all."
 	points = 1
  
-/datum/warbands/aspects/splintered/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/aspects/splintered/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	manager.disorder += 4

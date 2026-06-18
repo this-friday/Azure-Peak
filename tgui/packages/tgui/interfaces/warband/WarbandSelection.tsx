@@ -82,7 +82,23 @@ export const useWarbandSelection = () => {
   // selection
   const handleWarbandSelect = (warband: WarbandType) => {
     if (lockedWarband) { return; }
-    if (selectedWarband?.type === warband.type) { return; }
+    if (selectedWarband?.type === warband.type) {
+      // toggle off: clear the warband and everything that hangs off it
+      setSelectedWarband(null);
+      setSelectedSubtype(null);
+      setSelectedAspects([]);
+      setAspectIntensities({});
+      setSelectionInputStates(prev => {
+        const next = { ...prev };
+        delete next[warband.type];
+        if (selectedSubtype) delete next[selectedSubtype.type];
+        selectedAspects.forEach(a => delete next[a.type]);
+        return next;
+      });
+      setSelectedClass(null);
+      setSelectedSubclass(null);
+      return;
+    }
     const isSubtypeCompatible = selectedSubtype && warband.subtypes?.[0]?.includes(selectedSubtype.type);
     // carry over aspects the new warband also offers, but clamp to its cap so switching from an uncapped warband to a capped one can't smuggle in extra aspects
     const aspectCap = warband.max_aspects ?? 5;
@@ -110,9 +126,15 @@ export const useWarbandSelection = () => {
 
   const handleSubtypeSelect = (subtype: SubType) => {
     if (lockedSubtype) { return; }
-    setSelectedSubtype(subtype);
-    const compatibleAspects = selectedAspects.filter(aspect => subtype.aspects.includes(aspect.type));
-    const removedTypes = new Set(selectedAspects.filter(a => !subtype.aspects.includes(a.type)).map(a => a.type));
+    const isDeselect = selectedSubtype?.type === subtype.type;
+    // aspects survive the change if the warband or the (new) subtype still offers them
+    const offered = new Set([
+      ...(selectedWarband?.aspects ?? []),
+      ...(isDeselect ? [] : subtype.aspects),
+    ]);
+    const compatibleAspects = selectedAspects.filter(aspect => offered.has(aspect.type));
+    const removedTypes = new Set(selectedAspects.filter(a => !offered.has(a.type)).map(a => a.type));
+    setSelectedSubtype(isDeselect ? null : subtype);
     setSelectedAspects(compatibleAspects);
     setAspectIntensities(prev => {
       const next = { ...prev };
@@ -121,7 +143,11 @@ export const useWarbandSelection = () => {
     });
     setSelectionInputStates(prev => {
       const next = { ...prev };
-      if (selectedSubtype) delete next[selectedSubtype.type];
+      if (isDeselect) {
+        delete next[subtype.type];
+      } else if (selectedSubtype) {
+        delete next[selectedSubtype.type];
+      }
       removedTypes.forEach(t => delete next[t]);
       return next;
     });

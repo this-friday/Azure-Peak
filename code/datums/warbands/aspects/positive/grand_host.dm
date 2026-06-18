@@ -9,5 +9,5 @@
 	warning = "...of a notably large size."
 	points = -1
 
-/datum/warbands/aspects/extraspawns/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
+/datum/warbands/aspects/extraspawns/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
 	manager.spawns += 150

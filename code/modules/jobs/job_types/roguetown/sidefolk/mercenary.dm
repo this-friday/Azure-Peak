@@ -80,6 +80,3 @@
 
 			// Store the registration request
 			statue.pending_registrations[H.key] = H
-
-/datum/advclass/mercenary
-	multiclass_capable = TRUE // for Mercenary Warbands

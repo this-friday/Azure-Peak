@@ -31,8 +31,9 @@
 	if(ranged_ability)
 		ranged_ability.deactivate()
 
-	if(mind.warbandsetup)
-		mind.warband_manager.create_HUD_instance(mind.current)
+	// if we're rejoining a warband lobby, we recreate the lobby HUD popup
+	if(mind?.warbandsetup && mind.warband_manager)
+		mind.warband_manager.create_HUD_instance(src)
 	set_ssd_indicator(FALSE)
 
 /mob/living/proc/login_fade()

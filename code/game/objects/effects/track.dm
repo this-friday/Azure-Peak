@@ -592,6 +592,126 @@
 	to_chat(user,span_info("You can't distinguish an object like this."))
 	return
 
+// when a warband member uses the TAKE SHORTCUT verb (/mob/living/carbon/human/proc/shortcut), they leave behind special tracks
+// when a tracker examines it, they get clickable text in their chat. when clicked, it provides a locational hint regarding the warcamp's entrance
+/obj/effect/track/warband_shortcut
+	color = "#f71212"
+	base_diff = 5
+	var/warband_ID = 0
+	var/list/hint_uses = list() // a per-mob count of hints associated with the track
+								// uses are limited by their tracking skill
+
+/obj/effect/track/warband_shortcut/handle_creation(mob/living/track_source)
+	..()
+	warband_ID = track_source.mind?.warband_ID || 0
+
+/obj/effect/track/warband_shortcut/soft_reset()
+	..()
+	warband_ID = 0
+	hint_uses = list()
+
+/obj/effect/track/warband_shortcut/remove_knower(mob/living/tracker)
+	..()
+	hint_uses -= tracker
+
+/obj/effect/track/warband_shortcut/knowledge_readout(mob/user, knowledge)
+	. = ..()
+	. += "<br>[span_bold("These tracks end abruptly...")]<br>"
+	var/skill = user.get_skill_level(/datum/skill/misc/tracking)
+	if(skill >= SKILL_LEVEL_LEGENDARY)	// legendary trackers can indefinitely use the hint
+		. += span_nicegreen("<i><font size = 2><a href='?src=[REF(src)];hint=1'>Study where their maker slipped away to...</a></font></i>")
+	else if(skill > SKILL_LEVEL_NONE)	// everyone else gets a number of hints equal to their Tracking Skill
+		var/remaining = skill - (hint_uses[user] || 0)
+		if(remaining > 0)
+			. += span_nicegreen("<i><font size = 2><a href='?src=[REF(src)];hint=1'>Study where their maker slipped away to...</a> ([remaining] hint[remaining == 1 ? "" : "s"] left)</font></i>")
+		else
+			. += span_info("I've gleaned all I can from these tracks.")
+	return .
+
+/obj/effect/track/warband_shortcut/Topic(href, href_list)
+	. = ..()
+	if(!href_list["hint"])
+		return
+	if(!isliving(usr))
+		return
+	var/mob/living/user = usr
+	if(!user.canUseTopic(src))
+		return
+	if(!known_by[user])
+		return
+	if(!warband_ID)
+		return
+	var/skill = user.get_skill_level(/datum/skill/misc/tracking)
+	if(skill <= SKILL_LEVEL_NONE)
+		to_chat(user, span_warning("I lack the skill to make sense of where these lead."))
+		return
+	if(skill < SKILL_LEVEL_LEGENDARY && (hint_uses[user] || 0) >= skill)
+		to_chat(user, span_warning("I've gleaned all I can from these tracks."))
+		return
+	var/obj/structure/fluff/traveltile/warband/azure_to_intermission/target
+	for(var/obj/structure/fluff/traveltile/warband/azure_to_intermission/tile in SSwarbands.warband_machines)
+		if(tile.warband_ID == warband_ID)
+			target = tile
+			break
+	var/turf/here = get_turf(user)
+	var/turf/there = get_turf(target)
+	if(!here || !there)
+		to_chat(user, span_warning("The trail goes cold."))
+		return
+	var/z_relation
+	if(here.z != there.z)
+		z_relation = get_z_relation(here, there)
+		if(!z_relation)
+			to_chat(user, span_warning("The trail winds beyond my reckoning."))
+			return
+	var/dist = round(get_dist_euclidean(here, there))
+	var/dir_text = get_precise_direction_between(here, there)
+	var/dist_text
+	if(skill <= SKILL_LEVEL_JOURNEYMAN) // journeymen & below only get vague approximations of distance
+		switch(dist)
+			if(0 to 15)
+				dist_text = "very close by"
+			if(16 to 40)
+				dist_text = "fairly close"
+			if(41 to 90)
+				dist_text = "a fair distance off"
+			else
+				dist_text = "very far away"
+	else
+		var/rounded = round(dist, 10)
+		dist_text = rounded < 10 ? "mere paces away" : "roughly [rounded] paces away"
+	var/msg = "Whoever made those tracks slipped away to somewhere "
+	if(dir_text)
+		msg += "[dist_text], to the <b>[dir_text]</b>"
+	else
+		msg += "right around here"
+	if(z_relation)
+		msg += ", on a level [z_relation] us"
+	msg += "."
+	to_chat(user, span_notice(msg))
+	if(skill < SKILL_LEVEL_LEGENDARY)
+		hint_uses[user] = (hint_uses[user] || 0) + 1
+	return TRUE
+
+// determines whether destination's z-level sits above or below origin's
+// returns "above", "below", or (if we're on the same z-level) nothing
+/obj/effect/track/warband_shortcut/proc/get_z_relation(turf/origin, turf/destination)
+	var/turf/our_current_turf = origin
+	for(var/i in 1 to length(SSmapping.multiz_levels))
+		our_current_turf = GET_TURF_ABOVE(our_current_turf)
+		if(!our_current_turf)
+			break
+		if(our_current_turf.z == destination.z)
+			return "above"
+	our_current_turf = origin
+	for(var/i in 1 to length(SSmapping.multiz_levels))
+		our_current_turf = GET_TURF_BELOW(our_current_turf)
+		if(!our_current_turf)
+			break
+		if(our_current_turf.z == destination.z)
+			return "below"
+	return
+
 #undef ANALYSIS_TERRIBLE
 #undef ANALYSIS_BAD
 #undef ANALYSIS_DECENT

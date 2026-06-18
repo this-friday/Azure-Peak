@@ -6,8 +6,9 @@
 
   // grant: a source's warlord/lieu/grunt class lists are unioned into the available pool
   // suppress: a source's "suppressed_classes" removes those class types from every panel
-  // exclusive: a source with "replaces_primaries" restricts the PRIMARY panel to its own grants (blocks all other primaries) for the tiers it grants into
-  // subclass override: a selected primary with classes shows exactly those as its subclasses (hiding the shared multiclass pool)
+  // exclusive: a source with "suppress_all_other_classes" restricts the PRIMARY panel to its own grants (blocks all other primaries) for the tiers it grants into
+  // subclass override: a selected primary with classes shows exactly those as its subclasses (hiding the shared universal-class pool)
+  // universal classes: the warband's & subtype's universal_*classes lists (one per role tier) fill the subclass panel. roles without their own entry will share the grunt-tier's pool
 
 
 import { useMemo } from 'react';
@@ -33,9 +34,19 @@ const tierList = (source: ClassSource | null | undefined, tier: Tier): string[] 
   return source.gruntclasses || [];
 };
 
+const uniList = (source: ClassSource | null | undefined, tier: Tier): string[] => {
+  if (!source) return [];
+  if (tier === 'warlord') return source.universal_warlordclasses || [];
+  if (tier === 'lieutenant') return source.universal_lieuclasses || [];
+  return source.universal_gruntclasses || [];
+};
+
+const ROLE_LIEUTENANT = "Lieutenant";
+const ROLE_ASPIRANT = 'Aspirant Lieutenant';
+
 const tierForRole = (user_role: string | undefined): Tier | null => {
   if (user_role === 'Warlord') return 'warlord';
-  if (user_role === 'Lieutenant' || user_role === 'Aspirant Lieutenant') return 'lieutenant';
+  if (user_role === ROLE_LIEUTENANT || user_role === ROLE_ASPIRANT) return 'lieutenant';
   if (user_role === 'Grunt') return 'grunt';
   return null;
 };
@@ -133,14 +144,9 @@ export const useWarbandFilters = (
 
     let roleClasses: ClassType[] = filteredClasses[tier];
 
-    // primaries only, for multiclass-enabled warbands
-    if (selectedWarband?.multiclass_enabled) {
-      roleClasses = roleClasses.filter(c => !c.multiclass_capable);
-    }
-
     // if any active source replaces primaries, restrict this tier's primaries to those grants
     const exclusiveGrants = new Set(
-      classSources.filter(s => s.replaces_primaries).flatMap(s => tierList(s, tier)),
+      classSources.filter(s => s.suppress_all_other_classes).flatMap(s => tierList(s, tier)),
     );
     if (exclusiveGrants.size > 0) {
       roleClasses = roleClasses.filter(c => exclusiveGrants.has(c.type));
@@ -150,7 +156,7 @@ export const useWarbandFilters = (
   }, [user_role, filteredClasses, selectedWarband, classSources]);
 
   const filteredSubclasses = useMemo(() => {
-    if (!selectedWarband?.multiclass_enabled) return [];
+    if (!selectedWarband?.universal_subclasses_enabled) return [];
 
     const pool = classList.filter(
       c => rarityFilter(c, storytellersList, bypassRarity) && !suppressedTypes.has(c.type),
@@ -161,27 +167,25 @@ export const useWarbandFilters = (
       return pool.filter(c => whitelist.has(c.type));
     }
 
-    const getMulticlasses = (classTypes: string[]) =>
-      pool.filter(c => classTypes.includes(c.type) && c.multiclass_capable);
+    const getUniversals = (classTypes: string[]) =>
+      pool.filter(c => classTypes.includes(c.type));
 
-    const warlordTypes = [...tierList(selectedWarband, 'warlord'), ...tierList(selectedSubtype, 'warlord')];
-    const lieutenantTypes = [...tierList(selectedWarband, 'lieutenant'), ...tierList(selectedSubtype, 'lieutenant')];
-    const gruntTypes = [...tierList(selectedWarband, 'grunt'), ...tierList(selectedSubtype, 'grunt')];
+    const warlordTypes = [...uniList(selectedWarband, 'warlord'), ...uniList(selectedSubtype, 'warlord')];
+    const lieutenantTypes = [...uniList(selectedWarband, 'lieutenant'), ...uniList(selectedSubtype, 'lieutenant')];
+    const gruntTypes = [...uniList(selectedWarband, 'grunt'), ...uniList(selectedSubtype, 'grunt')];
 
-    // if higher-tier multiclass_capable classes exist for the role, they replace grunt-tier ones
-    // grunts, however, will only ever see grunt-tier classes
     if (user_role === 'Warlord') {
-      const higher = getMulticlasses(warlordTypes);
-      return higher.length > 0 ? higher : getMulticlasses(gruntTypes);
+      const higher = getUniversals(warlordTypes);
+      return higher.length > 0 ? higher : getUniversals(gruntTypes);
     }
 
-    if (user_role === 'Lieutenant' || user_role === 'Aspirant Lieutenant') {
-      const higher = getMulticlasses(lieutenantTypes);
-      return higher.length > 0 ? higher : getMulticlasses(gruntTypes);
+    if (user_role === ROLE_LIEUTENANT || user_role === ROLE_ASPIRANT) {
+      const higher = getUniversals(lieutenantTypes);
+      return higher.length > 0 ? higher : getUniversals(gruntTypes);
     }
 
     if (user_role === 'Grunt') {
-      return getMulticlasses(gruntTypes);
+      return getUniversals(gruntTypes);
     }
 
     return [];

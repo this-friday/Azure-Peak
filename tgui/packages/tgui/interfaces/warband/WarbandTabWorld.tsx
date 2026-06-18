@@ -6,7 +6,6 @@ import { CasusBelliProposal, CasusBelliTerm, NobleType } from './WarbandTypes';
 
 type WorldTabProps = {
   nobleList: NobleType[];
-  alliesList: NobleType[];
   act: (action: string, payload?: object) => void;
   proposals: CasusBelliProposal[];
   availableTerms: CasusBelliTerm[];
@@ -23,9 +22,11 @@ type WorldTabProps = {
 
 const SPLIT_MIN = 80;
 const SPLIT_DEFAULT = 220;
+const DIVIDER_H = 8;
+const THIN_MIN = 12;
 
 export const WorldTab = ({
-  nobleList, alliesList, act,
+  nobleList, act,
   proposals, availableTerms,
   userProposal, userVote, userVoteConfirmed,
   warlordSelectedProposal, warlordCasusBelli,
@@ -43,7 +44,7 @@ export const WorldTab = ({
     const onMove = (ev: MouseEvent) => {
       const delta = ev.clientY - startY;
       const containerH = containerRef.current?.clientHeight ?? 600;
-      const maxH = containerH - SPLIT_MIN - 8;
+      const maxH = containerH - THIN_MIN - DIVIDER_H;
       setCasusBelliHeight(Math.max(SPLIT_MIN, Math.min(maxH, startHeight + delta)));
     };
 
@@ -55,6 +56,11 @@ export const WorldTab = ({
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   };
+
+  const measuredH = containerRef.current?.clientHeight;
+  const topHeight = measuredH
+    ? Math.min(casusBelliHeight, Math.max(SPLIT_MIN, measuredH - THIN_MIN - DIVIDER_H))
+    : casusBelliHeight;
 
   const confirmed = locked && !!warlordCasusBelli;
 
@@ -82,12 +88,6 @@ export const WorldTab = ({
             >
               VIEW LAWS
             </Button>
-            <Button
-              onClick={() => act('view_decrees')}
-              style={{ flex: 1, fontSize: '25px', padding: '25px', display: 'flex', marginBottom: '110px', justifyContent: 'center', alignItems: 'center' }}
-            >
-              VIEW DECREES
-            </Button>
           </Stack>
         </Section>
       </Stack>
@@ -98,7 +98,7 @@ export const WorldTab = ({
     <Stack style={{ flex: 1, flexDirection: 'column', height: '100%' }}>
       <Stack.Item grow={1} style={{ minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div style={{ height: casusBelliHeight, flexShrink: 0, overflow: 'hidden' }}>
+          <div style={{ height: topHeight, flexShrink: 0, overflow: 'hidden' }}>
             <CasusBelliPanel
               proposals={proposals} availableTerms={availableTerms}
               userProposal={userProposal} userVote={userVote} userVoteConfirmed={userVoteConfirmed}
@@ -114,7 +114,7 @@ export const WorldTab = ({
           <div
             onMouseDown={handleDragStart}
             style={{
-              height: '8px',
+              height: `${DIVIDER_H}px`,
               flexShrink: 0,
               cursor: 'ns-resize',
               backgroundColor: '#1a0a0a',
@@ -137,17 +137,17 @@ export const WorldTab = ({
             </div>
           </div>
 
-          <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <Section
               title={<span style={{ color: '#7a2525ff' }}>KNOW THY ENEMIES</span>}
-              scrollable fill style={{ flex: 1, minWidth: '300px' }}
+              scrollable fill style={{ flex: 1, minHeight: 0 }}
             >
               {nobleList.length > 0 ? (
                 <Stack vertical>
                   {nobleList.map((noble) => (
                     <Button
                       key={noble.name} tooltip={noble.name}
-                      onClick={() => { act('interaction_sound'); act('view_vip', { enemy: noble.name }); }}
+                      onClick={() => { act('view_vip', { enemy: noble.name }); act('interaction_sound'); }}
                       style={{ textAlign: 'center' }}
                     >
                       The {noble.job}
@@ -161,69 +161,20 @@ export const WorldTab = ({
               )}
             </Section>
 
-            <Section
-              title={<span style={{ color: '#7a2525ff' }}>KNOW THY FRIENDS</span>}
-              scrollable fill style={{ flex: 1, minWidth: '300px' }}
-            >
-              {alliesList.length > 0 ? (
-                <Stack vertical>
-                  {alliesList.map((ally, index) => (
-                    <Button
-                      key={`${ally.name}-${index}`} tooltip={ally.name}
-                      onClick={() => { act('interaction_sound'); if (!ally.in_lobby) act('view_vip', { ally: ally.name }); }}
-                      disabled={ally.in_lobby}
-                      style={{ textAlign: 'left', opacity: ally.in_lobby ? 0.7 : 1 }}
-                    >
-                      <Stack vertical>
-                        {ally.in_lobby ? (
-                          <>
-                            <span style={{ fontWeight: 'bold' }}>
-                              {ally.job === 'Aspirant Lieutenant' ? 'Lieutenant' : ally.job}
-                              <span style={{ fontSize: '11px', marginLeft: '8px' }}>(In Lobby)</span>
-                            </span>
-                            <span style={{ fontSize: '12px', opacity: 0.9 }}>{ally.name}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span style={{ fontWeight: 'bold' }}>{ally.name}</span>
-                            <span style={{ fontSize: '12px', opacity: 0.9 }}>
-                              {ally.special_role && ally.special_role !== ally.job
-                                ? `${ally.special_role} - ${ally.job}`
-                                : ally.job || 'Unknown'}
-                            </span>
-                          </>
-                        )}
-                      </Stack>
-                    </Button>
-                  ))}
-                </Stack>
-              ) : (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                  <p style={{ color: '#7a2525ff' }}>YOU ARE ALONE</p>
-                </div>
-              )}
+            <Section style={{ flexShrink: 0 }}>
+              <Stack direction="row" justify="center">
+                <Button
+                  onClick={() => act('view_laws')}
+                  style={{ flex: 1, fontSize: '25px', padding: '25px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                >
+                  VIEW LAWS
+                </Button>
+              </Stack>
             </Section>
           </div>
 
         </div>
       </Stack.Item>
-
-      <Section style={{ flex: 0, flexBasis: 'auto' }}>
-        <Stack direction="row" justify="center">
-          <Button
-            onClick={() => act('view_laws')}
-            style={{ flex: 1, fontSize: '25px', padding: '25px', display: 'flex', marginBottom: '110px', justifyContent: 'center', alignItems: 'center' }}
-          >
-            VIEW LAWS
-          </Button>
-          <Button
-            onClick={() => act('view_decrees')}
-            style={{ flex: 1, fontSize: '25px', padding: '25px', display: 'flex', marginBottom: '110px', justifyContent: 'center', alignItems: 'center' }}
-          >
-            VIEW DECREES
-          </Button>
-        </Stack>
-      </Section>
     </Stack>
   );
 };

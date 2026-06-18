@@ -19,6 +19,7 @@
 /datum/examine_panel/Destroy(force)
 	holder = null
 	viewing = null
+	pref = null
 	qdel(examine_panel_screen)
 	return ..()
 
@@ -114,7 +115,31 @@
 	var/datum/antagonist/vampire/vampireplayer = user.mind?.has_antag_datum(/datum/antagonist/vampire)
 	var/datum/antagonist/lich/lichplayer = user.mind?.has_antag_datum(/datum/antagonist/lich)
 
-	if(ishuman(holder))
+	// pref-mode takes precedence
+	// a panel can potentially be pointed at a preferences datum even when its holder is a human (warband lobbies, for example)
+	if(pref)
+		is_naked = TRUE
+		obscured = FALSE
+		flavor_text = pref.flavortext_cached
+		flavor_text_nsfw = pref.nsfwflavortext_cached
+		ooc_notes = pref.ooc_notes_cached
+		ooc_notes_nsfw = pref.erpprefs_cached
+		if(vampireplayer && (!SEND_SIGNAL(pref, COMSIG_DISGUISE_STATUS))&& !isnull(pref.vampire_headshot_link)) //vampire with their disguise down and a valid headshot
+			headshot = pref.vampire_headshot_link
+		else if (lichplayer && !isnull(pref.lich_headshot_link))//Lich with a valid headshot
+			headshot = pref.lich_headshot_link
+		else
+			headshot = pref.headshot_link
+		img_gallery = pref.img_gallery
+		if(is_naked)
+			nsfw_img_gallery = pref.nsfw_img_gallery
+		char_name = pref.real_name
+		song_url = pref.ooc_extra
+		is_vet = viewing.check_agevet()
+		if(!headshot)
+			headshot = "headshot_red.png"
+
+	else if(ishuman(holder))
 		var/mob/living/carbon/human/holder_human = holder
 		if(!(holder_human.wear_armor && holder_human.wear_armor.flags_inv) && !(holder_human.wear_shirt && holder_human.wear_shirt.flags_inv))
 			is_naked = TRUE
@@ -139,38 +164,16 @@
 		if(!headshot)
 			headshot = "headshot_red.png"
 
-	else if(pref)
-		is_naked = TRUE
-		obscured = FALSE
-		flavor_text = pref.flavortext_cached
-		flavor_text_nsfw = pref.nsfwflavortext_cached
-		ooc_notes = pref.ooc_notes_cached
-		ooc_notes_nsfw = pref.erpprefs_cached
-		if(vampireplayer && (!SEND_SIGNAL(pref, COMSIG_DISGUISE_STATUS))&& !isnull(pref.vampire_headshot_link)) //vampire with their disguise down and a valid headshot
-			headshot = pref.vampire_headshot_link
-		else if (lichplayer && !isnull(pref.lich_headshot_link))//Lich with a valid headshot
-			headshot = pref.lich_headshot_link
-		else
-			headshot = pref.headshot_link
-		img_gallery = pref.img_gallery
-		if(is_naked)
-			nsfw_img_gallery = pref.nsfw_img_gallery
-		char_name = pref.real_name
-		song_url = pref.ooc_extra
-		is_vet = viewing.check_agevet()
-		if(!headshot)
-			headshot = "headshot_red.png"
-
 	if(song_url)
 		has_song = TRUE
 
 	// Examine theme override — use the viewed character's preference
 	var/char_examine_theme
-	if(ishuman(holder))
+	if(pref)
+		char_examine_theme = pref.examine_theme
+	else if(ishuman(holder))
 		var/mob/living/carbon/human/holder_human = holder
 		char_examine_theme = holder_human.examine_theme
-	else if(pref)
-		char_examine_theme = pref.examine_theme
 	// Validate — reject meme themes and unknown keys, fall back to default
 	if(char_examine_theme)
 		var/list/valid_themes = get_tgui_themes()
@@ -221,18 +224,18 @@
 
 	C = viewing.client
 
-	if(ishuman(holder))
+	if(pref)
+		web_sound_url= pref.ooc_extra
+		if(pref.song_artist)
+			artist_name = pref.song_artist
+		song_title = pref.song_title
+
+	else if(ishuman(holder))
 		var/mob/living/carbon/human/human_holder = holder
 		web_sound_url = human_holder.ooc_extra
 		if(human_holder.song_artist)
 			artist_name = human_holder.song_artist
 		song_title = human_holder.song_title
-
-	else if(pref)
-		web_sound_url= pref.ooc_extra
-		if(pref.song_artist)
-			artist_name = pref.song_artist
-		song_title = pref.song_title
 
 	if(!C || !web_sound_url)
 		return

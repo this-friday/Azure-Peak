@@ -10,7 +10,6 @@
 	warning = "...bearing a well-supplied cache of arms."
 	points = -1
 	max_intensity = 3
-	var/chosen_intensity = 1
 
 /datum/warbands/aspects/supplies/get_points_at_intensity(intensity)
 	return -(intensity)
@@ -59,11 +58,8 @@
 		item_field.options = options
 		input_fields += item_field
 
-/datum/warbands/aspects/supplies/on_warband_confirmed(atom/movable/screen/warband/manager/manager, intensity = 1)
-	chosen_intensity = intensity
-
 // certain warband types upgrade certain types of supply caches
-/datum/warbands/aspects/supplies/proc/resolve_item_upgrades(item_type, atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/supplies/proc/resolve_item_upgrades(item_type, datum/warband_manager/manager)
 	if(item_type == /obj/item/rogueweapon/sword/long)
 		for(var/patron_type in manager.faithlocks)
 			if(ispath(patron_type, /datum/patron/inhumen/zizo)) // zizo sects, for example, get Avantyne longswords over regular longswords
@@ -76,10 +72,11 @@
 		return list(/obj/item/quiver/bolt/heavy/standard = 8)
 	return list()
 
-/datum/warbands/aspects/supplies/on_warlord_spawned(mob/living/carbon/human/warlord, atom/movable/screen/warband/manager/manager)
-	var/list/my_inputs = manager.selection_inputs["[src.type]"]
+/datum/warbands/aspects/supplies/on_warlord_spawned(mob/living/carbon/human/warlord, datum/warband_manager/manager)
+	var/list/my_inputs = manager.selection_inputs["[type]"]
 	var/list/type_map = item_type_map()
 	var/turf/spawn_turf = get_turf(warlord)
+	var/chosen_intensity = manager.aspect_intensities["[type]"] || 1
 
 	for(var/i = 1 to chosen_intensity)
 		var/item_type = my_inputs ? type_map[my_inputs["item_[i]"]] : null

@@ -97,6 +97,19 @@
 	reqs = list(/obj/item/alch/hag_moss/lullaby = 1, /obj/item/alch/mentha = 1, /obj/item/alch/symphitum = 1)
 	craftdiff = 6
 
+// Cleanse Recipes
+/datum/crafting_recipe/roguetown/alchemy/hag/cowardly_moss
+	name = "moss cowardly"
+	result = list(/obj/item/alch/hag_moss/enchanted/cowardly = 1)
+	reqs = list(/obj/item/alch/hag_moss/mercy = 1, /obj/item/alch/hypericum = 1, /obj/item/alch/salvia = 1)
+	craftdiff = 6
+
+/datum/crafting_recipe/roguetown/alchemy/hag/dead_moss
+	name = "moss dead"
+	result = list(/obj/item/alch/hag_moss/enchanted/dead = 1)
+	reqs = list(/obj/item/alch/hag_moss/grief = 1, /obj/item/alch/symphitum = 1, /obj/item/alch/atropa = 1)
+	craftdiff = 6
+
 // Items
 
 /datum/crafting_recipe/roguetown/alchemy/hag/wyrd_axe

@@ -95,6 +95,13 @@
 				C.infected = TRUE
 				wake_zombie(C, infected_wake = TRUE, converted = FALSE)
 
+	// we intercept the rotting process of Goons, and recycle them back into their warband's cache
+	if(amount > CORPSE_ROT_START_TIME && istype(C, /mob/living/carbon/human/species/human/northern/goon) && !C.client)
+		var/mob/living/carbon/human/species/human/northern/goon/recycled_goon = C
+		recycled_goon.rot_event()
+		qdel(src)
+		return
+
 	var/findonerotten = FALSE
 	var/shouldupdate = FALSE
 	var/dustme = FALSE

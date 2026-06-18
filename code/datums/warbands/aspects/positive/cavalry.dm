@@ -10,6 +10,6 @@
 	warning = "...of an approaching cavalry force."
 	points = -1
 
-/datum/warbands/aspects/cavalry/on_grunt_spawned(mob/living/carbon/human/grunt, atom/movable/screen/warband/manager/manager)
+/datum/warbands/aspects/cavalry/on_grunt_spawned(mob/living/carbon/human/grunt, datum/warband_manager/manager)
 	apply_virtue(grunt, new /datum/virtue/utility/riding())
 	grunt.adjust_skillrank_up_to(/datum/skill/misc/riding = 3, TRUE)
