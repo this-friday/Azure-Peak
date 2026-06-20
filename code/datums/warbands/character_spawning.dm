@@ -275,8 +275,12 @@
 
 */ 
 /datum/warband_manager/proc/load_appearance(mob/living/carbon/human/user, mob/living/carbon/human/target)
-	user.client.prefs.copy_to(target)
+	var/client/source = user?.client || target?.client
+	if(!source?.prefs)
+		return
+	source.prefs.copy_to(target)
 	target.dna.update_dna_identity()
+	target.hud_used?.zone_select?.update_icon()
 	statwipe(target)
 	GLOB.chosen_names += target.real_name
 

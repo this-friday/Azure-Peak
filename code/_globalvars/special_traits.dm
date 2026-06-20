@@ -78,8 +78,14 @@ GLOBAL_LIST_INIT(special_traits, build_special_traits())
 	return TRUE
 
 /proc/apply_voicepacks(mob/living/carbon/human/character, client/player)
+	if(!player)
+		player = character.client
+	if(!player?.prefs)
+		return
 	if(player.prefs.voice_pack != "Default")
 		var/datum/voicepack/VP = GLOB.voice_packs_list[player.prefs.voice_pack]
+		if(!VP)
+			return
 		character.dna.species.soundpack_m = new VP()
 		character.dna.species.soundpack_f = new VP()
 
@@ -126,7 +132,8 @@ GLOBAL_LIST_INIT(special_traits, build_special_traits())
 			if(origin_check(origin_type, species))
 				apply_virtue(character, origin_type)
 			else
-				to_chat(character, "Incorrect Origin parameters! Resetting to default.")
+				if(character.job != "Warlord's Envoy")
+					to_chat(character, "Incorrect Origin parameters! Resetting to default.")
 				origin_type = new character.dna.species.origin_default
 				apply_virtue(character, origin_type)
 

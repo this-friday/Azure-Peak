@@ -595,11 +595,12 @@
 // when a warband member uses the TAKE SHORTCUT verb (/mob/living/carbon/human/proc/shortcut), they leave behind special tracks
 // when a tracker examines it, they get clickable text in their chat. when clicked, it provides a locational hint regarding the warcamp's entrance
 /obj/effect/track/warband_shortcut
-	color = "#f71212"
-	base_diff = 5
+	real_icon_state = "tracks_warband"
+	base_diff = 2
 	var/warband_ID = 0
 	var/list/hint_uses = list() // a per-mob count of hints associated with the track
 								// uses are limited by their tracking skill
+	var/list/hint_cooldowns = list() // a per-mob cooldown tracker, so legendary trackers can't spam the triangulation
 
 /obj/effect/track/warband_shortcut/handle_creation(mob/living/track_source)
 	..()
@@ -609,10 +610,12 @@
 	..()
 	warband_ID = 0
 	hint_uses = list()
+	hint_cooldowns = list()
 
 /obj/effect/track/warband_shortcut/remove_knower(mob/living/tracker)
 	..()
 	hint_uses -= tracker
+	hint_cooldowns -= tracker
 
 /obj/effect/track/warband_shortcut/knowledge_readout(mob/user, knowledge)
 	. = ..()
@@ -647,6 +650,9 @@
 		return
 	if(skill < SKILL_LEVEL_LEGENDARY && (hint_uses[user] || 0) >= skill)
 		to_chat(user, span_warning("I've gleaned all I can from these tracks."))
+		return
+	if(hint_cooldowns[user] && world.time < hint_cooldowns[user])
+		to_chat(user, span_warning("I need a moment before I can study these tracks again."))
 		return
 	var/obj/structure/fluff/traveltile/warband/azure_to_intermission/target
 	for(var/obj/structure/fluff/traveltile/warband/azure_to_intermission/tile in SSwarbands.warband_machines)
@@ -689,6 +695,7 @@
 		msg += ", on a level [z_relation] us"
 	msg += "."
 	to_chat(user, span_notice(msg))
+	hint_cooldowns[user] = world.time + (5 SECONDS)
 	if(skill < SKILL_LEVEL_LEGENDARY)
 		hint_uses[user] = (hint_uses[user] || 0) + 1
 	return TRUE

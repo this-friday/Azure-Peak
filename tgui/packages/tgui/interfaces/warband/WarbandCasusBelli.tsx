@@ -182,12 +182,12 @@ export const CasusBelliPanel = ({
 
     const fieldBox = (label: string, val: string | number) => (
       <Box key={label} mb={1}>
-        <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#4a8a4a' }}>
+        <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#e9ca9e' }}>
           {label}
         </Box>
         <Box mt={0.5} p={0.5} style={{
           backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word', fontSize: '0.9em', color: '#c9a060',
+          wordBreak: 'break-word', fontSize: '0.9em', color: '#b1a390',
         }}>
           {val}
         </Box>
@@ -248,12 +248,12 @@ export const CasusBelliPanel = ({
 
             {infoBlocks.map((block, i) => (
               <Box key={i} mb={1}>
-                <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#4a8a4a' }}>
+                <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#e9ca9e' }}>
                   {block.label.toUpperCase()}
                 </Box>
                 <Box mt={0.5} p={0.5} style={{
                   backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word', fontSize: '0.9em', color: '#c9a060',
+                  wordBreak: 'break-word', fontSize: '0.9em', color: '#b1a390',
                 }}>
                   {block.text}
                 </Box>
@@ -482,12 +482,12 @@ export const CasusBelliPanel = ({
 
                         const fieldBox = (label: string, val: string | number, key: string) => (
                           <Box key={key} mt={0.5}>
-                            <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#7a5525' }}>
+                            <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#e9ca9e' }}>
                               {label}
                             </Box>
                             <Box mt={0.5} p={0.5} style={{
                               backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
-                              wordBreak: 'break-word', fontSize: '0.85em', color: '#c9a060',
+                              wordBreak: 'break-word', fontSize: '0.85em', color: '#b1a390',
                             }}>
                               {val}
                             </Box>
@@ -499,7 +499,7 @@ export const CasusBelliPanel = ({
                             {!!proposal.term_text && !textCoveredByFields && (
                               <Box p={0.5} style={{
                                 backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word', fontSize: '0.85em', color: '#c9a060',
+                                wordBreak: 'break-word', fontSize: '0.85em', color: '#b1a390',
                               }}>
                                 {proposal.term_text}
                               </Box>
@@ -523,12 +523,12 @@ export const CasusBelliPanel = ({
 
                             {infoBlocks.map((block, i) => (
                               <Box key={i} mt={0.5}>
-                                <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#7a5525' }}>
+                                <Box bold style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#e9ca9e' }}>
                                   {block.label.toUpperCase()}
                                 </Box>
                                 <Box mt={0.5} p={0.5} style={{
                                   backgroundColor: 'rgba(0,0,0,0.3)', whiteSpace: 'pre-wrap',
-                                  wordBreak: 'break-word', fontSize: '0.85em', color: '#c9a060',
+                                  wordBreak: 'break-word', fontSize: '0.85em', color: '#b1a390',
                                 }}>
                                   {block.text}
                                 </Box>

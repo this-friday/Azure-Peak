@@ -61,7 +61,7 @@ SUBSYSTEM_DEF(warbands)
 	create_name_cache()
 	initialize_class_cache()
 	initialize_lobby_mob_cache()
-	// grunts_to_create = max_unassigned_cache
+	grunts_to_create = max_unassigned_cache
 	roundstart_manager = new /datum/warband_manager()
 	register_manager(roundstart_manager)
 	return ..()

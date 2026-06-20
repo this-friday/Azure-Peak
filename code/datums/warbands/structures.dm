@@ -479,6 +479,7 @@
 ////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////
 /////////////////////////////////// WARBAND TRAVEL TILES
+
 /obj/structure/fluff/traveltile/warband
 	name = "travel"
 	var/warband_ID = 0
@@ -499,6 +500,7 @@
 	..()
 	if(!linked_warband)
 		return
+
 	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (L in linked_warband.allies)
 
 	if(is_friendly)
@@ -507,7 +509,7 @@
 	if(!(L in linked_warband.incoming_mobs))
 		linked_warband.incoming_mobs += L
 		to_chat(L, span_warning("I feel eyes upon me. I've entered hostile territory."))
-		for(var/mob/officer in src.linked_warband.members)
+		for(var/mob/officer in linked_warband.members)
 			if(!officer || !officer.mind)
 				continue
 			if(IS_WARBAND_OFFICER(officer.mind))
@@ -532,7 +534,7 @@
 /obj/structure/fluff/traveltile/warband/Initialize()
 	..()
 	SSwarbands.warband_machines += src
-	src.color = null	// different colors in the editor for visual clarity, but they should appear normal in game
+	color = null	// different colors in the editor for visual clarity, but they should appear normal in game
 
 /obj/structure/fluff/traveltile/warband/intermission_to_outskirts
 	color = "#ff8b2c"
@@ -552,11 +554,13 @@
 		return FALSE
 
 	var/is_friendly = (L.mind && (L.mind.warband_ID == warband_ID)) || (linked_warband && (L in linked_warband.allies))
+
 	if(is_friendly)
 		return ..()
 
 	var/datum/outskirts_encounter/encounter = linked_warband?.encounter_manager
-	if(!encounter) // an unfinished warband has no defensive line to speak of
+
+	if(!encounter)
 		return ..()
 
 	if(encounter.attacker_rout_active)
@@ -671,7 +675,8 @@
 		return ..()
 
 	var/datum/outskirts_encounter/encounter = linked_warband?.encounter_manager
-	if(!encounter) // an unfinished warband has no camp defenses to speak of
+
+	if(!encounter)
 		return ..()
 
 	if(encounter.outskirts_locked || encounter.encounter_active)

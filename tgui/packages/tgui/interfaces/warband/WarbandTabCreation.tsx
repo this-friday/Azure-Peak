@@ -195,7 +195,7 @@ const SelectionInputDisplay = ({
       <Stack vertical style={{ gap: '4px' }}>
         {filled.map(field => (
           <div key={field.key}>
-            <span style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#7a5525', fontWeight: 'bold' }}>
+            <span style={{ fontSize: '11px', letterSpacing: '0.1em', color: '#7a2525ff', fontWeight: 'bold' }}>
               {field.label.toUpperCase()}
             </span>
             <div style={valueStyle}>{String(selectionInputs[field.key])}</div>
@@ -246,7 +246,7 @@ const LockedSummaryView = ({
 
   const inputValueStyle: React.CSSProperties = {
     fontSize: '13px',
-    color: '#c9a060',
+    color: '#b1a390',
     marginTop: '1px',
   };
 
@@ -268,8 +268,12 @@ const LockedSummaryView = ({
           <Box style={cardStyle}>
             <div style={labelStyle}>SELECTED</div>
             <div style={titleStyle}>{selectedWarband.title}</div>
-            <div style={dividerStyle} />
-            <div style={summaryStyle}>{selectedWarband.summary}</div>
+            {selectedWarband.summary && (
+              <>
+                <div style={dividerStyle} />
+                <div style={summaryStyle}>{selectedWarband.summary}</div>
+              </>
+            )}
             {selectedWarband.desc && (
               <>
                 <div style={dividerStyle} />
@@ -309,8 +313,12 @@ const LockedSummaryView = ({
                 )}
               </div>
             )}
-            <div style={dividerStyle} />
-            <div style={summaryStyle}>{selectedSubtype.summary}</div>
+            {selectedSubtype.summary && (
+              <>
+                <div style={dividerStyle} />
+                <div style={summaryStyle}>{selectedSubtype.summary}</div>
+              </>
+            )}
             {selectedSubtype.desc && (
               <>
                 <div style={dividerStyle} />

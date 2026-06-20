@@ -185,6 +185,8 @@
 
 /obj/structure/fluff/traveltile/proc/has_access(atom/movable/AM)
 	var/may_access = FALSE
+	if(!length(required_jobs) && !length(required_traits)) // tiles without any required jobs or traits are public
+		may_access = TRUE
 	if(required_jobs && ishuman(AM))
 		var/mob/living/carbon/human/H = AM
 		may_access = (H.job in required_jobs)
@@ -199,7 +201,6 @@
 	var/cooldown_limit = 15 SECONDS
 	if(istype(src, /obj/structure/fluff/traveltile/warband))
 		cooldown_limit = 3 SECONDS // reduced cooldown for warband tiles, since they're so close together
-		
 	if(world.time < AM.recent_travel + cooldown_limit)
 		return FALSE
 	if(!has_access(AM))

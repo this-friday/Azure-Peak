@@ -181,7 +181,7 @@
 					// characters with tracking skills can examine these tracks to get a hint of where the warband's Warcamp Entrance is
 					var/turf/departure_turf = get_turf(src)
 					if(departure_turf)
-						var/obj/effect/track/old_track = locate() in departure_turf
+						var/obj/effect/track/old_track = locate(/obj/effect/track) in departure_turf
 						var/obj/effect/track/warband_shortcut/new_track = SStracks.get_track(/obj/effect/track/warband_shortcut, departure_turf)
 						if(new_track)
 							if(old_track && old_track != new_track)
