@@ -35,7 +35,7 @@
 		member.playsound_local(member, 'sound/misc/notice (2).ogg', 100, FALSE)
 
 /datum/warbands/sect/on_warlord_equip(mob/living/carbon/human/warlord, datum/warband_manager/manager)
-	warlord.verbs += /mob/living/carbon/human/proc/enlighten
+	add_verb(warlord, /mob/living/carbon/human/proc/enlighten)
 	
 //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// SUBTYPES

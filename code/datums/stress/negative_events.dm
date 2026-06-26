@@ -384,7 +384,7 @@
 	desc = span_boldred("I can't believe I signed that! My peers shall find me a laughingstock... Gods damn mine wretched, wizard lyfe...")
 	timer = 999 MINUTES
 
-/datum/stressevent/warband_warhorn
+/datum/stressevent/warband_warhorn // given to mobs affected by a warlord's 'Shatter Morale' warhorn
 	stressadd = 5
 	desc = span_boldred("War's song shatters my peace.")
 	timer = 5 MINUTES

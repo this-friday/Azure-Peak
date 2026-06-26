@@ -285,7 +285,7 @@
 					outpost.warband_ID = mind.warband_ID
 					outpost.linked_warband = mind.warband_manager
 					mind.warband_manager.warcamp_established = TRUE
-					verbs -= /mob/living/carbon/human/proc/connect_warcamp
+					remove_verb(src, /mob/living/carbon/human/proc/connect_warcamp)
 			SSwarbands.warband_managers_busy = FALSE
 			return
 
@@ -578,5 +578,5 @@
 		target.emote("agony", forced = TRUE)
 		to_chat(target, span_userdanger("In place of my lux lies an agonizing vacancy. It is elsewhere, and it will never be mine again."))
 	target.mind.enlightened = TRUE
-	target.verbs -= /mob/living/carbon/human/proc/clericpray // can't pray
+	remove_verb(target, /mob/living/carbon/human/proc/clericpray) // can't pray
 	return TRUE

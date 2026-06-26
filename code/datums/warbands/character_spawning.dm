@@ -85,8 +85,8 @@
 	equip_character(class_path, subclass_path, is_leader, user)
 
 	user.faction |= list("warband_[warband_ID]")
-	user.verbs += /mob/living/carbon/human/proc/shortcut
-	user.verbs += /mob/living/carbon/human/proc/communicate
+	add_verb(user, /mob/living/carbon/human/proc/shortcut)
+	add_verb(user, /mob/living/carbon/human/proc/communicate)
 	REMOVE_TRAIT(user, TRAIT_FORCED_LOBBY_CHAT, TRAIT_GENERIC)
 	members += user
 	user.nutrition = NUTRITION_LEVEL_FULL
@@ -98,8 +98,8 @@
 		user.mind.AddSpell(new /obj/effect/proc_holder/spell/invoked/grunt_order)
 		addtimer(CALLBACK(src, PROC_REF(give_treaty), user), 10 SECONDS)
 		if(is_lieutenant)
-			user.verbs += /mob/living/carbon/human/proc/desert
-			user.verbs += /mob/living/carbon/human/proc/accept_kick
+			add_verb(user, /mob/living/carbon/human/proc/desert)
+			add_verb(user, /mob/living/carbon/human/proc/accept_kick)
 
 	switch(role)
 		if(ROLE_WARLORD_GRUNT)
@@ -324,8 +324,8 @@
 	user.actions = list()
 	user.mind.RemoveAllSpells()
 	if(/mob/living/carbon/human/proc/devotionreport in user.verbs)
-		user.verbs -= /mob/living/carbon/human/proc/devotionreport
-		user.verbs -= /mob/living/carbon/human/proc/clericpray
+		remove_verb(user, /mob/living/carbon/human/proc/devotionreport)
+		remove_verb(user, /mob/living/carbon/human/proc/clericpray)
 
 /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// GIVE TREATY
@@ -345,7 +345,7 @@
 	new /obj/item/natural/feather(user.loc)
 	new_treaty.firstparty = linked_faction.name
 	new_treaty.secondparty = "The Crown"
-	new_treaty.add_unique_terms(src)
+	new_treaty.set_warband_source(src)
 	apply_casus_belli_to_treaty(new_treaty)
 
 	to_chat(user, span_notice("I fetch the Treaty from my bag. If I lose it, I can draft spares from the Campaign Planner."))

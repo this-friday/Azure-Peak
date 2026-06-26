@@ -100,7 +100,7 @@
 				user.mind.unresolved_exile_names -= target.real_name
 				to_chat(user, span_warning("Since this was in question, I shall make it official."))
 				for(var/mob/living/carbon/human/member in user.mind.warband_manager.members) 
-					to_chat(member, span_warning("The [user.job], [user.real_name], acts in defiance of [target.real_name]'s decree of exile and has ordered their men to treat [target.real_name] as an associate."))
+					to_chat(member, span_warning("The [user.job], [user.real_name], acts in defiance of [target.real_name]'s exile and has ordered their men to treat [target.real_name] as an associate."))
 
 			return FALSE
 
@@ -110,7 +110,7 @@
 					// if a lieutenant's the one doing this, they become a personal ally
 					if(user.mind.special_role == ROLE_WARLORD_LIEUTENANT || user.mind.special_role == ROLE_WARLORD_ASPIRANT) 
 						for(var/mob/living/carbon/human/member in user.mind.warband_manager.members) 
-							to_chat(member, span_warning("The [user.job], [user.real_name], acts in defiance of [target.real_name]'s decree of exile and has ordered their men to treat [target.real_name] as an associate."))
+							to_chat(member, span_warning("The [user.job], [user.real_name], acts in defiance of [target.real_name]'s exile and has ordered their men to treat [target.real_name] as an associate."))
 						if(!target.mind.warband_recruiter_name)
 							target.mind.warband_recruiter_name = user.real_name 
 						if(!(target in user.mind.subordinates)) // if they weren't our subordinate we adopt them
@@ -264,8 +264,10 @@
 		start_recharge()
 		return TRUE
 
+	// Shatter Morale:
 	// those outside the warband w/o the steelhearted trait get extremely stressed out
-	// aura farm (temporarily override combat music for all players within 21 tiles)
+	// goons temporarily have their Underwhelming trait removed
+	// aura farms (temporarily override combat music for all players within 21 tiles)
 	if(istype(target, /atom/movable/screen/quad_intents))
 		if(!can_cast(caster) || !cast_check(FALSE, caster))
 			return FALSE
@@ -347,7 +349,7 @@
 							if(get_dist(follower_npc, origin_turf) > 40)
 								continue // skip them if they're too far away
 							REMOVE_TRAIT(follower_npc, TRAIT_UNDERWHELMING, TRAIT_GENERIC)
-							addtimer(CALLBACK(follower_npc, TYPE_PROC_REF(/mob/living/carbon/human/species/human/northern/goon, become_underwhelming)), 60 SECONDS, TIMER_UNIQUE | TIMER_OVERRIDE)
+							addtimer(CALLBACK(follower_npc, TYPE_PROC_REF(/mob/living/carbon/human/species/human/northern/goon, become_underwhelming)), WARBAND_ULT_BUFF_TIME, TIMER_UNIQUE | TIMER_OVERRIDE)
 
 				caster.mind.order_exhaustion = TRUE
 				addtimer(CALLBACK(caster, TYPE_PROC_REF(/mob/living/carbon/human, end_order_exhaustion)), 25 MINUTES)

@@ -25,7 +25,8 @@
 /datum/warbands/mercenary/get_base_squad_size(mob/user, datum/advclass/primary_class)
 	if(istype(primary_class, /datum/advclass/warband/mercenary/warlord/patron))
 		return 5
-	return ..()
+	else // extremely low base squad size, as mercenaries classes are already pretty strong
+		return 2 // still potentially supplemented with the Horde aspect, so this is far from a hard limit
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// NOTE ON HOW CLASSES WORK HERE
@@ -152,8 +153,8 @@
 	universal_gruntclasses = list(/datum/advclass/mercenary/lirvanmerc)
 	combatmusic = list('sound/music/combat_matthios.ogg')
 
-////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// NPC OUTFIT
+/////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// NPC OUTFITS
 
 /datum/warbands/mercenary/get_grunt_outfit(mob/living/carbon/human/species/human/northern/goon/goon)
 	return /datum/outfit/job/roguetown/human/species/human/northern/goon/mercenary

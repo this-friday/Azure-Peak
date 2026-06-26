@@ -253,14 +253,9 @@
 			announce_to_lobby(span_redteamradio("The most-supported casus belli proposal ([winner["term_name"]]) carries the day."))
 			return TRUE
 
-	var/obj/item/treaty/temp_treaty = new /obj/item/treaty()
-	if(selected_warband)
-		temp_treaty.add_unique_terms(src)
 	var/list/no_input_terms = list()
 	var/list/fillable_terms = list()
-	for(var/datum/treaty/terms/term in temp_treaty.terms)
-		if(term.warbandlock && term.warbandlock != selected_warband?.type)
-			continue
+	for(var/datum/treaty/terms/term in SSwarbands.get_all_terms(selected_warband?.type))
 		var/fillable = TRUE
 		var/has_required = FALSE
 		for(var/datum/treaty/input_field/field in term.input_fields)
@@ -274,7 +269,6 @@
 			no_input_terms += term.type
 		else if(fillable)
 			fillable_terms += term.type
-	qdel(temp_treaty)
 	var/list/candidate_pool = no_input_terms.len ? no_input_terms : fillable_terms
 	if(!candidate_pool.len)
 		return FALSE

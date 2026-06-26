@@ -66,7 +66,7 @@
 
 		var/datum/devotion/C = new /datum/devotion(H, H.patron)
 		C.grant_miracles(H, cleric_tier = CLERIC_T4, devotion_limit = CLERIC_REQ_4, start_maxed = TRUE)
-		H.verbs -= /mob/living/carbon/human/proc/clericpray // cannot regain devotion
+		remove_verb(H, /mob/living/carbon/human/proc/clericpray) // cannot regain devotion
 
 /obj/item/clothing/head/roguetown/witchhat/thrall
 	color = "#b2b2b2"

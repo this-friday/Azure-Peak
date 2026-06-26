@@ -2138,13 +2138,13 @@
 	id = "warband_attack"
 	alert_type = /atom/movable/screen/alert/status_effect/buff/druqks
 	effectedstats = list(STATKEY_STR = 10)
-	duration = 10 SECONDS
+	duration = WARBAND_ATTACK_BUFF_TIME
 /datum/status_effect/buff/warband_defend
 	var/outline_colour ="#341686"
 	id = "warband_defend"
 	alert_type = /atom/movable/screen/alert/status_effect/buff/druqks
 	effectedstats = list(STATKEY_CON = 10,STATKEY_WIL = 10)
-	duration = 17 SECONDS
+	duration = WARBAND_DEFEND_BUFF_TIME
 
 // attack filter
 /datum/status_effect/buff/warband_attack/on_apply()

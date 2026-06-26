@@ -7,6 +7,7 @@
 	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
 		ui = new(user, src, "TreatyMenu")
+		ui.set_autoupdate(FALSE)
 		ui.open()
 
 /obj/item/treaty/ui_data(mob/user)
@@ -106,7 +107,7 @@
 	data["backend_factions"] = faction_list
 
 	var/list/all_terms = list()
-	for(var/datum/treaty/terms/term in terms)
+	for(var/datum/treaty/terms/term in get_available_terms())
 		UNTYPED_LIST_ADD(all_terms, list(
 			"name" = term.name,
 			"desc" = term.desc,
@@ -219,10 +220,10 @@
 			var/term_name = params["name"]
 			if(!term_name)
 				return
-			for(var/datum/treaty/terms/prototype in terms)
-				if(prototype.name != term_name)
+			for(var/datum/treaty/terms/found_term in get_available_terms())
+				if(found_term.name != term_name)
 					continue
-				var/datum/treaty/terms/new_term = new prototype.type()
+				var/datum/treaty/terms/new_term = new found_term.type()
 				apply_params_to_term(new_term, params)
 				if(check_duplicate_term(new_term))
 					to_chat(user, span_warning("This term conflicts with an existing term on the treaty."))
@@ -244,10 +245,10 @@
 			term_index++
 			if(term_index < 1 || term_index > active_terms.len)
 				return
-			for(var/datum/treaty/terms/prototype in terms)
-				if(prototype.name != term_name)
+			for(var/datum/treaty/terms/found_term in get_available_terms())
+				if(found_term.name != term_name)
 					continue
-				var/datum/treaty/terms/new_term = new prototype.type()
+				var/datum/treaty/terms/new_term = new found_term.type()
 				apply_params_to_term(new_term, params)
 				if(check_duplicate_term(new_term, term_index))
 					to_chat(user, span_warning("This term conflicts with an existing term on the treaty."))
@@ -301,4 +302,4 @@
 			. = TRUE
 
 	if(.)
-		ui_interact(user)
+		SStgui.update_uis(src)

@@ -10,8 +10,8 @@
 	// a treaty's "first party" and "second party" are just flavor. it's possible that none of the listed terms could apply to either of them
 	var/firstparty		// the first party in the treaty
 	var/secondparty		// the second party in the treaty
+	var/warband_type	// the warband type the treaty was issued for
 
-	var/list/terms = list()				// all potential terms
 	var/list/active_terms = list()		// the actual, written terms on a treaty
 	var/list/warband_sources = list()	// treaties from certain warbands & aspects can have unique terms
 	var/list/user_cooldowns = list()
@@ -30,8 +30,6 @@
 
 /obj/item/treaty/Initialize()
 	..()
-	for(var/term_option in WARBAND_TERMS)
-		terms += new term_option
 	SSwarbands.treaties += src
 
 /obj/item/treaty/spark_act()
@@ -41,25 +39,23 @@
 	SSwarbands.treaties -= src
 	for(var/datum/treaty/terms/term in active_terms)
 		qdel(term)
-	for(var/datum/treaty/terms/term in terms)
-		qdel(term)
 	active_terms = null
-	terms = null
 	warband_sources = null
 	user_cooldowns = null
 	job_titles = null
 	return ..()
 
-//////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////// ADD UNIQUE TERMS
+////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// WARBAND SOURCE
 /*
-	when a treaty is spawned by a warband, this proc adds any unique terms the warband might have
+	when a treaty is spawned by a warband, we record the warband's type
+	the treaty's available unique terms are then gated on it (see /datum/treaty/terms/warbandlock & SSwarbands.get_all_terms)
 */
-/obj/item/treaty/proc/add_unique_terms(datum/warband_manager/warband_manager)
-	var/datum/warbands/warband = warband_manager.selected_warband
-	if(warband)
-		if(istype(warband, /datum/warbands/wizard))
-			terms += new /datum/treaty/terms/unique/wizard
+/obj/item/treaty/proc/set_warband_source(datum/warband_manager/warband_manager)
+	warband_type = warband_manager.selected_warband?.type
+
+/obj/item/treaty/proc/get_available_terms()
+	return SSwarbands.get_all_terms(warband_type)
 
 ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// GET WEALTH
@@ -67,6 +63,9 @@
 	get a faction's vault for the treaty's "Wealth" display
 	the town's faction vault is directly linked to its treasury
 	for everyone else, it just returns the actual vault value from their faction datum
+
+	completely irrelevant flavor
+
 */
 /obj/item/treaty/proc/get_wealth(faction_name)
 	if(faction_name == "The Crown")

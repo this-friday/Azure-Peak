@@ -4,7 +4,7 @@
 
 /datum/warbands/aspects/horde
 	title = "HORDE"
-	summary = "Our squads become a sprawling mass of eager combatants."
+	summary = "Were it so that manpower alone could buy victory, Psydonia in its entirety would be ours."
 	desc = "Increases squad size by 1 per intensity."
 	warning = "...of a relentless tide that threatens to completely drown the battlefield."
 	points = -1

@@ -52,6 +52,10 @@ SUBSYSTEM_DEF(warbands)
 	var/list/aspects_ui_data
 	var/list/cached_ui_classes
 
+	// terms
+	var/list/all_terms					// a list of universal terms from WARBAND_TERMS, available to every treaty
+	var/list/unique_terms_by_warband	// an associated list of: warband type path + a list of unique terms
+
 /datum/controller/subsystem/warbands/New()
 	..()
 
@@ -65,6 +69,38 @@ SUBSYSTEM_DEF(warbands)
 	roundstart_manager = new /datum/warband_manager()
 	register_manager(roundstart_manager)
 	return ..()
+
+///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////// TERM REGISTRY
+
+/datum/controller/subsystem/warbands/proc/build_term_registry()
+	if(all_terms)
+		return
+	all_terms = list()
+	unique_terms_by_warband = list()
+	// universal terms: explicitly declared in WARBAND_TERMS
+	for(var/datum/treaty/terms/term_type as anything in WARBAND_TERMS)
+		if(initial(term_type.warbandlock))
+			continue // a warband-locked term doesn't belong in the universal pool
+		all_terms += new term_type
+	// unique terms: auto-discovered via the warbandlock each one declares
+	for(var/datum/treaty/terms/term_type as anything in subtypesof(/datum/treaty/terms))
+		var/lock = initial(term_type.warbandlock)
+		if(!lock)
+			continue
+		if(!unique_terms_by_warband[lock])
+			unique_terms_by_warband[lock] = list()
+		unique_terms_by_warband[lock] += new term_type
+
+// returns the terms available for the given warband
+/datum/controller/subsystem/warbands/proc/get_all_terms(warband_type)
+	build_term_registry()
+	var/list/result = all_terms.Copy()
+	if(warband_type)
+		var/list/uniques = unique_terms_by_warband[warband_type]
+		if(uniques)
+			result += uniques
+	return result
 
 /datum/controller/subsystem/warbands/proc/allocate_warband_id()
 	return next_warband_id++
@@ -161,7 +197,7 @@ SUBSYSTEM_DEF(warbands)
 			return aspect
 
 // cycles through phases each time it fires
-// 	phases: 0 (equip a mob) -> 1 (create a fresh, unassigned mob) -> 2 (create a fresh lobby mob) -> repeat until the caches are full
+// phases: 0 (equip a mob) -> 1 (create a fresh, unassigned mob) -> 2 (create a fresh lobby mob) -> repeat until the caches are full
 /datum/controller/subsystem/warbands/fire(resumed = FALSE)
 	if(!resumed)
 		currentrun_encounters = list()

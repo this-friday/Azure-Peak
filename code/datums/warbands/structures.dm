@@ -56,7 +56,7 @@
 					new /obj/item/natural/feather(loc)
 					spawned_treaty.firstparty = linked_warband.linked_faction.name
 					spawned_treaty.secondparty = "The Crown"
-					spawned_treaty.add_unique_terms(linked_warband)
+					spawned_treaty.set_warband_source(linked_warband)
 					linked_warband.apply_casus_belli_to_treaty(spawned_treaty)
 					COOLDOWN_START(user.mind, treaty_cooldown, 15 MINUTES)
 					return

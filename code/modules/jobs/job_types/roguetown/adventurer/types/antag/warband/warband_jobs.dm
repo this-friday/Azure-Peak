@@ -71,10 +71,10 @@
 	..()
 	to_chat(H, span_warning("As an Envoy, you may return to your main character by interacting with a Rally Point. In the event of an emergency, use the ABANDON ENVOY verb in your Warband tab. Failing that, re-enter your corpse."))
 	to_chat(H, span_warning("If you embark for diplomacy, you should consider fetching a Treaty from the Campaign Planner."))
-	H.verbs += /mob/living/carbon/human/proc/abandon_envoy
-	H.verbs += /mob/living/carbon/human/proc/shortcut
-	H.verbs += /mob/living/carbon/human/proc/connect_warcamp
-	H.verbs += /mob/living/carbon/human/proc/communicate
+	add_verb(H, /mob/living/carbon/human/proc/abandon_envoy)
+	add_verb(H, /mob/living/carbon/human/proc/shortcut)
+	add_verb(H, /mob/living/carbon/human/proc/connect_warcamp)
+	add_verb(H, /mob/living/carbon/human/proc/communicate)
 	H.mind.warband_manager.members += H
 	H.pronouns = "he/him"
 	backl = /obj/item/storage/backpack/rogue/satchel	

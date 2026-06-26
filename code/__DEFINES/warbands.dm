@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// VARIABLES
 // warband max playercount (10 at minimum)
-#define GRUNTS_PER_LIEUTENANT 2 // minimum grunts per lieutenant | scales at a rate of +1 for every 15 active players past 40, as seen here: (/datum/round_event/antagonist/solo/warlord/start())
+#define GRUNTS_PER_LIEUTENANT 2 // minimum grunts per lieutenant | scales at a rate of +1 for every 15 active players past 40, as seen here: (/proc/warband_grunts_per_lieutenant())
 #define GRUNTS_PER_LIEUTENANT_MAX 99
 #define LIEUTENANTS_PER_WARLORD 3
 
@@ -16,6 +16,11 @@
 
 // the default squad size for Goons
 #define ALLIED_NPC_MINIMUM 4
+
+// the durations for squad-wide NPC buffs
+#define WARBAND_ATTACK_BUFF_TIME 10 SECONDS // maxed out STR for 10 seconds
+#define WARBAND_DEFEND_BUFF_TIME 17 SECONDS // maxed out WIL & CON for 17 seconds
+#define WARBAND_ULT_BUFF_TIME 60 SECONDS 	// underwhelming trait dropped for 60 seconds
 
 // the respawn pool/tickets for a warband's Goon NPCs
 #define WARBAND_BASE_RESPAWNS 400 // the initial minimum | the final total is combined with another RESPAWNS_ define, based on the chosen Warband

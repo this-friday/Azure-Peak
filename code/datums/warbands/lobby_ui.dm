@@ -8,6 +8,7 @@
 	ui = SStgui.try_update_ui(user, src, ui)
 	if(!ui)
 		ui = new(user, src, "WarbandCreation")
+		ui.set_autoupdate(FALSE)
 		ui.open()
 
 /datum/warband_manager/ui_data(mob/user)
@@ -303,7 +304,9 @@
 			var/class_ignore_locks = FALSE
 			var/class_ignores_subclass_requirement = FALSE
 			var/list/class_subclass_paths = list()
+			var/class_slots = -1
 			if(ispath(class_type, /datum/advclass/warband))
+				class_slots = initial(class_type:maximum_possible_slots)
 				class_ignore_locks = initial(class_type:ignore_locks)
 				class_ignores_subclass_requirement = initial(class_type:ignores_uni_class_requirement)
 				// a primary may source its subclasses from its own filepath subtypes, or from an explicit list
@@ -320,7 +323,7 @@
 				"alt_name" = initial(class_type:name),
 				"storyinfluence" = initial(class_type:storytellerlimit),
 				"rarity" = initial(class_type:rarity),
-				"slots" = initial(class_type:maximum_possible_slots),
+				"slots" = class_slots,
 				"type" = class_type,
 				"ignore_locks" = class_ignore_locks,
 				"ignores_uni_class_requirement" = class_ignores_subclass_requirement,
@@ -330,11 +333,9 @@
 	data["classes"] = SSwarbands.cached_ui_classes
 
 /datum/warband_manager/proc/populate_terms_data(list/data)
-	var/obj/item/treaty/temp_treaty = new /obj/item/treaty()
-	if(creation_stage >= 2 && selected_warband)
-		temp_treaty.add_unique_terms(src)
+	var/warband_type = (creation_stage >= 2 && selected_warband) ? selected_warband.type : null
 	var/list/all_terms_list = list()
-	for(var/datum/treaty/terms/term in temp_treaty.terms)
+	for(var/datum/treaty/terms/term in SSwarbands.get_all_terms(warband_type))
 		UNTYPED_LIST_ADD(all_terms_list, list(
 			"name" = term.name,
 			"desc" = term.desc,
@@ -344,7 +345,6 @@
 			"type" = "[term.type]",
 			"warbandlock" = (term.warbandlock ? "[term.warbandlock]" : null)
 		))
-	qdel(temp_treaty)
 	data["all_terms"] = all_terms_list
 
 /datum/warband_manager/proc/populate_warband_lists(list/data)

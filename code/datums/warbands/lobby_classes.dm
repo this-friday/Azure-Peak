@@ -107,6 +107,8 @@
 
 // TRUE if the class still has an open slot in this warband
 /datum/warband_manager/proc/class_slots_available(class_path, mob/user)
+	if(!ispath(class_path, /datum/advclass/warband)) // ignore slot caps for non-warband jobs (like /datum/advclass/mercenary/lirvanmerc)
+		return TRUE
 	var/max_slots = initial(class_path:maximum_possible_slots)
 	if(max_slots < 0)
 		return TRUE

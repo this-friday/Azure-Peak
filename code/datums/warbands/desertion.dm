@@ -59,7 +59,7 @@
 
 	else // if they WERE kicked
 		to_chat(src, span_userdanger("I have been declared an exile by my Warband."))
-		verbs -= /mob/living/carbon/human/proc/desert
+		remove_verb(src, /mob/living/carbon/human/proc/desert)
 		mind.warband_exile_IDs += initial_ID
 		for(var/mob/warband_member in src.mind.warband_manager.members)
 			if(isliving(warband_member))
@@ -138,7 +138,7 @@
 			else if(patron.name == "Psydon")
 				new_warband_manager.selected_subtype = new WARBAND_SECT_PSYDON
 			new_warband_manager.faithlocks = list(patron.type)
-			verbs += /mob/living/carbon/human/proc/enlighten
+			add_verb(src, /mob/living/carbon/human/proc/enlighten)
 
 		if("Magician") // a magician in schism (potentially) creates a sorcerer-king 
 			if(mind.warband_manager.disorder >= 5)
@@ -184,7 +184,7 @@
 	new_warband_manager.stop_creation_timer()
 	if(new_warband_manager.has_compatible_cache(mind.warband_manager))
 		new_warband_manager.share_cache_with(mind.warband_manager)
-	verbs -= /mob/living/carbon/human/proc/desert
-	verbs += /mob/living/carbon/human/proc/connect_warcamp
+	remove_verb(src, /mob/living/carbon/human/proc/desert)
+	add_verb(src, /mob/living/carbon/human/proc/connect_warcamp)
 	mind.warband_manager = new_warband_manager
 	mind.warband_manager.determine_squad_size(src)
