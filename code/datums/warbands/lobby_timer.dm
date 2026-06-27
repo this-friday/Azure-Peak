@@ -17,7 +17,7 @@
 	var/cached_remaining_time = -1
 	var/timer_id_warning
 	var/timer_id_timeout
-	var/storytellers_resolved = FALSE // we get the current storytellers when the timer starts, too
+	var/patrons_resolved = FALSE 		// we resolve the princes' patrons when the timer starts, so we can decide our rarity unlocks
 	var/current_stage_limit = 0			// the CURRENT stage's timer duration | 0 means "use creation_time_limit"
 	var/current_warning_threshold = 0	// the current stage's halfway warning point
 
@@ -29,9 +29,9 @@
 	current_warning_threshold = current_stage_limit / 2
 	creation_start_time = world.time
 	creation_timer_active = TRUE
-	if(!storytellers_resolved)
-		storyteller_refresh()
-		storytellers_resolved = TRUE
+	if(!patrons_resolved)
+		patron_refresh()
+		patrons_resolved = TRUE
 	var/time_until_warning = current_stage_limit - current_warning_threshold
 	timer_id_warning = addtimer(CALLBACK(src, PROC_REF(send_warning)), time_until_warning, TIMER_STOPPABLE)
 

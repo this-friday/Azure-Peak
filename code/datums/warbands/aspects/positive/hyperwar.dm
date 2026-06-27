@@ -6,7 +6,7 @@
 
 /datum/warbands/aspects/war
 	title = "WAR FOREVER"
-	storytellerlimit = /datum/storyteller/ravox
+	storytellerlimit = /datum/patron/divine/ravox
 	rarity = 2
 	summary = "We arrive with one of the largest armies yet assembled. Proper cohesion, however, is nearly impossible."
 	desc = "You are given a massive NPC spawn pool (+500). As a drawback, however, the Warband permanently suffers from 10 Disorder. This shuts off the Communicate verb."

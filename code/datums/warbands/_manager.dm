@@ -119,7 +119,6 @@
 	button = new /atom/movable/screen/warband_button()
 	button.manager = src
 	if(!finalized)
-		storyteller_refresh()
 		figure_refresh()
 
 /datum/warband_manager/Destroy()
@@ -186,32 +185,32 @@
 		if(important_jobs.Find(important_figure.job_path))
 			importantfigures |= important_figure
 
-///////////////////////////////////////////////////////
-/////////////////////////////////// STORYTELLER REFRESH
+//////////////////////////////////////////////////
+/////////////////////////////////// PATRON REFRESH
 /*
 	builds the storyinfluences for warband creation
-	takes into account:
-		the roundstart storyteller
-		the currently active storyteller (only really matters for latespawns)
-		each prince has a 50% chance to contribute their patron to the storyteller list
+	formerly storyteller-based, but storytellers are currently Out of the Picture
+
+	rarity is driven exclusively by the patrons of the princes:
+		each prince contributes their patron at least once (guaranteed)
+		20% chance to contribute it twice
+		5% chance to contribute it three times
 	
 	ran when a manager's timer first starts during start_creation_timer()
 */
-/datum/warband_manager/proc/storyteller_refresh()
+/datum/warband_manager/proc/patron_refresh()
 	storyinfluence.Cut()
-	var/active_storyteller = SSgamemode.current_storyteller
-	var/roundstart_storyteller_string = SSgamemode.selected_storyteller
-	if(active_storyteller)
-		storyinfluence += active_storyteller
-
-	if(roundstart_storyteller_string)
-		storyinfluence += new roundstart_storyteller_string()
-
 	for(var/mob/living/carbon/human/deadbeat in importantfigures)
-		if(deadbeat.job_path == /datum/job/roguetown/prince && deadbeat.patron)
-			if(prob(50))
-				var/datum/patron/prince_patron_datum = deadbeat.patron
-				storyinfluence += new prince_patron_datum.storyteller()
+		if(deadbeat.job_path != /datum/job/roguetown/prince || !deadbeat.patron)
+			continue
+		var/contributions = 1	// each prince contributes their patron once
+		var/roll = rand(1, 100)
+		if(roll <= 5)
+			contributions = 3	// 5%  for three copies
+		else if(roll <= 25)
+			contributions = 2	// 20% for two copies
+		for(var/i in 1 to contributions)
+			storyinfluence += deadbeat.patron
 
 //////////////////////////////////////////////
 /////////////////////////////////// LOCK CHECK

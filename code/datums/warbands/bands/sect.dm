@@ -86,7 +86,7 @@
 
 /datum/warbands/subtypes/ascendant
 	rarity = 2	// an ascendant sect treads on narrative ground covered by a ton of other antagonists, so we'll make them uncommon
-	storytellerlimit = /datum/storyteller/graggar // by well-tread narrative ground i'm referring to a massacre
+	storytellerlimit = /datum/patron/inhumen/graggar // by well-tread narrative ground i'm referring to a massacre
 	title = "ASCENDANT"
 	treaty_name = "The Holy Ecclesial"
 	quote = "''Shine thy fury upon me, oh Dark Star! I sing slaughter's psalm, and thy word is sweet!''"

@@ -1,8 +1,8 @@
   // the backend should be providing every possible warband, aspect and class
   // then it gets put through this Filter
 
-  // for a storyteller-locked warband to pass the filter and appear as a possible choice, its required storyteller needs to be present in the manager's "storyinfluences" variable
-  // it will need to be present an amount of times equal to the warband's "rarity"
+  // for a rarity-locked warband to pass the filter and appear as a possible choice, its required patron needs to be present in the manager's "storyinfluence" variable
+  // it will need to be present an amount of times equal to the warband's "rarity" (contributed by the princes' patrons)
 
   // grant: a source's warlord/lieu/grunt class lists are unioned into the available pool
   // suppress: a source's "suppressed_classes" removes those class types from every panel
@@ -13,12 +13,12 @@
 
 import { useMemo } from 'react';
 
-import { AspectType, ClassType, StorytellerType, SubType, WarbandType } from './WarbandTypes';
+import { AspectType, ClassType, PatronType, SubType, WarbandType } from './WarbandTypes';
 
-const rarityFilter = (band: any, storytellersList: StorytellerType[], bypass: boolean): boolean => {
+const rarityFilter = (band: any, patronsList: PatronType[], bypass: boolean): boolean => {
   if (bypass) return true;
-  if (band.storyinfluence) {
-    const matchCount = storytellersList.filter(storyteller => storyteller.type === band.storyinfluence).length;
+  if (band.storytellerlimit) {
+    const matchCount = patronsList.filter(patron => patron.type === band.storytellerlimit).length;
     return matchCount >= band.rarity;
   }
   return true;
@@ -61,16 +61,16 @@ export const useWarbandFilters = (
   subtypeList: SubType[],
   aspectList: AspectType[],
   classList: ClassType[],
-  storytellersList: StorytellerType[],
+  patronsList: PatronType[],
   bypassRarity: boolean = false,
 ) => {
 
   const filteredWarbands = useMemo(() => {
     return warbandList.map(warband => ({
       ...warband,
-      rarity_locked: !rarityFilter(warband, storytellersList, bypassRarity),
+      rarity_locked: !rarityFilter(warband, patronsList, bypassRarity),
     }));
-  }, [warbandList, storytellersList, bypassRarity]);
+  }, [warbandList, patronsList, bypassRarity]);
 
   const filteredSubtypes = useMemo(() => {
     if (!selectedWarband) {
@@ -81,9 +81,9 @@ export const useWarbandFilters = (
       .filter(subtype => selectedWarband.subtypes?.[0]?.includes(subtype.type))
       .map(subtype => ({
         ...subtype,
-        rarity_locked: !rarityFilter(subtype, storytellersList, bypassRarity),
+        rarity_locked: !rarityFilter(subtype, patronsList, bypassRarity),
       }));
-  }, [selectedWarband, subtypeList, storytellersList, bypassRarity]);
+  }, [selectedWarband, subtypeList, patronsList, bypassRarity]);
 
   const filteredAspects = useMemo(() => {
     if (!selectedWarband) {
@@ -100,10 +100,10 @@ export const useWarbandFilters = (
       .filter(aspect => allowedAspectTypes.has(aspect.type))
       .map(aspect => ({
         ...aspect,
-        rarity_locked: !rarityFilter(aspect, storytellersList, bypassRarity),
+        rarity_locked: !rarityFilter(aspect, patronsList, bypassRarity),
       }))
       .sort((a, b) => b.points - a.points);
-  }, [selectedWarband, selectedSubtype, aspectList, storytellersList, bypassRarity]);
+  }, [selectedWarband, selectedSubtype, aspectList, patronsList, bypassRarity]);
 
   // every selection that can manipulate the class pool, in priority order
   const classSources: ClassSource[] = useMemo(
@@ -123,7 +123,7 @@ export const useWarbandFilters = (
     }
 
     const filteredRarity = classList.filter(
-      classe => rarityFilter(classe, storytellersList, bypassRarity) && !suppressedTypes.has(classe.type),
+      classe => rarityFilter(classe, patronsList, bypassRarity) && !suppressedTypes.has(classe.type),
     );
 
     const combine = (tier: Tier) => new Set(classSources.flatMap(s => tierList(s, tier)));
@@ -136,7 +136,7 @@ export const useWarbandFilters = (
     const gruntClasses = filteredRarity.filter(classe => combinedGruntClasses.has(classe.type));
 
     return { warlord: warlordClasses, lieutenant: lieuClasses, grunt: gruntClasses };
-  }, [selectedWarband, classSources, suppressedTypes, classList, storytellersList, bypassRarity]);
+  }, [selectedWarband, classSources, suppressedTypes, classList, patronsList, bypassRarity]);
 
   const availableClasses = useMemo(() => {
     const tier = tierForRole(user_role);
@@ -159,7 +159,7 @@ export const useWarbandFilters = (
     if (!selectedWarband?.universal_subclasses_enabled) return [];
 
     const pool = classList.filter(
-      c => rarityFilter(c, storytellersList, bypassRarity) && !suppressedTypes.has(c.type),
+      c => rarityFilter(c, patronsList, bypassRarity) && !suppressedTypes.has(c.type),
     );
 
     if (selectedClass?.classes?.length) {
@@ -189,7 +189,7 @@ export const useWarbandFilters = (
     }
 
     return [];
-  }, [selectedWarband, selectedSubtype, selectedClass, user_role, classList, suppressedTypes, storytellersList, bypassRarity]);
+  }, [selectedWarband, selectedSubtype, selectedClass, user_role, classList, suppressedTypes, patronsList, bypassRarity]);
 
   return {
     filteredWarbands,

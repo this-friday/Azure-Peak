@@ -21,7 +21,7 @@ const sectionHeaderStyle = `
 export const WarbandCreation = () => {
   const { 
     user_role, act,
-    warbandList, subtypeList, aspectList, classList, storytellersList,
+    warbandList, subtypeList, aspectList, classList, patronsList,
     nobleList, alliesList,
     creation_stage, warlord_spawned, is_warlord,
     time_remaining, timer_active,
@@ -57,7 +57,7 @@ export const WarbandCreation = () => {
   const { filteredWarbands, filteredSubtypes, filteredAspects, availableClasses, filteredSubclasses } = useWarbandFilters(
     user_role, selectedWarband, selectedSubtype,
     selectedAspects, selectedClass,
-    warbandList, subtypeList, aspectList, classList, storytellersList,
+    warbandList, subtypeList, aspectList, classList, patronsList,
     bypass_rarity,
   );
 

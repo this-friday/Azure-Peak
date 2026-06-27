@@ -537,14 +537,14 @@ export const CreationTab = ({
                         }
                       }}
                       disabled={locked || rarityLocked || (isSelected && !needsExpand)}
-                      tooltip={rarityLocked ? `Storyteller-locked (${warband.rarity}\u00d7 rarity)` : undefined}
+                      tooltip={rarityLocked ? `Rarity-locked (${warband.rarity}\u00d7 rarity)` : undefined}
                       style={{ backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : undefined, opacity: rarityLocked ? 0.45 : 1 }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                         <span>{warband.title}</span>
                         {rarityLocked && (
                           <span style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#9a8a6a', marginLeft: '8px', flexShrink: 0 }}>
-                            🔒 STORYTELLER-LOCKED
+                            🔒 RARITY-LOCKED
                           </span>
                         )}
                       </div>
@@ -598,14 +598,14 @@ export const CreationTab = ({
                         }
                       }}
                       disabled={locked || rarityLocked}
-                      tooltip={rarityLocked ? `Storyteller-locked (${subtype.rarity}\u00d7 rarity)` : undefined}
+                      tooltip={rarityLocked ? `Rarity-locked (${subtype.rarity}\u00d7 rarity)` : undefined}
                       style={{ backgroundColor: isSelected ? '#7a2525ff' : isExpanded ? '#4a1515' : undefined, opacity: rarityLocked ? 0.45 : 1 }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                         <span>{subtype.title}</span>
                         {rarityLocked && (
                           <span style={{ fontSize: '11px', letterSpacing: '0.08em', color: '#9a8a6a', marginLeft: '8px', flexShrink: 0 }}>
-                            🔒 STORYTELLER-LOCKED
+                            🔒 RARITY-LOCKED
                           </span>
                         )}
                       </div>
@@ -659,7 +659,7 @@ export const CreationTab = ({
                       onClick={() => { if (cardLocked) return; if (needsExpand) { handleAspectClick(aspect); } else { handleConfirmSelect(aspect); } }}
                       disabled={locked || cardLocked}
                       tooltip={rarityLocked
-                        ? `Storyteller-locked (${aspect.rarity}\u00d7 rarity)`
+                        ? `Rarity-locked (${aspect.rarity}\u00d7 rarity)`
                         : capReached
                           ? `This warband can field at most ${aspectCap} aspects.`
                           : undefined}
@@ -677,7 +677,7 @@ export const CreationTab = ({
                           {aspect.title}
                           {rarityLocked && (
                             <span style={{ color: '#9a8a6a', fontWeight: 'normal', marginLeft: '6px', fontSize: '0.85em' }}>
-                              🔒 STORYTELLER-LOCKED
+                              🔒 RARITY-LOCKED
                             </span>
                           )}
                           {hasIntensity && isSelected && (

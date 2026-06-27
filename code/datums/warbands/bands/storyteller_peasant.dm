@@ -1,5 +1,5 @@
 /datum/warbands/peasant
-	storytellerlimit = /datum/storyteller/matthios
+	storytellerlimit = /datum/patron/inhumen/matthios
 	rarity = 1
 	title = "PEASANT REBELLION"
 	name = "Peasant Rebellion"

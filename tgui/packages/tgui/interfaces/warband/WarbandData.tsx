@@ -33,7 +33,7 @@ export const useWarbandData = () => {
   const subtypeList = finalized_status ? backend_subtype : (data?.subtypes || []);
   const aspectList = finalized_status ? backend_aspects : (data?.aspects || []);
   const classList = data?.classes || [];
-  const storytellersList = data?.backendstorytellers || [];
+  const patronsList = data?.backendpatrons || [];
 
   const nobleList = data?.nobles || [];
   const alliesList = data?.allies || [];
@@ -55,7 +55,7 @@ export const useWarbandData = () => {
     subtypeList,
     aspectList,
     classList,
-    storytellersList,
+    patronsList,
     alliesList,
     nobleList,
     backend_warband,

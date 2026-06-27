@@ -54,7 +54,7 @@
 	var/summary						// first description in a warband's info tab | followed up by desc
 	var/warning						// a string | when a warband spawns, we collect these strings and send someone in the city a warning letter w/details (its warband, aspects, etc)
 	var/datum/map_template/warcamp	// a 45x45 map template
-	var/datum/storytellerlimit		// certain warbands are only available with certain storytellers | when storytellers are accounted, the manager will look at the current storyteller, the storyteller chosen at roundstart, and each prince's patron
+	var/datum/storytellerlimit		// certain warbands are only available with certain storytellers | the manager tallies each prince's contributed patron (see patron_refresh())
 	var/rarity						// how many times the storytellerlimit needs to be met before a locked warband is unlocked
 	var/subtyperequired = FALSE		// forces a warband to take a subtype
 

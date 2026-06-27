@@ -2,7 +2,7 @@ export type WarbandDatumBase = {
   title: string;
   summary: string;
   desc?: string;
-  storyinfluence?: string;
+  storytellerlimit?: string;
   rarity: number;
   points: number;
   type: string;
@@ -50,7 +50,7 @@ export type ClassType = {
   name: string;
   desc: string;
   alt_name: string;
-  storyinfluence?: string;
+  storytellerlimit?: string;
   rarity: number;
   slots: number;
   type: string;
@@ -59,7 +59,7 @@ export type ClassType = {
   classes?: string[];
 };
 
-export type StorytellerType = {
+export type PatronType = {
   title: string;
   summary: string;
   type: string;
@@ -126,7 +126,7 @@ export type Data = {
   subtypes?: SubType[];
   aspects?: AspectType[];
   classes?: ClassType[];
-  backendstorytellers?: StorytellerType[];
+  backendpatrons?: PatronType[];
   backend_warband?: WarbandType[];
   backend_subtype?: SubType[];
   backend_aspects?: AspectType[];

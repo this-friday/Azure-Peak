@@ -1,5 +1,5 @@
 /datum/warbands/wizard
-	storytellerlimit = /datum/storyteller/noc
+	storytellerlimit = /datum/patron/divine/noc
 	rarity = 3
 	title = "SORCERER-KING"
 	name = "Sorcerer-King"

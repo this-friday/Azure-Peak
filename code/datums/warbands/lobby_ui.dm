@@ -34,7 +34,7 @@
 	populate_user_data(user, data)
 	populate_casus_belli_data(user, data)
 	populate_faction_data(data)
-	populate_storyteller_data(data)
+	populate_patron_data(data)
 	populate_warband_lists(data)
 	populate_class_data(data)
 	populate_terms_data(data)
@@ -284,18 +284,18 @@
 		))
 	data["backend_factions"] = cb_faction_list
 
-/datum/warband_manager/proc/populate_storyteller_data(list/data)
+/datum/warband_manager/proc/populate_patron_data(list/data)
 	if(static_data_set)
-		data["backendstorytellers"] = list()
+		data["backendpatrons"] = list()
 		return
-	var/list/storyteller_list = list()
-	for(var/datum/storyteller/storyteller in storyinfluence)
-		UNTYPED_LIST_ADD(storyteller_list, list(
-			"title" = storyteller.name,
-			"summary" = storyteller.desc,
-			"type" = storyteller.type
+	var/list/patron_list = list()
+	for(var/datum/patron/influence_patron in storyinfluence)
+		UNTYPED_LIST_ADD(patron_list, list(
+			"title" = influence_patron.name,
+			"summary" = influence_patron.desc,
+			"type" = influence_patron.type
 		))
-	data["backendstorytellers"] = storyteller_list
+	data["backendpatrons"] = patron_list
 
 /datum/warband_manager/proc/populate_class_data(list/data)
 	if(!SSwarbands.cached_ui_classes)
@@ -321,7 +321,7 @@
 				"name" = initial(class_type:title),
 				"desc" = initial(class_type:tutorial),
 				"alt_name" = initial(class_type:name),
-				"storyinfluence" = initial(class_type:storytellerlimit),
+				"storytellerlimit" = initial(class_type:storytellerlimit),
 				"rarity" = initial(class_type:rarity),
 				"slots" = class_slots,
 				"type" = class_type,
@@ -433,7 +433,7 @@
 		"title" = W.title,
 		"summary" = W.summary,
 		"desc" = W.desc,
-		"storyinfluence" = W.storytellerlimit,
+		"storytellerlimit" = W.storytellerlimit,
 		"rarity" = W.rarity,
 		"points" = W.points,
 		"type" = W.type,
