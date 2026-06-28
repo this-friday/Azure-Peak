@@ -177,7 +177,7 @@ export const CasusBelliPanel = ({
     const displayName = term.custom_name || term.name;
 
     const divider = (
-      <div style={{ borderBottom: '1px solid #2a4a2a', margin: '10px 0' }} />
+      <div style={{ borderBottom: '1px solid #e9ca9e', margin: '10px 0' }} />
     );
 
     const fieldBox = (label: string, val: string | number) => (
@@ -207,11 +207,11 @@ export const CasusBelliPanel = ({
 
     return (
       <Section
-        title={<span style={{ color: '#4db84d' }}>CHOSEN CASUS BELLI</span>}
+        title={<span style={{ color: '#ffd59a' }}>CHOSEN CASUS BELLI</span>}
         fill scrollable
       >
         <Box mb={1}>
-          <Box bold style={{ fontSize: '20px', color: '#7fc97f', marginBottom: '6px' }}>
+          <Box bold style={{ fontSize: '20px', color: '#e9ca9e', marginBottom: '6px' }}>
             {displayName}
           </Box>
           <Box style={{ fontSize: '13px', color: '#b1a390', lineHeight: '1.6' }}>

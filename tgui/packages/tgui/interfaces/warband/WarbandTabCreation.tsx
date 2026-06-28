@@ -634,7 +634,23 @@ export const CreationTab = ({
         </Section>
 
         <Section
-          title={<span style={{ color: '#7a2525ff' }}>ASPECTS</span>}
+          title={
+            <span style={{ color: '#7a2525ff' }}>
+              ASPECTS
+              {selectedWarband && (
+                <span
+                  style={{
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    fontWeight: 'normal',
+                    color: selectedAspects.length >= (selectedWarband.max_aspects ?? 5) ? '#ae3636' : '#fafafa',
+                  }}
+                >
+                  {selectedAspects.length}/{selectedWarband.max_aspects ?? 5}
+                </span>
+              )}
+            </span>
+          }
           scrollable fill
           style={{ flex: 1, minWidth: '280px' }}
         >

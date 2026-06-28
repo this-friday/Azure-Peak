@@ -10,7 +10,8 @@
 	5 - CHOOSE MAP				// choose & spawn the warcamp
 	6 - CHOOSE MUSIC			// choose the combat music
 	7 - SPAWN WARBAND			// spawns the warband after some final tweaks	
-	8 - SEND WARNINGS 			// sends a warning letter to a single towner containing hints about the warband's type & aspects
+	8 - DEADCHAT ANNOUNCEMENT	// sends a deadchat_broadcast() with the warband's details
+	9 - SEND WARNINGS 			// sends a warning letter to a single towner containing hints about the warband's type & aspects
 
 */
 
@@ -220,7 +221,7 @@
 */
 /datum/warband_manager/proc/spawn_warband(mob/user, rebellion = FALSE)
 	stop_creation_timer() // before choose_map: the template load sleeps, and the timeout must not fire mid-finalization
-	if(rebellion == FALSE) // if a warband is spawning via a lieutenant's desertion,
+	if(rebellion == FALSE) // if a warband is spawning via a lieutenant's desertion, we skip spawning a map, as that's handled by the SCOUT A PATH verb
 		choose_map()
 	choose_combat_music()
 	// apply the band's & subtype's spawn pool contributions on top of the 400 baseline
@@ -240,20 +241,66 @@
 	finalized = TRUE
 	announce_spawn_to_deadchat(user)
 
+/////////////////////////////////////////////////////////
+/////////////////////////////////// DEADCHAT ANNOUNCEMENT
+/*
+	a deadchat broadcast that announces a warband and its selections
+
+*/
 /datum/warband_manager/proc/announce_spawn_to_deadchat(mob/warlord)
 	if(!selected_warband)
 		return
-	var/announcement = "[selected_warband.title]"
+	var/announcement = " has spawned:"
+	announcement += "<br><b>Warband:</b> [selected_warband.title] [band_link(selected_warband)]"
 	if(selected_subtype)
-		announcement += " ([selected_subtype.title])"
+		announcement += "<br><b>Subtype:</b> [selected_subtype.title] [band_link(selected_subtype)]"
 	if(length(selected_aspects))
-		var/list/aspect_names = list()
+		announcement += "<br><b>Aspects:</b>"
 		for(var/datum/warbands/aspects/aspect in selected_aspects)
-			aspect_names += aspect.title
-		announcement += " | ASPECTS: [aspect_names.Join(", ")]"
+			announcement += "<br><span style='margin-left: 1.2em'>- [aspect.title]</span> [band_link(aspect)]"
 	if(casus_belli_selection)
-		announcement += " | CASUS BELLI: [casus_belli_selection.custom_name || casus_belli_selection.name]"
-	deadchat_broadcast(" has spawned: [announcement]", "<b>A WARBAND</b>", follow_target = warlord)
+		announcement += "<br><b>Casus Belli:</b> [casus_belli_selection.custom_name || casus_belli_selection.name] <span class='info'><a href='?src=[REF(src)];cb_info=1'>{?}</a></span>"
+	deadchat_broadcast(announcement, "<b>A WARBAND</b>", follow_target = warlord)
+
+/datum/warband_manager/proc/band_link(datum/warbands/band)
+	return "<span class='info'><a href='?src=[REF(src)];band_ref=[REF(band)]'>{?}</a></span>"
+
+/datum/warband_manager/Topic(href, href_list)
+	. = ..()
+	if(href_list["band_ref"])
+		var/datum/warbands/band = locate(href_list["band_ref"])
+		if(band && (band == selected_warband || band == selected_subtype || (band in selected_aspects)))
+			show_band_info(usr, band)
+	else if(href_list["cb_info"])
+		show_casus_belli_info(usr)
+
+// warband/subtype/aspect info-blocks
+/datum/warband_manager/proc/show_band_info(mob/user, datum/warbands/band)
+	if(!user?.client || !band)
+		return
+	var/list/text = list("<b>[band.title || band.name]</b>")
+	if(band.summary)
+		text += "<br>[band.summary]"
+	if(band.desc)
+		text += "<br>[band.desc]"
+	if(istype(band, /datum/warbands/aspects))
+		text += "<br><i>Cost: [band.points]</i>"
+	var/output = span_info(text.Join(""))
+	if(!user.client.prefs.no_examine_blocks)
+		output = examine_block(output)
+	to_chat(user, output)
+
+// casus belli info-blocks
+/datum/warband_manager/proc/show_casus_belli_info(mob/user)
+	if(!user?.client || !casus_belli_selection)
+		return
+	var/list/text = list("<b>[casus_belli_selection.custom_name || casus_belli_selection.name]</b>")
+	if(casus_belli_selection.desc)
+		text += "<br>[casus_belli_selection.desc]"
+	var/output = span_info(text.Join(""))
+	if(!user.client.prefs.no_examine_blocks)
+		output = examine_block(output)
+	to_chat(user, output)
 
 /////////////////////////////////////////////////
 /////////////////////////////////// SEND WARNINGS
