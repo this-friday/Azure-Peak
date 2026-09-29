@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// VARIABLES
-// warband max playercount (10 at minimum)
+// warband max playercount (currently 10 at minimum)
 #define GRUNTS_PER_LIEUTENANT 2 // minimum grunts per lieutenant | scales at a rate of +1 for every 15 active players past 40, as seen here: (/proc/warband_grunts_per_lieutenant())
 #define GRUNTS_PER_LIEUTENANT_MAX 99
 #define LIEUTENANTS_PER_WARLORD 3
@@ -55,6 +55,10 @@
 	"bog"		= list(/datum/map_template/intermission/bog_a) \
 )
 
+#define WARBAND_LOAD_TIMEOUT (5 MINUTES) // a timeout for debugging purposes | triggers if the lobby gets stuck in Finalization
+#define TEMPLATE_OUTSKIRTS 1
+#define TEMPLATE_INTERMISSION 2
+
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ROLES
 
@@ -84,6 +88,7 @@
 #define ASPECT_CAVALRY			/datum/warbands/aspects/cavalry
 #define ASPECT_SUPPLIES			/datum/warbands/aspects/supplies
 #define ASPECT_PATRON			/datum/warbands/aspects/patron
+#define ASPECT_SPLIT			/datum/warbands/aspects/split_warband
 
 // SUBTYPES (SECTS)
 #define WARBAND_SECT_TEN 		/datum/warbands/subtypes/ten 
@@ -132,7 +137,3 @@
 #define TFACTION_MERCHANT /datum/treaty_flavor/merchant
 
 #define DEFAULT_TREATY_FLAVOR_FACTIONS list(TFACTION_AZURE, TFACTION_CHURCH, TFACTION_HEARTFELT, TFACTION_ORTHODOX, TFACTION_SOILER, TFACTION_GUILD, TFACTION_MERCHANT)
-
-
-#define TEMPLATE_OUTSKIRTS 1
-#define TEMPLATE_INTERMISSION 2

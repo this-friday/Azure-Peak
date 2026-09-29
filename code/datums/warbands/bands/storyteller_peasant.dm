@@ -6,7 +6,7 @@
 	treaty_name = "The People"
 	summary = "Turmoil in the Duchy's countryside has boiled into a full-blown rebellion."
 	warning = "...turmoil in Azuria's distant countryside, and roving bands of unruly peasants."
-	aspects = list(ASPECT_SURPRISE, ASPECT_HOST, ASPECT_FIGUREHEAD, ASPECT_ENVY, ASPECT_SCUM, ASPECT_WAR, ASPECT_RANDOM, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED)
+	aspects = list(ASPECT_SURPRISE, ASPECT_HOST, ASPECT_FIGUREHEAD, ASPECT_ENVY, ASPECT_SCUM, ASPECT_WAR, ASPECT_RANDOM, ASPECT_BADSPAWN, ASPECT_HORDE, ASPECT_SPLINTERED, ASPECT_MARKED, ASPECT_SPLIT)
 	combatmusic = list('sound/music/combat_routier.ogg')
 	spawns = RESPAWNS_HORDE
 	warcamp = /datum/map_template/warcamp_peasant

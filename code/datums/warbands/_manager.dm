@@ -48,6 +48,8 @@
 	var/outskirts_established = FALSE		// whether or not the warband has spawned an outskirts map
 	var/warcamp_established = FALSE
 	var/turf/warband_spawn_turf				// main spawn turf for the warband's characters
+	var/list/warcamp_bounds					// bounds of the loaded warcamp | used to tear it down if the lobby disbands
+	var/finalization_in_progress = FALSE
 
 	var/spawns = WARBAND_BASE_RESPAWNS		// 400 minimum | lost when an NPC is spawned | combined with spawn contributions from the warband/subtypes/aspects
 											// might seem very generous, but this can be reduced in massive chunks by aspirants going rogue & outskirts fights
@@ -127,6 +129,13 @@
 	if(SSwarbands.roundstart_manager == src)
 		SSwarbands.roundstart_manager = null
 	stop_creation_timer()
+	cancel_all_swap_offers()
+	if(!warlord_spawned)
+		delete_warcamp()
+	end_finalization()
+	if(linked_lobby?.linked_lobby == src)
+		linked_lobby.linked_lobby = null
+	linked_lobby = null
 	if(cache_source)
 		cache_source.cache_dependents -= src
 		cache_source = null
@@ -422,11 +431,11 @@
 
 	if(exiled_creecher.stat == DEAD) // against a corpse
 		to_chat(user, span_warning("They're dead. That's exile enough."))
-		return
+		return FALSE
 		
 	if(exiled_creecher.mind && exiled_creecher.mind.special_role == ROLE_WARLORD_ENVOY)
 		to_chat(user, span_warning("No point in killing the messenger."))
-		return
+		return FALSE
 
 	if(exiled_creecher in manager.members) // against one of your own NPCs
 		to_chat(user, span_warning("[exiled_creecher.name] is one of my finest soldiers! I could never consider such a thing..."))

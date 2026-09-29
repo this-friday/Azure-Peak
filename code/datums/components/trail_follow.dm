@@ -171,17 +171,27 @@
 	if(!target_turf.can_traverse_safely(goon))
 		return FALSE
 	
+	var/passing_allies = FALSE
 	for(var/mob/M in target_turf)
 		if(M.density)
 			if(istype(M, /mob/living/carbon/human/species/human/northern/goon))
 				var/mob/living/carbon/human/species/human/northern/goon/other = M
 				if(goon.warband_ID == other.warband_ID)
 					if(goon.squad_leader != other.squad_leader)
+						passing_allies = TRUE
 						continue  // if another goon is in the same warband but inside a different squad, they can pass through one another during a Follow Command
-			
+
 			return FALSE
-	
-	return step(goon, move_dir)
+
+	if(!passing_allies)
+		return step(goon, move_dir)
+
+	var/had_passmob = (goon.pass_flags & PASSMOB)
+	goon.pass_flags |= PASSMOB
+	var/moved = step(goon, move_dir)
+	if(!had_passmob)
+		goon.pass_flags &= ~PASSMOB
+	return moved
 
 /datum/component/trail_follow/proc/next_best_waypoint(mob/living/carbon/human/species/human/northern/goon/goon)
 	var/turf/goon_turf = get_turf(goon)
@@ -189,17 +199,20 @@
 		return
 
 	var/turf/best_waypoint
-	var/closest_dist = INFINITY
-	
+	var/best_score = INFINITY
+
 	for(var/turf/waypoint in waypoints)
-		if(waypoint == goon_turf || waypoint.z != goon_turf.z) // skip the waypoint we're already standing on
-			continue // and skip waypoints on other z-levels
+		if(waypoint == goon_turf || waypoint.z != goon_turf.z) 	// skip the waypoint we're already standing on
+			continue 											// and skip waypoints on other z-levels
 
 		var/dist = get_dist(goon, waypoint)
+		if(dist <= 0 || dist > 3) // only consider waypoints 1-3 tiles away
+			continue
 
-		// prefer waypoints that are 1-3 tiles away
-		if(dist > 0 && dist <= 3 && dist < closest_dist)
-			closest_dist = dist
+		// prefers the nearest waypoint & prefers cardinal directions
+		var/score = dist + (ISDIAGONALDIR(get_dir(goon, waypoint)) ? 0.5 : 0)
+		if(score < best_score)
+			best_score = score
 			best_waypoint = waypoint
 
 	// if there's no nearby waypoint, just take the closest one
@@ -207,10 +220,11 @@
 		for(var/turf/waypoint in waypoints)
 			if(waypoint == goon_turf || waypoint.z != goon_turf.z)
 				continue
-			
+
 			var/dist = get_dist(goon, waypoint)
-			if(dist < closest_dist)
-				closest_dist = dist
+			var/score = dist + (ISDIAGONALDIR(get_dir(goon, waypoint)) ? 0.5 : 0)
+			if(score < best_score)
+				best_score = score
 				best_waypoint = waypoint
 
 	// fall back to the leader's tile, but only if they're on this goon's floor

@@ -6,6 +6,12 @@
 /obj/structure/fluff/warband/Initialize()
 	..()
 	SSwarbands.warband_machines += src
+	get_id_from_loading_warband()
+
+/obj/structure/fluff/warband/proc/get_id_from_loading_warband()
+	if(SSwarbands.warband_loading_manager && warband_ID == 0)
+		linked_warband = SSwarbands.warband_loading_manager
+		warband_ID = linked_warband.warband_ID
 
 /obj/structure/fluff/warband/Destroy()
 	SSwarbands.warband_machines -= src
@@ -104,7 +110,7 @@
 						to_chat(user, span_warning("We are without allies."))
 						return
 					for(var/mob/living/ally in linked_warband.allies)
-						to_chat(user, span_warning("There is [ally.real_name], the [ally.job]. They were joined with us by decree of [ally.mind.warband_recruiter_name]"))
+						to_chat(user, span_warning("There is [ally.real_name], the [ally.job]. They were joined with us by decree of [ally.mind.warband_recruiter_name]."))
 
 					return
 				if("Stand Down Outskirts Defenses")
@@ -155,16 +161,11 @@
 	var/destruction_doafter = "prepares to clear out the rally point."
 	var/destruction_msg = "The rally point is no more. The Warband's tide of reinforcements is stemmed."
 
-/obj/structure/fluff/warband/foreguard
-
-/obj/structure/fluff/warband/rearguard
-
 /obj/structure/fluff/warband/shortcut
 	name = "shortcut"
 	icon = 'icons/turf/roguefloor.dmi'
 	icon_state = "travel"
 	var/disabled = FALSE
-
 
 /obj/structure/fluff/warband/shortcut/attack_hand(mob/living/carbon/human/user)
 	. = ..()
@@ -177,7 +178,6 @@
 				return
 		else
 			to_chat(user, span_bold("This is a one-way path. If I want to leave, I'll need to leave through the front."))
-
 
 	else if(!disabled)
 		user.visible_message(span_info("[user] prepares to clear out [src]."))
@@ -298,7 +298,6 @@
 		target.faction |= "[user.real_name]_faction" // included in their lieutenant's personal faction
 	linked_warband.spawns--
 	return TRUE
-
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// RECRUITMENT POINT INTERACTION
@@ -429,6 +428,9 @@
 /obj/effect/solid_invisible_barrier/warband_spawnbarrier/Initialize()
 	. = ..()
 	SSwarbands.warband_machines += src
+	if(SSwarbands.warband_loading_manager && warband_ID == 0)
+		linked_warband = SSwarbands.warband_loading_manager
+		warband_ID = linked_warband.warband_ID
 
 /obj/effect/solid_invisible_barrier/warband_spawnbarrier/Destroy()
 	SSwarbands.warband_machines -= src
@@ -458,9 +460,8 @@
 
 	var/user_role = user.mind.special_role
 
-	// envoys and grunts can pass freely
 	if(user_role == ROLE_WARLORD_ENVOY || user_role == ROLE_WARLORD_GRUNT)
-		return TRUE
+		return TRUE // envoys and grunts can pass freely
 
 	return FALSE
 
@@ -535,6 +536,9 @@
 	..()
 	SSwarbands.warband_machines += src
 	color = null	// different colors in the editor for visual clarity, but they should appear normal in game
+	if(SSwarbands.warband_loading_manager && warband_ID == 0)
+		linked_warband = SSwarbands.warband_loading_manager
+		warband_ID = linked_warband.warband_ID
 
 /obj/structure/fluff/traveltile/warband/intermission_to_outskirts
 	color = "#ff8b2c"
@@ -729,7 +733,7 @@
 
 	if(IS_WARBAND_OFFICER(user.mind))
 		if(user.mind.warband_ID == warband_ID)
-			var/create_envoy = tgui_alert(user, "I can't leave yet. I need to send out an Envoy.", "BECOME ENVOY", list("BECOME ENVOY", "No"))
+			var/create_envoy = tgui_alert(user, "I can't leave yet. I need to send out an Envoy.", "BECOME ENVOY", list("BECOME ENVOY", "NO"))
 
 			if(create_envoy == "BECOME ENVOY")
 				if(linked_warband.spawns <= 0)

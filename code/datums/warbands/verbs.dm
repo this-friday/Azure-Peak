@@ -213,15 +213,8 @@
 	if(!mind?.warband_manager)
 		return
 
-	if(SSwarbands.warband_managers_busy == TRUE) // we don't want multiple maps getting spawned at the same time
-		to_chat(src, span_userdanger("I'll need to wait for a moment."))
-		return
-
-	SSwarbands.warband_managers_busy = TRUE
-
 	if(mind.warband_manager.outskirts_established == TRUE)
 		to_chat(src, span_userdanger("A path has already been scouted."))
-		SSwarbands.warband_managers_busy = FALSE
 		return
 
 	var/area/zone = get_area(src)
@@ -256,19 +249,16 @@
 
 	if(!is_allowed || is_blacklisted)
 		to_chat(src, span_danger("This isn't a suitable location. I should go far away from here."))
-		SSwarbands.warband_managers_busy = FALSE
 		return
 
 	var/has_mineral_turf = locate(/turf/closed/mineral) in range(1, src)
 	if(!has_mineral_turf)
 		to_chat(src, span_green("This is a good location. I should get my bearings beside a ROCK WALL before I plot a route back to camp."))
-		SSwarbands.warband_managers_busy = FALSE		
 		return
 
 	for(var/turf/nearby_turf in range(4, src))
 		if(locate(/obj/structure/fluff/traveltile) in nearby_turf)
 			to_chat(src, span_userdanger("I'm too close to an existing path."))
-			SSwarbands.warband_managers_busy = FALSE
 			return
 
 	if(!mind.warband_manager.warcamp_established) // if this is being done without a warcamp, we check if there's a free space.
@@ -286,11 +276,9 @@
 					outpost.linked_warband = mind.warband_manager
 					mind.warband_manager.warcamp_established = TRUE
 					remove_verb(src, /mob/living/carbon/human/proc/connect_warcamp)
-			SSwarbands.warband_managers_busy = FALSE
 			return
 
-	. = do_scout_warcamp_path(zone)
-	SSwarbands.warband_managers_busy = FALSE
+	return do_scout_warcamp_path(zone)
 
 // the actual map-spawning half of connect_warcamp
 /mob/living/carbon/human/proc/do_scout_warcamp_path(area/zone)
@@ -298,15 +286,13 @@
 	var/turf/initial_turf = loc
 	if(!do_after(src, 30, target = src))
 		visible_message(span_warning("[src] halts their scouting."))
-		SSwarbands.warband_managers_busy = FALSE
 		return FALSE
 
-	if(!mind?.warband_manager) // exiled or otherwise dispossessed mid-scout
-		SSwarbands.warband_managers_busy = FALSE
+	var/datum/warband_manager/manager = mind?.warband_manager
+	if(!manager) // exiled or otherwise dispossessed mid-scout
 		return FALSE
-	if(mind.warband_manager.outskirts_established == TRUE)
+	if(manager.outskirts_established == TRUE)
 		to_chat(src, span_userdanger("A path has already been scouted."))
-		SSwarbands.warband_managers_busy = FALSE
 		return FALSE
 
 	var/terrain_key
@@ -323,51 +309,89 @@
 
 	if(!terrain_key)
 		to_chat(src, span_userdanger("Something's wrong. I should attempt this somewhere else."))
-		SSwarbands.warband_managers_busy = FALSE
 		return FALSE
+
+	to_chat(src, span_notice("I've found a path! I need but a moment to commit it to memory..."))
 
 	var/datum/map_template/chosen_outskirts_map = SSwarbands.get_template(TEMPLATE_OUTSKIRTS, terrain_key)
 	var/datum/map_template/chosen_intermission_map = SSwarbands.get_template(TEMPLATE_INTERMISSION, terrain_key)
 
 	if(!chosen_outskirts_map || !chosen_intermission_map)
 		to_chat(src, span_userdanger("Something's wrong. I should attempt this somewhere else."))
-		SSwarbands.warband_managers_busy = FALSE
 		return FALSE
 
-	var/outskirts_landmark_found = FALSE
-	var/obj/effect/landmark/warcamp_outskirts/used_outskirts_landmark
-	for(var/obj/effect/landmark/warcamp_outskirts/outskirts_landmark in GLOB.landmarks_list)
-		chosen_outskirts_map.load(outskirts_landmark.loc, centered = TRUE)
-		used_outskirts_landmark = outskirts_landmark
-		outskirts_landmark_found = TRUE
-		break
+	SSwarbands.acquire_load_slot(manager)
+	var/scouted = manager.scout_load_maps(src, chosen_outskirts_map, chosen_intermission_map, initial_turf)
+	SSwarbands.release_load_slot(manager)
+	if(!scouted || QDELETED(manager))
+		return FALSE
+	manager.scout_open_path(src, initial_turf)
+	return TRUE
 
-	if(used_outskirts_landmark)
-		qdel(used_outskirts_landmark)
+///////////////////////////////////////////////////
+///////////////////////////////// SCOUTING SEQUENCE
 
-	var/intermission_landmark_found = FALSE
-	var/obj/effect/landmark/warcamp_intermission/used_intermission_landmark
-	for(var/obj/effect/landmark/warcamp_intermission/intermission_landmark in GLOB.landmarks_list)
-		chosen_intermission_map.load(intermission_landmark.loc, centered = TRUE)
-		used_intermission_landmark = intermission_landmark
-		intermission_landmark_found = TRUE
-		break
-
-	if(used_intermission_landmark)
-		qdel(used_intermission_landmark)
-
-	if(!outskirts_landmark_found || !intermission_landmark_found) // this shouldn't happen
-		to_chat(src, span_userdanger("Something's deeply wrong. I can't find a path back."))
-		SSwarbands.warband_managers_busy = FALSE
+// loads the outskirts map, then the intermission map | TRUE once both are committed
+// the caller must hold the world-load slot for the whole sequence - our intermission landmark mustn't get consumed under us
+/datum/warband_manager/proc/scout_load_maps(mob/living/carbon/human/envoy, datum/map_template/outskirts_map, datum/map_template/intermission_map, turf/initial_turf)
+	if(QDELETED(src) || QDELETED(envoy) || envoy.mind?.warband_manager != src)
+		return FALSE
+	if(outskirts_established)
+		to_chat(envoy, span_userdanger("A path has already been scouted."))
+		return FALSE
+	for(var/turf/nearby_turf in range(4, initial_turf))
+		if(locate(/obj/structure/fluff/traveltile) in nearby_turf)
+			to_chat(envoy, span_userdanger("I'm too close to an existing path."))
+			return FALSE
+	var/obj/effect/landmark/warcamp_outskirts/outskirts_landmark = locate(/obj/effect/landmark/warcamp_outskirts) in GLOB.landmarks_list
+	var/obj/effect/landmark/warcamp_intermission/intermission_landmark = locate(/obj/effect/landmark/warcamp_intermission) in GLOB.landmarks_list
+	if(!outskirts_landmark || !intermission_landmark)
+		to_chat(envoy, span_userdanger("Something's deeply wrong. I can't find a path back."))
 		return FALSE
 
-	// spawns the travel tiles to the intermission
-	// attempts to get the spawned tiles to hug the wall
-	visible_message(span_info("[src] reveals a path to the Warcamp!"))
-	mind.warband_manager.outskirts_established = TRUE
+	var/list/outskirts_bounds = SSwarbands.load_template(src, outskirts_map, outskirts_landmark.loc)
+	qdel(outskirts_landmark)
+	if(QDELETED(src) || !outskirts_bounds)
+		teardown_loaded_bounds(outskirts_bounds)
+		if(!QDELETED(src) && envoy)
+			to_chat(envoy, span_userdanger("Something's deeply wrong. I can't find a path back."))
+		return FALSE
+
+	if(QDELETED(src) || QDELETED(intermission_landmark)) // the outskirts load yields, so the world may have moved on under us
+		teardown_loaded_bounds(outskirts_bounds)
+		if(!QDELETED(src) && envoy)
+			to_chat(envoy, span_userdanger("Something's deeply wrong. I can't find a path back."))
+		return FALSE
+	var/list/intermission_bounds = SSwarbands.load_template(src, intermission_map, intermission_landmark.loc)
+	qdel(intermission_landmark)
+	if(QDELETED(src) || !intermission_bounds)
+		teardown_loaded_bounds(outskirts_bounds)
+		teardown_loaded_bounds(intermission_bounds)
+		if(!QDELETED(src) && envoy)
+			to_chat(envoy, span_userdanger("Something's deeply wrong. I can't find a path back."))
+		return FALSE
+
+	outskirts_established = TRUE
+	return TRUE
+
+/datum/warband_manager/proc/scout_open_path(mob/living/carbon/human/envoy, turf/initial_turf)
+	if(envoy)
+		envoy.visible_message(span_info("[envoy] reveals a path to the Warcamp!"))
 	var/obj/structure/fluff/traveltile/warband/new_path = new /obj/structure/fluff/traveltile/warband/azure_to_intermission(initial_turf)
-	new_path.warband_ID = mind.warband_ID
+	new_path.warband_ID = warband_ID
 
+	// create a warcamp for deserters, next
+	// for memory's sake, we currently only have one set of warcamp/outskirts landmarks in centcomm
+	// but the capacity for multiple warcamps Does Exist and has been tested. it's just better reserved for a future where lazyloading for z-levels properly exists
+	// if That Future Comes, we should still limit ourselves to 2 warcamps at most
+	if(!warcamp_established)
+		spawn_warcamp(latespawn = TRUE)
+	finish_scouting(initial_turf)
+
+// adds some extra travel tiles nearby, wires up the portals, & finalizes the warcamp's outskirts encounter
+/datum/warband_manager/proc/finish_scouting(turf/initial_turf)
+	if(QDELETED(src))
+		return
 	var/list/spawn_locations = list()
 	var/list/preferred_spawn_locations = list()
 	for(var/turf/T in range(1, initial_turf))
@@ -377,15 +401,6 @@
 				if(istype(neighbor_turf, /turf/closed/mineral))
 					preferred_spawn_locations += T
 					break
-
-	// create a warcamp next, if there's an available space and no warcamp
-	// for memory's sake, we currently only have one set of warcamp landmarks in centcomm
-	// but the capacity for multiple warcamps Does Exist and has been tested. it's just better reserved for a future where lazyloading for map templates properly exists
-	// if That Future Comes, we should still limit ourselves to 2 warcamps at most
-	if(mind.warband_manager.warcamp_established == FALSE)
-		for(var/obj/effect/landmark/warcamp/open_warcamp_slot in GLOB.landmarks_list)
-			mind.warband_manager.choose_map(latespawn = TRUE)
-			break
 
 	var/list/final_spawn_locations
 	if(preferred_spawn_locations.len >= 2)
@@ -400,18 +415,16 @@
 	for(var/i = 1, i <= tiles_to_place, i++)
 		var/turf/chosen_turf = final_spawn_locations[i]
 		var/obj/structure/fluff/traveltile/warband/new_tile = new /obj/structure/fluff/traveltile/warband/azure_to_intermission(chosen_turf)
-		new_tile.warband_ID = mind.warband_ID
-	mind.warband_manager.set_IDs()
-	mind.warband_manager.link_portals()
-	mind.warband_manager.finalize_outskirts_encounter()
+		new_tile.warband_ID = warband_ID
+	set_IDs()
+	link_portals()
+	finalize_outskirts_encounter()
 	var/list/barriers_to_clear = list()
 	for(var/obj/effect/solid_invisible_barrier/warband_spawnbarrier/spawn_barrier in SSwarbands.warband_machines)
-		if(spawn_barrier.warband_ID == mind.warband_manager.warband_ID)
+		if(spawn_barrier.warband_ID == warband_ID)
 			barriers_to_clear += spawn_barrier
 	for(var/obj/effect/solid_invisible_barrier/warband_spawnbarrier/spawn_barrier in barriers_to_clear)
 		qdel(spawn_barrier)
-	SSwarbands.warband_managers_busy = FALSE
-	return TRUE
 
 /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ACCEPT KICK
@@ -468,6 +481,7 @@
 	if(readycheck == "Defy Exile (Keep as Personal Associate)")
 		if(target && target.mind.warband_recruiter_name != real_name) // if they have a new recruiter, set the recruiter back to us
 			target.mind.warband_recruiter_name = real_name
+
 		for(var/mob/warband_member in mind.warband_manager.members)
 			if(isliving(warband_member))
 				to_chat(warband_member, span_warning("A zad arrives with the [src.job]'s seal. They reject the decree of [target.real_name]'s exile, and have ordered their own men to treat [target.real_name] as an associate."))
@@ -480,6 +494,7 @@
 		for(var/mob/warband_member in src.mind.warband_manager.members)
 			if(isliving(warband_member))
 				to_chat(warband_member, span_warning("A zad arrives with the [src.job]'s seal. They have embraced the decree of [target.real_name]'s exile."))
+
 		if(target && target.mind.warband_recruiter_name != real_name) // if they have a new recruiter, another lieutenant stole them, so we stop here
 			mind.subordinates -= target
 			mind.unresolved_exile_names -= target.real_name			
@@ -533,10 +548,6 @@
 
 	if(chosen_target.devotion) // can't convert someone who's already a cleric
 		to_chat(src, span_warning("A shame. [chosen_target.patron.name] shields them."))
-		return FALSE
-
-	if(get_dist(src, chosen_target) > 1)
-		to_chat(src, span_warning("[chosen_target] has moved away."))
 		return FALSE
 
 	visible_message(span_boldwarning("[src] raises a palm toward [chosen_target]'s face..."))

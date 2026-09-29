@@ -110,6 +110,7 @@
 	//initialize things that are normally initialized after map load
 	parsed.initTemplateBounds()
 
+	// clear outdoor_effects when we're spawning a warband template, otherwise they overlap & our tidi explodes at sunrise
 	if(warband_template)
 		var/list/template_zone = block(
 			locate(bounds[MAP_MINX], bounds[MAP_MINY], bounds[MAP_MINZ]),

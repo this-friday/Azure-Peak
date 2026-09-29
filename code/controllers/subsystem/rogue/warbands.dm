@@ -6,7 +6,6 @@ SUBSYSTEM_DEF(warbands)
 	init_order = INIT_ORDER_MAPPING + 1
 	var/list/warband_managers = list()
 	var/list/warband_machines = list()
-	var/warband_managers_busy = FALSE	// prevents multiple warbands from being loaded in at once | necessary, as warband_ID assignments for objects will expect this to be the case
 	var/datum/warband_manager/roundstart_manager
 	var/roundstart_manager_claimed = FALSE
 	var/next_warband_id = 1
@@ -15,16 +14,18 @@ SUBSYSTEM_DEF(warbands)
 	var/list/submitted_treaties = list()
 	var/treaty_flavor_factions = list()
 
-	// list of associated faction names & jobs
-	var/list/name_to_faction_cache = list() 	 
-	var/list/job_to_faction_cache = list()
-
 	var/classes_initialized = FALSE
 
 	var/list/currentrun_encounters = list() // currently running Defense encounters for warcamps
 
+	// warband map-load coordination
+	var/datum/warband_manager/warband_loading_manager	// assigned as a Warcamp is being spawned | any initializing warband objects (rally points, travel tiles, etc) get branded as belonging to this specific warband
+	var/datum/warband_manager/warband_load_busy			// used for a debug timeout
+	var/load_slot_claimed_at = 0						// the world.time we began loading | used for a debug timeout
+	var/warband_managers_busy = FALSE
+
 	// npc cache
-	// we're spawning large groups of complex mobs at once (especially during outskirts fights), so this is softens the lag spikes
+	// we're spawning large groups of complex mobs at once (especially during outskirts fights), so this softens the lag spikes
 	var/list/unassigned_mob_cache = list()	
 	var/max_unassigned_cache = 100			// max size for the unassigned goon cache
 	var/ticks_between_equip = 6
@@ -62,7 +63,6 @@ SUBSYSTEM_DEF(warbands)
 /datum/controller/subsystem/warbands/Initialize()
 	for(var/territory_faction_path in DEFAULT_TREATY_FLAVOR_FACTIONS)
 		treaty_flavor_factions += new territory_faction_path
-	create_name_cache()
 	initialize_class_cache()
 	initialize_lobby_mob_cache()
 	grunts_to_create = max_unassigned_cache
@@ -117,14 +117,6 @@ SUBSYSTEM_DEF(warbands)
 /proc/warband_grunts_per_lieutenant()
 	var/scaled = GRUNTS_PER_LIEUTENANT + max(0, round((get_active_player_count() - 40) / 15))
 	return min(scaled, GRUNTS_PER_LIEUTENANT_MAX)
-
-/datum/controller/subsystem/warbands/proc/create_name_cache()
-	for(var/datum/treaty_flavor/faction in treaty_flavor_factions)
-		if(faction.owner)
-			name_to_faction_cache[faction.owner] = faction
-		if(faction.job_owner)
-			job_to_faction_cache[faction.job_owner] = faction
-
 
 ///////////////////////////////////////////////////////////
 ////////////////////////////////////// CLASS INITIALIZATION
@@ -234,13 +226,13 @@ SUBSYSTEM_DEF(warbands)
 			if(!options)
 				return
 			var/chosen_type = options[rand(1, length(options))]
-			return new chosen_type()
+			return new chosen_type(null, null, TRUE)
 		if(TEMPLATE_INTERMISSION)
 			var/list/options = INTERMISSION_TEMPLATE_TYPES[key]
 			if(!options)
 				return
 			var/chosen_type = options[rand(1, length(options))]
-			return new chosen_type()
+			return new chosen_type(null, null, TRUE)
 
 /datum/controller/subsystem/warbands/proc/process_encounters()
 	for(var/datum/outskirts_encounter/encounter as anything in currentrun_encounters)
@@ -401,3 +393,27 @@ SUBSYSTEM_DEF(warbands)
 	else // if the cache is empty fall back to creating a fresh mob
 		var/mob/living/carbon/human/species/human/northern/new_mob = new() 
 		return new_mob
+
+///////////////////////////////////////////////////////
+////////////////////////////////////////// CAMP LOADING TEST
+
+/datum/controller/subsystem/warbands/proc/acquire_load_slot(datum/warband_manager/claimant)
+	while(warband_load_busy)
+		if(world.time - load_slot_claimed_at > WARBAND_LOAD_TIMEOUT)
+			message_admins("SSwarbands: the warcamp load slot was held for over [WARBAND_LOAD_TIMEOUT / 10] seconds.")
+			if(warband_loading_manager == warband_load_busy)
+				warband_loading_manager = null
+			warband_load_busy = null
+			break
+		stoplag()
+	warband_load_busy = claimant
+	load_slot_claimed_at = world.time
+
+/datum/controller/subsystem/warbands/proc/release_load_slot(datum/warband_manager/holder)
+	if(warband_load_busy == holder)
+		warband_load_busy = null
+
+/datum/controller/subsystem/warbands/proc/load_template(datum/warband_manager/manager, datum/map_template/template, atom/target)
+	warband_loading_manager = manager
+	. = template.load(target, centered = TRUE)
+	warband_loading_manager = null

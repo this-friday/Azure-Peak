@@ -141,47 +141,65 @@
 
 	if there's no room to spawn a fresh warcamp (e.g. prior warbands consumed all the warcamp landmarks), we flag the warband to spawn directly in the field at a wretch landmark
 */
-/datum/warband_manager/proc/choose_map(latespawn = FALSE)
-	var/warcamp_template_type
-
+/datum/warband_manager/proc/get_warcamp_type()
 	if(selected_aspects)
 		for(var/datum/warbands/aspects/aspect in selected_aspects)
 			if(aspect.warcamp)
-				warcamp_template_type = aspect.warcamp
-				break
-	if(!warcamp_template_type && selected_subtype && selected_subtype.warcamp)
-		warcamp_template_type = selected_subtype.warcamp
-	if(!warcamp_template_type && selected_warband && selected_warband.warcamp)
-		warcamp_template_type = selected_warband.warcamp
+				return aspect.warcamp
+	if(selected_subtype && selected_subtype.warcamp)
+		return selected_subtype.warcamp
+	if(selected_warband && selected_warband.warcamp)
+		return selected_warband.warcamp
+	return
 
+// 
+/datum/warband_manager/proc/spawn_warcamp(latespawn = FALSE)
+	if(QDELETED(src) || warcamp_established)
+		return
+	var/warcamp_template_type = get_warcamp_type()
 	if(!warcamp_template_type)
-		return FALSE
+		return
 
-	var/datum/map_template/chosenmap = new warcamp_template_type()
+	// if we can't place a warcamp, we spawn the warband directly in the Main Map at a wretch landmark
+	if(!(locate(/obj/effect/landmark/warcamp) in GLOB.landmarks_list))
+		field_spawn()
+		return
 
-	if(!chosenmap)
-		return FALSE
+	var/datum/map_template/chosenmap = new warcamp_template_type(null, null, TRUE)
+	if(!chosenmap || QDELETED(src))
+		return
 
-	for(var/obj/effect/landmark/warcamp/warcamp_landmark in GLOB.landmarks_list)
-		var/list/bounds = chosenmap.load(warcamp_landmark.loc, centered = TRUE)
-		qdel(warcamp_landmark)
-		if(!bounds)
-			continue
-		warcamp_established = TRUE
-		break
+	SSwarbands.acquire_load_slot(src)
+	var/list/camp_bounds
+	if(!QDELETED(src) && !warcamp_established)
+		for(var/obj/effect/landmark/warcamp/warcamp_landmark in GLOB.landmarks_list)
+			var/list/bounds = SSwarbands.load_template(src, chosenmap, warcamp_landmark.loc)
+			qdel(warcamp_landmark)
+			if(!bounds)
+				continue
+			camp_bounds = bounds
+			warcamp_bounds = bounds
+			warcamp_established = TRUE
+			break
+	SSwarbands.release_load_slot(src)
 
-	// no warcamp could be placed, so we just drop the warband straight onto the field at a wretch spawn landmark and continue
+	if(QDELETED(src))
+		teardown_loaded_bounds(camp_bounds)
+		return
+
 	if(!warcamp_established)
-		var/obj/effect/landmark/field_landmark = get_random_wretch_landmark()
-		if(!field_landmark)
-			return FALSE
-		warband_spawn_turf = get_turf(field_landmark)
-		return TRUE
-
-	if(latespawn == TRUE)
+		field_spawn()
+	else if(latespawn)
 		for(var/obj/effect/landmark/start/warlordlate/warlord_spawn in GLOB.landmarks_list)
 			qdel(warlord_spawn)
 			break
+
+// if we can't place a warcamp, we spawn the warband directly in the Main Map at a wretch landmark
+/datum/warband_manager/proc/field_spawn()
+	var/obj/effect/landmark/field_landmark = get_random_wretch_landmark()
+	if(!field_landmark)
+		return FALSE
+	warband_spawn_turf = get_turf(field_landmark)
 	return TRUE
 
 ////////////////////////////////////////////////
@@ -219,10 +237,7 @@
 	chooses variables with priority & spawns the final result
 	for example, a map provided from an aspect is prioritized over one from a subtype, and a subtype map's prioritized over the base warband's map
 */
-/datum/warband_manager/proc/spawn_warband(mob/user, rebellion = FALSE)
-	stop_creation_timer() // before choose_map: the template load sleeps, and the timeout must not fire mid-finalization
-	if(rebellion == FALSE) // if a warband is spawning via a lieutenant's desertion, we skip spawning a map, as that's handled by the SCOUT A PATH verb
-		choose_map()
+/datum/warband_manager/proc/spawn_warband(mob/user)
 	choose_combat_music()
 	// apply the band's & subtype's spawn pool contributions on top of the 400 baseline
 	if(selected_warband?.spawns)
@@ -273,6 +288,10 @@
 			show_band_info(usr, band)
 	else if(href_list["cb_info"])
 		show_casus_belli_info(usr)
+	else if(href_list["swap_answer"])
+		if(!isliving(usr) || !(usr in lobby_members))
+			return
+		resolve_swap_offer(usr, href_list["swap_answer"] == "accept")
 
 // warband/subtype/aspect info-blocks
 /datum/warband_manager/proc/show_band_info(mob/user, datum/warbands/band)
@@ -382,3 +401,19 @@
 
 /obj/item/paper/warband_warning
 	name = "hastily-written warning"
+
+// delete a warcamp using the Manager's warcamp_bounds list
+/datum/warband_manager/proc/delete_warcamp()
+	teardown_loaded_bounds(warcamp_bounds)
+	warcamp_bounds = null
+	
+/datum/warband_manager/proc/teardown_loaded_bounds(list/bounds)
+	if(!bounds)
+		return
+	var/turf/corner_min = locate(bounds[MAP_MINX], bounds[MAP_MINY], bounds[MAP_MINZ])
+	var/turf/corner_max = locate(bounds[MAP_MAXX], bounds[MAP_MAXY], bounds[MAP_MAXZ])
+	if(!corner_min || !corner_max)
+		return
+	for(var/turf/T in block(corner_min, corner_max))
+		for(var/atom/movable/AM in T)
+			qdel(AM)

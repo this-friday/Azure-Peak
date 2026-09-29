@@ -84,10 +84,6 @@
 
 	var/datum/treaty_flavor/generated_faction = src
 	generated_faction.member_names |= user.real_name
-	if(owner) // adds the faction to the subsystem's cache
-		SSwarbands.name_to_faction_cache[owner] = generated_faction
-	if(job_owner)
-		SSwarbands.job_to_faction_cache[job_owner] = generated_faction
 	SSwarbands.treaty_flavor_factions += generated_faction
 	return generated_faction
 

@@ -207,11 +207,11 @@ export const CasusBelliPanel = ({
 
     return (
       <Section
-        title={<span style={{ color: '#ffd59a' }}>CHOSEN CASUS BELLI</span>}
+        title={<span style={{ color: '#7a2525ff' }}>CHOSEN CASUS BELLI</span>}
         fill scrollable
       >
         <Box mb={1}>
-          <Box bold style={{ fontSize: '20px', color: '#e9ca9e', marginBottom: '6px' }}>
+          <Box bold style={{ fontSize: '20px', color: '#4a1515', marginBottom: '6px' }}>
             {displayName}
           </Box>
           <Box style={{ fontSize: '13px', color: '#b1a390', lineHeight: '1.6' }}>

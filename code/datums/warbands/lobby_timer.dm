@@ -142,6 +142,8 @@
 				is_compatible = TRUE
 		if(!is_compatible)
 			continue
+		if(potential_aspect.random_blacklisted)
+			continue
 		if(potential_aspect.points > 0)
 			negative_aspects += potential_aspect
 		else if(potential_aspect.points < 0)
@@ -194,6 +196,7 @@
 	to_chat(warlord, span_boldwarning("TIME EXPIRED! Settling the casus belli..."))
 	auto_select_leading_casus_belli() // the old force-spawn path proceeded without one entirely, so a failed pick isn't fatal
 	creation_stage = 3
+	INVOKE_ASYNC(src, PROC_REF(spawn_warcamp))
 	for(var/mob/living/carbon/human/member in lobby_members)
 		to_chat(member, span_boldwarning("The casus belli stage has closed. You may now choose your class."))
 		member.playsound_local(member, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
@@ -220,11 +223,7 @@
 			cancel_lobby(member)
 		qdel(src)
 		return
-	finalize_warband(warlord, class_path, subclass_path)
-	for(var/mob/living/carbon/human/member in lobby_members)
-		if(member.mind.special_role == ROLE_WARLORD_LIEUTENANT || member.mind.special_role == ROLE_WARLORD_ASPIRANT || member.mind.special_role == ROLE_WARLORD_GRUNT)
-			to_chat(member, span_boldwarning("TIME EXPIRED! The warband has been auto-finalized. You may now create your character."))
-			member.playsound_local(member, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
+	finalize_warband(warlord, class_path, subclass_path, timed_out = TRUE)
 
 // warlord's pick > most-voted proposal > random term
 /datum/warband_manager/proc/auto_select_leading_casus_belli()

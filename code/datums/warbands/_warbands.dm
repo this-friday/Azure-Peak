@@ -109,7 +109,8 @@
 
 /datum/warbands/aspects
 	abstract_type = /datum/warbands/aspects
-	var/asclass			// aspects of the same class can't be selected simultaneously (i.e: two map aspects)
+	var/asclass						// aspects of the same class can't be selected simultaneously (i.e: two map aspects)
+	var/random_blacklisted = FALSE	// when a warband times out, if this is TRUE the auto-config process will never pick this aspect
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////// WARBAND HOOKS

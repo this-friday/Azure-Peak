@@ -70,7 +70,7 @@
 					shortest_distance = distance
 					nearest_rally = rally
 
-		// prefer the nearest rally point, then the warlord landmark, then a field spawn turf already set by choose_map
+		// prefer the nearest rally point, then the warlord landmark, then a field spawn turf
 		warband_spawn_turf = nearest_rally ? get_turf(nearest_rally) : (warlord_landmark_turf || warband_spawn_turf)
 	else if(!is_latespawn)
 		user.forceMove(warband_spawn_turf)

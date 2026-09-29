@@ -7,6 +7,7 @@
 */
 /datum/warband_manager
 	var/lobby_chat_muted_until = 0
+	var/list/pending_swap_offers = list()	// an associated list of: target ckey + offer details | used to track Role Swap requests between warband members
 
 // returns a style based on the provided special_role
 /datum/warband_manager/proc/get_warband_lobby_style(role)
@@ -67,7 +68,10 @@
 	var/lobby_line = "<font color='[col]'><span style='font-size:[size];font-weight:[style["weight"]]'><b>[speaker_name]</b>: <span class='message'>[message]</span></span></font>"
 
 	var/list/recipients = list()
-	for(var/mob/living/lobby_member in manager.lobby_members)
+	var/list/hearing_members = manager.lobby_members.Copy()
+	if(manager.linked_lobby) // sundered lobbies share their chat, so the two hosts can conspire
+		hearing_members |= manager.linked_lobby.lobby_members
+	for(var/mob/living/lobby_member in hearing_members)
 		var/client/lobby_client = lobby_member.client
 		if(!lobby_client)
 			continue
@@ -102,14 +106,20 @@
 		to_chat(user, span_warning("Only the Warlord may silence the lobby."))
 		user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 		return
+	var/announcement
 	if(lobby_chat_muted_until > world.time)
 		lobby_chat_muted_until = 0
-		announce_to_lobby(span_greenteamradio("The Warlord lifts the silence. The lobby may speak freely."))
+		announcement = span_greenteamradio("The Warlord lifts the silence. The lobby may speak freely.")
 		user.playsound_local(user, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 	else
 		lobby_chat_muted_until = world.time + 2 MINUTES
-		announce_to_lobby(span_redteamradio("The Warlord silences the lobby. Only the Warlord may speak for the next 2 minutes."))
+		announcement = span_redteamradio("The Warlord silences the lobby. Only the Warlord may speak for the next 2 minutes.")
 		user.playsound_local(user, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
+	announce_to_lobby(announcement)
+	if(linked_lobby) // mutes are shared between linked lobbies
+		linked_lobby.lobby_chat_muted_until = lobby_chat_muted_until
+		linked_lobby.announce_to_lobby(announcement)
+		SStgui.update_uis(linked_lobby)
 
 	SStgui.update_uis(src)
 
@@ -123,7 +133,8 @@
 //////////////////////////////////////////////////// ROLE SWAP
 /*
 	any two lobby members may trade their special_roles during stage 1 (warband selection)
-	the requester picks a target, the target gets an accept/refuse prompt, and the backend re-validates everything on acceptance
+	the requester picks a target, the target gets a clickable ACCEPT/REFUSE chat message
+	an unanswered offer expires after 30 seconds
 
 */
 
@@ -132,7 +143,7 @@
 		return ROLE_WARLORD_LIEUTENANT
 	return role
 
-// asks the requester to pick a target, prompts the target, and swaps mind.special_role on acceptance
+// asks the requester to pick a target, then sends the target a clickable chat offer
 /datum/warband_manager/proc/handle_role_swap_request(mob/living/requester)
 	if(!requester?.mind || !(requester in lobby_members))
 		return
@@ -160,18 +171,46 @@
 	if((requester.ckey in pending_swap_ckeys) || (target.ckey in pending_swap_ckeys))
 		to_chat(requester, span_warning("A role swap involving one of us is already pending."))
 		return
+	var/requester_name = requester.client?.prefs?.real_name || requester.ckey
+	var/target_name = target.client?.prefs?.real_name || target.ckey
 	pending_swap_ckeys += requester.ckey
 	pending_swap_ckeys += target.ckey
 	last_swap_request[requester.ckey] = world.time
-	var/requester_name = requester.client?.prefs?.real_name || requester.ckey
-	var/target_name = target.client?.prefs?.real_name || target.ckey
+	pending_swap_offers[target.ckey] = list(
+		"requester_ckey" = requester.ckey,
+		"requester_name" = requester_name,
+		"target_name" = target_name,
+		"requester_role" = requester_role,
+		"target_role" = target_role,
+		"timer_id" = addtimer(CALLBACK(src, PROC_REF(expire_swap_offer), target.ckey), 30 SECONDS, TIMER_STOPPABLE)
+	)
 	to_chat(requester, span_notice("The offer is sent. Awaiting their answer..."))
-	var/answer = tgui_alert(target, "[requester_name] ([display_role(requester_role)]) offers to swap roles with me. I would become a [display_role(requester_role)], and they would become a [display_role(target_role)].", "ROLE SWAP", list("ACCEPT", "REFUSE"), 30 SECONDS)
-	pending_swap_ckeys -= requester.ckey
-	pending_swap_ckeys -= target.ckey
-	if(answer != "ACCEPT")
-		to_chat(requester, span_warning("The offer was refused."))
+	var/offer_line = "<b>ROLE SWAP:</b> [requester_name] ([display_role(requester_role)]) offers to swap roles with me. I would become a [display_role(requester_role)], and they would become a [display_role(target_role)]. <a href='?src=[REF(src)];swap_answer=accept'>\[ACCEPT\]</a> <a href='?src=[REF(src)];swap_answer=refuse'>\[REFUSE\]</a>"
+	to_chat(target, span_notice(offer_line))
+	target.playsound_local(target, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
+
+// the target clicked ACCEPT or REFUSE on their offer
+/datum/warband_manager/proc/resolve_swap_offer(mob/living/target, accepted)
+	var/list/offer = pending_swap_offers[target.ckey]
+	if(!offer)
 		return
+	clear_swap_offer(target.ckey)
+	var/mob/living/requester
+	for(var/mob/living/candidate in lobby_members)
+		if(candidate.ckey == offer["requester_ckey"])
+			requester = candidate
+			break
+	if(!accepted)
+		if(requester)
+			to_chat(requester, span_warning("The offer was refused."))
+		return
+	if(!requester)
+		to_chat(target, span_warning("They're no longer in the lobby. The swap is off."))
+		return
+	complete_role_swap(requester, target, offer["requester_role"], offer["target_role"])
+
+// re-validates everything (everything could've changed since the moment the offer was made), then trades special_roles
+/datum/warband_manager/proc/complete_role_swap(mob/living/requester, mob/living/target, requester_role, target_role)
 	if(creation_stage != 1 || !(requester in lobby_members) || !(target in lobby_members) || !requester.client || !target.client || !requester.mind || !target.mind)
 		to_chat(target, span_warning("The moment has passed. Swaps may only be performed in phase 1."))
 		return
@@ -179,6 +218,8 @@
 		to_chat(requester, span_warning("Our stations have shifted. The swap is off."))
 		to_chat(target, span_warning("Our stations have shifted. The swap is off."))
 		return
+	var/requester_name = requester.client?.prefs?.real_name || requester.ckey
+	var/target_name = target.client?.prefs?.real_name || target.ckey
 	requester.mind.special_role = target_role
 	target.mind.special_role = requester_role
 	to_chat(requester, span_greenteamradio("The swap is made. I now serve as [display_role(target_role)]."))
@@ -187,3 +228,37 @@
 	requester.playsound_local(requester, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 	target.playsound_local(target, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 	update_static_data_for_all_viewers()
+
+// removes a pending offer
+/datum/warband_manager/proc/clear_swap_offer(target_ckey)
+	var/list/offer = pending_swap_offers[target_ckey]
+	if(!offer)
+		return
+	if(offer["timer_id"])
+		deltimer(offer["timer_id"])
+	pending_swap_ckeys -= offer["requester_ckey"]
+	pending_swap_ckeys -= target_ckey
+	pending_swap_offers -= target_ckey
+
+// the offer went unanswered for 30 seconds
+/datum/warband_manager/proc/expire_swap_offer(target_ckey)
+	var/list/offer = pending_swap_offers[target_ckey]
+	if(!offer)
+		return
+	clear_swap_offer(target_ckey)
+	for(var/mob/living/member in lobby_members)
+		if(member.ckey == offer["requester_ckey"])
+			to_chat(member, span_warning("The offer went unanswered."))
+		else if(member.ckey == target_ckey)
+			to_chat(member, span_warning("The role swap offer has lapsed."))
+
+// voids every pending offer (lobby death, schisms) | reason_text (if any) is sent to everyone involved
+/datum/warband_manager/proc/cancel_all_swap_offers(reason_text)
+	for(var/target_ckey in pending_swap_offers.Copy())
+		var/list/offer = pending_swap_offers[target_ckey]
+		clear_swap_offer(target_ckey)
+		if(!reason_text)
+			continue
+		for(var/mob/living/member in lobby_members)
+			if(member.ckey == offer["requester_ckey"] || member.ckey == target_ckey)
+				to_chat(member, span_warning(reason_text))

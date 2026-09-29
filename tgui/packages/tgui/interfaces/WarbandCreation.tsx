@@ -101,7 +101,7 @@ export const WarbandCreation = () => {
     if (warlord_spawned) return "JOIN AT WILL";
     if (!is_warlord && creation_stage === 1) return "STAGE 1: THE WARLORD MUST SELECT A WARBAND";
     if (!is_warlord && creation_stage === 2) return "STAGE 2: PROPOSE A CASUS BELLI";
-    if (!is_warlord && creation_stage === 3 && !warlord_spawned) return "STAGE 3: CHOOSE A CLASS | WAIT FOR THE WARLORD TO FINALIZE THE WARBAND";
+    if (!is_warlord && creation_stage === 3 && !warlord_spawned) return "STAGE 3: CHOOSE A CLASS | READY UP";
     if (is_warlord && creation_stage === 1) return "STAGE 1: SELECT A WARBAND";
     if (is_warlord && creation_stage === 2) return "STAGE 2: SELECT A CASUS BELLI TO ADVANCE";
     if (is_warlord && creation_stage === 3 && !warlord_spawned) return "STAGE 3: CHOOSE A CLASS | FINALIZE";
@@ -150,8 +150,8 @@ export const WarbandCreation = () => {
         onClick={() => act('request_role_swap')}
         tooltip="Ask another lobby member to trade roles with you."
         style={{
-          height: '40px',
-          backgroundColor: '#2a0808',
+          height: '60px',
+          backgroundColor: '#7a1f1f',
           border: '1px solid #682222ff',
           color: '#c9c9c9',
           fontWeight: 'bold',
@@ -170,8 +170,8 @@ export const WarbandCreation = () => {
           ? 'Lift the silence on the warband lobby.'
           : 'Shut everybody else up for 2 minutes.'}
         style={{
-          height: '40px',
-          backgroundColor: lobby_chat_muted ? '#7a1f1f' : '#2a0808',
+          height: '60px',
+          backgroundColor: lobby_chat_muted ? '#c74040' : '#7a1f1f',
           border: `1px solid ${lobby_chat_muted ? '#e8bf67' : '#682222ff'}`,
           color: lobby_chat_muted ? '#e8bf67' : '#c9c9c9',
           fontWeight: 'bold',

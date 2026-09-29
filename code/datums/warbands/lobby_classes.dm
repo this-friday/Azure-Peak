@@ -89,8 +89,7 @@
 				subclass_pool += class_type
 	return subclass_pool
 
-// counts this warband's members holding the given class: spawned characters plus current ready-up picks
-// exclude_user keeps a member's own ready entry from blocking them when they re-validate
+// counts the total number of a warband's members holding the given class
 /datum/warband_manager/proc/class_slot_count(class_path, mob/exclude_user)
 	var/count = taken_class_counts[class_path] || 0
 	for(var/ckey in ready_members)
@@ -137,3 +136,35 @@
 		if(!class_slots_available(subclass_path, user))
 			return FALSE
 	return TRUE
+
+// occupied slot counts per class type
+/datum/warband_manager/proc/build_class_slot_counts()
+	var/list/counts = list()
+	for(var/class_path in taken_class_counts)
+		counts["[class_path]"] = taken_class_counts[class_path]
+	for(var/ckey in ready_members)
+		var/list/stored = ready_members[ckey]
+		if(!islist(stored))
+			continue
+		for(var/slot_key in list("class", "subclass"))
+			if(!stored[slot_key])
+				continue
+			counts["[stored[slot_key]]"] += 1
+	return counts
+
+// gets a readied member's stored class/subclass display title
+/datum/warband_manager/proc/ready_class_title(ckey, slot_key)
+	var/list/stored = ready_members[ckey]
+	if(!islist(stored) || !stored[slot_key])
+		return
+	var/stored_path = text2path(stored[slot_key])
+	if(!ispath(stored_path, /datum/advclass))
+		return
+	return initial(stored_path:title) || initial(stored_path:name)
+
+/datum/warband_manager/proc/subclass_requirement_met(class_path, subclass_path)
+	if(!selected_warband?.universal_subclasses_enabled || !selected_warband?.subclass_required)
+		return TRUE
+	if(warband_class_for(class_path) && initial(class_path:ignores_uni_class_requirement))
+		return TRUE
+	return subclass_path ? TRUE : FALSE
