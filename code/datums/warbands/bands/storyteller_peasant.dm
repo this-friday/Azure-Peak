@@ -1,8 +1,8 @@
 /datum/warbands/peasant
 	storytellerlimit = /datum/patron/inhumen/matthios
 	rarity = 1
-	title = "PEASANT REBELLION"
-	name = "Peasant Rebellion"
+	title = "ROGUE TOWN"
+	name = "Rogue Town"
 	treaty_name = "The People"
 	summary = "Turmoil in the Duchy's countryside has boiled into a full-blown rebellion."
 	warning = "...turmoil in Azuria's distant countryside, and roving bands of unruly peasants."
