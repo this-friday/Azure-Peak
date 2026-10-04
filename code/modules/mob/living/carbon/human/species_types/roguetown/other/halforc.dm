@@ -8,8 +8,8 @@
 	origin = "Aavnr"
 	base_name = "Humen"
 	is_subrace = TRUE
-	desc = "<b>Half Orcs</b><br>\
-	With the Ironmask clan on a centuries-long warpath to consolidate all orcs beneath their banner, \
+	desc_title = "Half Orc"
+	desc = "With the Ironmask clan on a centuries-long warpath to consolidate all orcs beneath their banner, \
 	crushed orc tribes have lost their menfolk, and war-widows have been scattered to the hinterlands. \
 	Between humen civilization and orc savagery, orc-women opting for exile over dishonor have become \
 	more common visitors to fur trading posts and prospecting camps, eventually leading to half-orcs \
@@ -17,8 +17,7 @@
 	to the Ironmask. True orcs would kill you on sight, seeing you as a mongrel dog, and non-orcish \
 	people cannot decide between regarding you with either mere distrust or outright disgust. Yet \
 	somehow your wandering feet came to Azure Peak, where half-orcs ply muscle and their hardiness \
-	in the rough underbelly or outer reaches of society.<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 STR</b></span><br>"
+	in the rough underbelly or outer reaches of society."
 
 	skin_tone_wording = "Clan"
 
@@ -59,6 +58,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		//ORGAN_SLOT_TESTICLES = /obj/item/organ/testicles,
 		//ORGAN_SLOT_PENIS = /obj/item/organ/penis,
 		//ORGAN_SLOT_BREASTS = /obj/item/organ/breasts,
@@ -76,6 +76,9 @@
 		/datum/body_marking/flushed_cheeks,
 		/datum/body_marking/eyeliner,
 		/datum/body_marking/tonage,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 	customizers = list(
 		/datum/customizer/organ/eyes/humanoid,
@@ -90,6 +93,8 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/human,
 		/datum/customizer/organ/vagina/human_anthro,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		/datum/customizer/organ/horns/tusks,
 		/datum/customizer/organ/ears/halforc,
 		)
@@ -98,17 +103,9 @@
 		/datum/language/orcish
 	)
 
-/datum/species/halforc/on_species_gain(mob/living/carbon/C, datum/species/old_species)
-	..()
-	RegisterSignal(C, COMSIG_MOB_SAY, PROC_REF(handle_speech))
-
 /datum/species/halforc/after_creation(mob/living/carbon/C)
 	..()
 	to_chat(C, "<span class='info'>I can speak Orcish with ,o before my speech.</span>")
-
-/datum/species/halforc/on_species_loss(mob/living/carbon/C)
-	. = ..()
-	UnregisterSignal(C, COMSIG_MOB_SAY)
 
 /datum/species/halforc/qualifies_for_rank(rank, list/features)
 	return TRUE
@@ -123,7 +120,10 @@
 		"Crescent Fang" = SKIN_COLOR_CRESCENT_FANG,
 		"Murkwalker" = SKIN_COLOR_MURKWALKER,
 		"Shatterhorn" = SKIN_COLOR_SHATTERHORN,
-		"Spirit Crusher" = SKIN_COLOR_SPIRITCRUSHER
+		"Spirit Crusher" = SKIN_COLOR_SPIRITCRUSHER,
+		"Iron Splinter" = SKIN_COLOR_IRON_SPLINTER,
+		"Glass Crag" = SKIN_COLOR_GLASS_CRAG,
+		"Daemonscar" = SKIN_COLOR_DAEMONSCAR
 	)
 
 /datum/species/halforc/get_hairc_list()

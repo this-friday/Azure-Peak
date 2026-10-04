@@ -6,10 +6,9 @@
 	var/payout_price = 1
 	var/withdraw_price = 1
 	var/withdraw_disabled = FALSE
-	var/mint_item = FALSE
+	var/autoexport_disabled = FALSE
 	var/stockpile_limit = 100
 	var/importexport_amt = 10
-	var/percent_bounty = FALSE
 	var/category = "Raw Materials"
 	var/trade_good_id
 	var/accept_toggle_enabled = TRUE
@@ -52,6 +51,8 @@
 	return out
 
 /datum/roguestock/proc/check_item(obj/item/I)
+	if(I.GetComponent(/datum/component/unsellable))
+		return FALSE
 	if(istype(I, /obj/item/reagent_containers/food/snacks))
 		var/obj/item/reagent_containers/food/snacks/food = I
 		if(food.eat_effect == /datum/status_effect/debuff/rotfood)

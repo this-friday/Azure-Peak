@@ -6,8 +6,8 @@
 	id = "elfw"
 	psydonic = TRUE
 	sub_name = "Wood Elf"
-	desc = "<b>Wood Elf: Guardians of the Grove</b><br>\
-	\"Elf\" is a catch-all term used for tall, pointy-eared humanoids who can trace \
+	desc_title = "Wood Elf: Guardians of the Grove"
+	desc = "\"Elf\" is a catch-all term used for tall, pointy-eared humanoids who can trace \
 	their heritage to the ancient and mysterious Snow Elves. This particular species \
 	of elf are what most imagine when they hear the word, and are also known among \
 	the elder races as \"Wood-Elves\". Considering their diverse history, it is extremely \
@@ -18,8 +18,7 @@
 	territorial disputes. This, however, does not stop many Humens and Elves from forming \
 	relationships, which are capable of producing half-elven children. Elves are known for \
 	their intelligence and sharp eyes, but their graceful nature typically leaves their bodies \
-	more frail and fragile than most. In these lands, only a handful of the many Elvish tribes are seen.<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 SPD</b></span><br>"
+	more frail and fragile than most. In these lands, only a handful of the many Elvish tribes are seen."
 
 	skin_tone_wording = "Tribal Identity"
 	max_age = 850
@@ -36,21 +35,14 @@
 	limbs_icon_f = 'icons/roguetown/mob/bodies/f/fm.dmi'
 	dam_icon = 'icons/roguetown/mob/bodies/dam/dam_male.dmi'
 	dam_icon_f = 'icons/roguetown/mob/bodies/dam/dam_female.dmi'
+	// Superseded by the slim build, which decides the clothing cut before is_bulky_body() ever reads this.
+	// Kept as the fallback for anything that strips this species of its builds.
 	use_f = TRUE
 	soundpack_m = /datum/voicepack/male/elf
 	soundpack_f = /datum/voicepack/female/elf
-	offset_features = list(
-		OFFSET_ID = list(0,2), OFFSET_GLOVES = list(0,0), OFFSET_WRISTS = list(0,1),\
-		OFFSET_CLOAK = list(0,2), OFFSET_FACEMASK = list(0,1), OFFSET_HEAD = list(0,1), \
-		OFFSET_FACE = list(0,1), OFFSET_BELT = list(0,1), OFFSET_BACK = list(0,2), \
-		OFFSET_NECK = list(0,1), OFFSET_MOUTH = list(0,2), OFFSET_PANTS = list(0,2), \
-		OFFSET_SHIRT = list(0,2), OFFSET_ARMOR = list(0,2), OFFSET_HANDS = list(0,2), OFFSET_UNDIES = list(0,0), \
-		OFFSET_ID_F = list(0,-1), OFFSET_GLOVES_F = list(0,0), OFFSET_WRISTS_F = list(0,0), OFFSET_HANDS_F = list(0,0), \
-		OFFSET_CLOAK_F = list(0,0), OFFSET_FACEMASK_F = list(0,-1), OFFSET_HEAD_F = list(0,-1), \
-		OFFSET_FACE_F = list(0,-1), OFFSET_BELT_F = list(0,0), OFFSET_BACK_F = list(0,-1), \
-		OFFSET_NECK_F = list(0,-1), OFFSET_MOUTH_F = list(0,-1), OFFSET_PANTS_F = list(0,0), \
-		OFFSET_SHIRT_F = list(0,0), OFFSET_ARMOR_F = list(0,0), OFFSET_UNDIES_F = list(0,-1), \
-		)
+	allowed_body_builds = ALL_BODY_BUILDS
+	default_body_build_m = BODY_BUILD_ELVEN
+	default_body_build_f = BODY_BUILD_SLIM
 	race_bonus = list(STAT_SPEED = 1)
 	enflamed_icon = "widefire"
 	organs = list(
@@ -63,6 +55,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		)
 	bodypart_features = list(
 		/datum/bodypart_feature/hair/head,
@@ -82,6 +75,8 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/human,
 		/datum/customizer/organ/vagina/human_anthro,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		)
 
 	body_marking_sets = list(
@@ -100,6 +95,9 @@
 		/datum/body_marking/nose,
 		/datum/body_marking/bangs,
 		/datum/body_marking/bun,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 /datum/species/elf/wood/get_span_language(datum/language/message_language)
 	if(!message_language)

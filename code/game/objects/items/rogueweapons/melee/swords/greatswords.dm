@@ -84,7 +84,7 @@
 
 /obj/item/rogueweapon/greatsword/aalloy
 	name = "decrepit greatsword"
-	desc = "A massive blade, wrought in frayed bronze. It is too big to be called a sword; massive, thick, heavy, and far too rough. Indeed, this blade was more like a heap of raw metal."
+	desc = "A massive blade, wrought in rotted metal. It is too big to be called a sword; massive, thick, heavy, and far too rough. Indeed, this blade was more like a heap of raw metal."
 	force = 10
 	force_wielded = 25
 	max_integrity = 150
@@ -98,7 +98,7 @@
 
 /obj/item/rogueweapon/greatsword/paalloy
 	name = "ancient greatsword"
-	desc = "A massive blade, forged from polished gilbronze. Your kind will discover your true nature, in wrath and ruin. You will take to the stars and burn them out, one by one. Only when the last star turns to dust, will you finally realize that She was trying to save you from Man's greatest foe; oblivion."
+	desc = "A massive blade, forged from polished gilbranze. Your kind will discover your true nature, in wrath and ruin. You will take to the stars and burn them out, one by one. Only when the last star turns to dust, will you finally realize that She was trying to save you from Man's greatest foe; oblivion."
 	icon_state = "ancient_gsw"
 	smeltresult = /obj/item/ingot/aaslag
 
@@ -170,6 +170,35 @@
 	max_blade_int = 200
 	smeltresult = /obj/item/ingot/blacksteel
 	smelt_bar_num = 2 // Okay you CAN get a refund on the blacksteel
+	var/used = FALSE
+	var/list/selection = list(
+		/datum/special_intent/greatsword_swing,
+		/datum/special_intent/vicious_swipe,
+		/datum/special_intent/side_sweep,
+		/datum/special_intent/limbguard
+		)
+
+/obj/item/rogueweapon/greatsword/grenz/flamberge/blacksteel/examine(mob/user)
+	. = ..()
+	if(!used)
+		. += span_notice("The Special Manoeuvre of this weapon can be changed. Right-click it with a free hand to select one. This can only be done once.")
+
+/obj/item/rogueweapon/greatsword/grenz/flamberge/blacksteel/attack_right(mob/user)
+	. = ..()
+	if(used)
+		return
+
+	var/list/special_options = list()
+	for(var/intent in selection)
+		var/datum/special_intent/S = intent // Hate this DM quirk.
+		special_options[S::name] = S
+
+	var/choice = input(user, "Choose the Manoeuvre", "MANOEUVRE") as anything in special_options
+	if(choice)
+		qdel(special)
+		var/datum/special_intent/S = special_options[choice]
+		special = new S()
+		used = TRUE
 
 /obj/item/rogueweapon/greatsword/silver
 	name = "silver greatsword"
@@ -177,10 +206,6 @@
 	seeks to safeguard those who've taken pilgrimage towards Azuria. </br>'There is no fate, but what we make for ourselves. It is not the will of \
 	gods that will determine Psydonia's fate.. but instead, the hope of its children.'"
 	icon_state = "silverexealt"
-	force = 8
-	force_wielded = 25
-	minstr = 11
-	wdefense = 6
 	is_silver = TRUE
 	smeltresult = /obj/item/ingot/silver
 
@@ -188,11 +213,7 @@
 	AddComponent(\
 		/datum/component/silverbless,\
 		pre_blessed = BLESSING_NONE,\
-		silver_type = SILVER_TENNITE,\
-		added_force = 0,\
-		added_blade_int = 0,\
-		added_int = 50,\
-		added_def = 2,\
+		silver_type = SILVER_TENNITE\
 	)
 
 /obj/item/rogueweapon/greatsword/psygsword
@@ -200,10 +221,6 @@
 	desc = "It is said that a Psydonian smith was guided by Saint Malum himself to forge such a formidable blade, and given the task to slay a \
 	daemon preying on the Otavan farmlands. The design was retrieved, studied, and only a few replicas made - for they believe it dulls its edge."
 	icon_state = "silverexealt"
-	force = 8
-	force_wielded = 25
-	minstr = 11
-	wdefense = 6
 	is_silver = TRUE
 	smeltresult = /obj/item/ingot/silverblessed
 
@@ -211,15 +228,11 @@
 	AddComponent(\
 		/datum/component/silverbless,\
 		pre_blessed = BLESSING_NONE,\
-		silver_type = SILVER_PSYDONIAN,\
-		added_force = 0,\
-		added_blade_int = 0,\
-		added_int = 50,\
-		added_def = 2,\
+		silver_type = SILVER_PSYDONIAN\
 	)
 
 /obj/item/rogueweapon/greatsword/psygsword/relic
-	name = "Apocrypha"
+	name = "\"Apocrypha\""
 	desc = "In Otava's grandest mosaics, Saint Ravox - bare in all but a beaked helmet and loincloth - is depicted wielding such an imposing \
 	greatweapon against the Sinistar, Graggar. Regardless of whether this relic was actually wielded by divinity-or-not, its unparallel strength \
 	will nevertheless command even the greatest foes to fall. Stand fast, childe o' God, and drive the unforgivable back to Hell."
@@ -230,16 +243,15 @@
 	gripped_intents = list(/datum/intent/sword/cut/zwei, /datum/intent/sword/thrust/heavy, /datum/intent/sword/chop/cleave, /datum/intent/rend)
 	minstr = 13
 	minstr_req = TRUE
+	wdefense = 8
+	max_integrity = 350
+	max_blade_int = 400
 
 /obj/item/rogueweapon/greatsword/psygsword/relic/ComponentInitialize()
 	AddComponent(\
 		/datum/component/silverbless,\
 		pre_blessed = BLESSING_PSYDONIAN,\
-		silver_type = SILVER_PSYDONIAN,\
-		added_force = 0,\
-		added_blade_int = 100,\
-		added_int = 100,\
-		added_def = 2,\
+		silver_type = SILVER_PSYDONIAN\
 	)
 
 /obj/item/rogueweapon/greatsword/psygsword/relic/getonmobprop(tag)
@@ -254,7 +266,7 @@
 				return list("shrink" = 0.6,"sx" = 9,"sy" = -4,"nx" = -7,"ny" = 1,"wx" = -9,"wy" = 2,"ex" = 10,"ey" = 2,"northabove" = 0,"southabove" = 1,"eastabove" = 1,"westabove" = 0,"nturn" = 5,"sturn" = -190,"wturn" = -170,"eturn" = -10,"nflip" = 8,"sflip" = 8,"wflip" = 1,"eflip" = 0)
 			if("onback")
 				return list("shrink" = 0.6,"sx" = -1,"sy" = 2,"nx" = 0,"ny" = 2,"wx" = 2,"wy" = 1,"ex" = 0,"ey" = 1,"nturn" = 0,"sturn" = 0,"wturn" = 70,"eturn" = 15,"nflip" = 1,"sflip" = 1,"wflip" = 1,"eflip" = 1,"northabove" = 1,"southabove" = 0,"eastabove" = 0,"westabove" = 0)
-			if("altgrip") 
+			if("altgrip")
 				return list("shrink" = 0.45,"sx" = 2,"sy" = 3,"nx" = -7,"ny" = 1,"wx" = -8,"wy" = 0,"ex" = 8,"ey" = -1,"northabove" = 0,"southabove" = 1,"eastabove" = 1,"westabove" = 0,"nturn" = -135,"sturn" = -35,"wturn" = 45,"eturn" = 145,"nflip" = 8,"sflip" = 8,"wflip" = 1,"eflip" = 0)
 
 /obj/item/rogueweapon/greatsword/bsword/psy
@@ -262,7 +274,7 @@
 	desc = "'Let His name be naught but forgot'n.' </br>The remnants of a legendary champion, who's name has been lost to the annals of tyme. Even so, the tarnished \
 	silver still glimmers with otherworldly strength; to exorcise, to eradicate, and to endure."
 	icon_state = "oldpsybroadsword"
-	force = 15 
+	force = 15
 	force_wielded = 25
 	minstr = 11
 	wdefense = 6
@@ -271,17 +283,44 @@
 	alt_grips = list(/datum/alt_grip/mordhau/broadsword/forgotten_blade)
 	is_silver = TRUE
 	smeltresult = /obj/item/ingot/silver
+	/// Whether a blessing awakens this blade, raising its force, defense and integrity.
+	var/awakens = TRUE
+	/// Whether a blessing has already awakened this blade.
+	var/awakened = FALSE
 
 /obj/item/rogueweapon/greatsword/bsword/psy/ComponentInitialize()
 	AddComponent(\
 		/datum/component/silverbless,\
 		pre_blessed = BLESSING_NONE,\
-		silver_type = SILVER_PSYDONIAN,\
-		added_force = 10,\
-		added_blade_int = 50,\
-		added_int = 50,\
-		added_def = 2,\
+		silver_type = SILVER_PSYDONIAN\
 	)
+
+/obj/item/rogueweapon/greatsword/bsword/psy/on_blessed(blessing_type)
+	if(!awakens || awakened)
+		return
+	awakened = TRUE
+	max_integrity += 50
+	obj_integrity = max_integrity
+	restore_bintegrity()
+	awaken_edge()
+
+/obj/item/rogueweapon/greatsword/bsword/psy/proc/awaken_edge()
+	force += 10
+	force_wielded += 10
+	update_force_dynamic()
+	wdefense += 2
+	update_wdefense_dynamic()
+
+/obj/item/rogueweapon/greatsword/bsword/psy/obj_fix(mob/user, full_repair = TRUE)
+	. = ..()
+	if(awakened)
+		awaken_edge()
+
+/obj/item/rogueweapon/greatsword/bsword/psy/restore_bintegrity()
+	. = ..()
+	if(awakened)
+		max_blade_int += 50
+		blade_int = max_blade_int
 
 /obj/item/rogueweapon/greatsword/bsword/psy/unforgotten
 	name = "unforgotten blade"
@@ -296,22 +335,22 @@
 	AddComponent(\
 		/datum/component/silverbless,\
 		pre_blessed = BLESSING_NONE,\
-		silver_type = SILVER_PSYDONIAN,\
-		added_force = 10,\
-		added_blade_int = 50,\
-		added_int = 50,\
-		added_def = 2,\
+		silver_type = SILVER_PSYDONIAN\
 	)
 
 /obj/item/rogueweapon/greatsword/bsword/psy/relic
-	name = "Creed"
+	name = "\"Creed\""
 	desc = "Psydonian prayers and Tennite smiths, working as one to craft a weapon to slay the Four. A heavy and large blade, favored by Saint Ravox, to lay \
 	waste to those who threaten His flock. The crossguard's psycross reflects even the faintest of Noc's light. You're the light - show them the way."
 	icon_state = "psybroadsword"
-	force = 25 
+	force = 25
 	force_wielded = 25
 	is_silver = TRUE
 	smeltresult = /obj/item/ingot/silver
+	wdefense = 8
+	max_integrity = 350
+	max_blade_int = 400
+	awakens = FALSE
 
 /obj/item/rogueweapon/greatsword/bsword/psy/getonmobprop(tag)
 	. = ..()
@@ -326,16 +365,12 @@
 	AddComponent(\
 		/datum/component/silverbless,\
 		pre_blessed = BLESSING_PSYDONIAN,\
-		silver_type = SILVER_PSYDONIAN,\
-		added_force = 0,\
-		added_blade_int = 100,\
-		added_int = 100,\
-		added_def = 2,\
+		silver_type = SILVER_PSYDONIAN\
 	)
 
 /obj/item/rogueweapon/greatsword/avantyne
 	name = "avantyne-threaded greatsword"
-	desc = "Malediction made manifest; the greatweapon of an otherworldly champion, unphased by the thickest plates nor the toughest flesh. Let no one stop the \
+	desc = "Malediction made manifest; the greatweapon of an otherworldly champion, unfazed by the thickest plates and the toughest flesh. Let no one stop the \
 	march of Her disciples, towards the filament's sputtering wound. Take thine birthright and ascend to the heavens beyond, or die trying."
 	gripped_intents = list(/datum/intent/sword/cut/zwei, /datum/intent/sword/thrust/estoc, /datum/intent/sword/cut/zwei/cleave, /datum/intent/sword/cut/zwei/sweep)
 	icon_state = "zizogsw"
@@ -344,6 +379,9 @@
 	max_blade_int = 500
 	max_integrity = 500
 	smeltresult = /obj/item/ingot/avantyne
+
+/obj/item/rogueweapon/greatsword/avantyne/get_examine_highlight_status()
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_ALARMING, HERESYDESC_ZIZO_AVANTYNE)
 
 /obj/item/rogueweapon/estoc
 	name = "estoc"
@@ -357,7 +395,7 @@
 	inhand_x_dimension = 64
 	inhand_y_dimension = 64
 	force = 20
-	force_wielded = 25
+	force_wielded = 28
 	possible_item_intents = list(
 		/datum/intent/sword/thrust,
 		/datum/intent/sword/strike,
@@ -412,5 +450,5 @@
 	gripped_intents = list(/datum/intent/sword/cut/zhanmadao, /datum/intent/rend, /datum/intent/sword/thrust/zhanmadao, /datum/intent/sword/cut/zhanmadao/sweep)
 	alt_grips = null // can't be alt-gripped
 	name = "Zhanmadao"
-	desc = "A traditional Lingyuese weapon, the 'horse chopping saber', first pioneered during the Yuanzhao dynasty to cut through saigas and fogbeasts legs from below. It consists of a long, single-edged blade affixed to a hilt meant strictly for two-handed use, and is designed strictly for cutting and wide sweeping attacks. Quite bad at thrusting, unusable for striking."
+	desc = "A traditional Lingyuese weapon, the 'horse chopping sabre', first pioneered during the Yuanzhao dynasty to cut through saigas and fogbeasts legs from below. It consists of a long, single-edged blade affixed to a hilt meant strictly for two-handed use, and is designed strictly for cutting and wide sweeping attacks. Quite bad at thrusting, unusable for striking."
 	icon_state = "zhanmadao"

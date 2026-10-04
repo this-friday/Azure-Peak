@@ -4,6 +4,11 @@
 	path = /obj/item/clothing/shoes/roguetown/boots/leather
 	sort_category = "Shoes"
 
+/datum/loadout_item/furboots
+	name = "Fur Boots"
+	path = /obj/item/clothing/shoes/roguetown/boots/furlinedboots
+	sort_category = "Shoes"
+
 /datum/loadout_item/darkboots
 	name = "Dark Boots"
 	path = /obj/item/clothing/shoes/roguetown/boots
@@ -59,3 +64,9 @@
 	name = "Raised Sandals"
 	path = /obj/item/clothing/shoes/roguetown/armor/rumaclan/shitty
 	sort_category = "Shoes"
+
+/datum/loadout_item/classicsandals
+	name = "Classical Sandals"
+	path = /obj/item/clothing/shoes/roguetown/sandals/toga
+	sort_category = "Shoes"
+

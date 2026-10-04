@@ -19,7 +19,7 @@
 	chunkcolor = "#7d9097"
 	material_category = ARMOR_MAT_PLATE
 
-/obj/item/clothing/suit/roguetown/armor/brigandine/Initialize()
+/obj/item/clothing/suit/roguetown/armor/brigandine/Initialize(mapload)
 	. = ..()
 	AddComponent(/datum/component/item_equipped_movement_rustle, SFX_PLATE_COAT_STEP, 18)
 
@@ -49,7 +49,7 @@
 			pic.color = get_detail_color()
 		add_overlay(pic)
 
-/obj/item/clothing/suit/roguetown/armor/brigandine/retinue/Initialize()
+/obj/item/clothing/suit/roguetown/armor/brigandine/retinue/Initialize(mapload)
 	. = ..()
 	if(GLOB.lordprimary)
 		lordcolor(GLOB.lordprimary,GLOB.lordsecondary)
@@ -67,6 +67,10 @@
 	GLOB.lordcolor -= src
 	return ..()
 
+/obj/item/clothing/suit/roguetown/armor/brigandine/ComponentInitialize()
+	. = ..()
+	AddComponent(/datum/component/armour_filtering/negative, TRAIT_FREEBLADEDEXTERITY)
+
 /obj/item/clothing/suit/roguetown/armor/brigandine/light
 	slot_flags = ITEM_SLOT_ARMOR
 	name = "lightweight brigandine"
@@ -75,7 +79,6 @@
 	blocksound = SOFTHIT
 	body_parts_covered = COVERAGE_TORSO
 	max_integrity = ARMOR_INT_CHEST_PLATE_BRIGANDINE - ARMOR_INT_CHEST_PLATE_BRIGANDINE_WEIGHT_MODIFIER
-	smeltresult = /obj/item/ingot/iron
 	equip_delay_self = 40
 	armor_class = ARMOR_CLASS_LIGHT//steel version of the studded leather armor now
 	w_class = WEIGHT_CLASS_BULKY
@@ -108,7 +111,7 @@
 			pic.color = get_detail_color()
 		add_overlay(pic)
 
-/obj/item/clothing/suit/roguetown/armor/brigandine/light/retinue/Initialize()
+/obj/item/clothing/suit/roguetown/armor/brigandine/light/retinue/Initialize(mapload)
 	. = ..()
 	if(GLOB.lordprimary)
 		lordcolor(GLOB.lordprimary,GLOB.lordsecondary)
@@ -134,6 +137,16 @@
 	smelt_bar_num = 2
 	armor_class = ARMOR_CLASS_HEAVY
 	max_integrity = ARMOR_INT_CHEST_PLATE_BRIGANDINE + ARMOR_INT_CHEST_PLATE_BRIGANDINE_WEIGHT_MODIFIER
+
+/obj/item/clothing/suit/roguetown/armor/brigandine/heavy/iron
+	name = "iron coat of plates"
+	desc = "A heavyweight coat-of-plates, adorned with a pair of iron vambraces and faulds."
+	icon_state = "icoat_of_plates"
+	blocksound = PLATEHIT
+	smelt_bar_num = 2
+	armor_class = ARMOR_CLASS_HEAVY
+	max_integrity = ARMOR_INT_CHEST_PLATE_BRIGANDINE
+	smeltresult = /obj/item/ingot/iron
 
 /obj/item/clothing/suit/roguetown/armor/brigandine/banneret
 	name = "knight banneret's brigandine"

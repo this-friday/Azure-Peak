@@ -3,12 +3,6 @@ SUBSYSTEM_DEF(regionthreat)
 	wait = 30 MINUTES
 	flags = SS_KEEP_TIMING | SS_BACKGROUND
 	runlevels = RUNLEVEL_GAME
-	// SS fires every 30 minutes = 6 ticks per 3-hour round.
-	// Highpop tick = THREAT_HIGHPOP_TICK_RATE (20%) of max_ambush. Each tick is a maintenance fight's worth of threat.
-	// Lowpop tick = THREAT_LOWPOP_TICK_RATE (10%) of max_ambush.
-	// Basin & Grove & Terrorbog are fully tameable (min 0). Coast & Decap stay dangerous (min > 0).
-	// Budget = player_factor * pool * 3%. Solo combat budgets shown at max pool.
-	// Additive group drain: 5-man party drains at 3x/player_factor efficiency (0.5x per extra player).
 	var/list/threat_regions = list(
 		new /datum/threat_region(
 			_region_name = THREAT_REGION_AZURE_BASIN,
@@ -68,7 +62,8 @@ SUBSYSTEM_DEF(regionthreat)
 			),
 			_tp_budget_multiplier = 1.5,
 			_delivery_reward_multiplier = 2.0,
-			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_COURIER, QUEST_RETRIEVAL, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN),
+			_payout_multiplier = 1.3,
+			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_COURIER, QUEST_RETRIEVAL, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN, QUEST_NOTORIOUS_BOUNTY),
 			_kill_target_floor = 4,
 			_evergreen_target = 3
 		),
@@ -90,8 +85,9 @@ SUBSYSTEM_DEF(regionthreat)
 			),
 			_tp_budget_multiplier = 1.2,
 			_delivery_reward_multiplier = 1.8,
-			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN),
-			_kill_target_floor = 3
+			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN, QUEST_NOTORIOUS_BOUNTY),
+			_kill_target_floor = 3,
+			_blockade_travel_fee = BLOCKADE_TRAVEL_FEE_COAST
 		),
 		new /datum/threat_region(
 			_region_name = THREAT_REGION_MOUNT_DECAP,
@@ -112,8 +108,9 @@ SUBSYSTEM_DEF(regionthreat)
 			),
 			_tp_budget_multiplier = 1.5,
 			_delivery_reward_multiplier = 2.0,
-			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN),
-			_kill_target_floor = 3
+			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN, QUEST_NOTORIOUS_BOUNTY),
+			_kill_target_floor = 3,
+			_blockade_travel_fee = BLOCKADE_TRAVEL_FEE_MOUNTAIN
 		),
 		// Underdark cannot be tamed — min_ambush is high, keeping the region permanently dangerous.
 		new /datum/threat_region(
@@ -133,20 +130,28 @@ SUBSYSTEM_DEF(regionthreat)
 			),
 			_tp_budget_multiplier = 1.5,
 			_delivery_reward_multiplier = 2.0,
-			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN),
-			_kill_target_floor = 3
+			_payout_multiplier = 1.2,
+			_allowed_quest_types = list(QUEST_CLEAR_OUT, QUEST_RAID, QUEST_BOUNTY, QUEST_RECOVERY, QUEST_TOWNER_SMITH_CARAVAN, QUEST_TOWNER_MINER_OREVEIN, QUEST_NOTORIOUS_BOUNTY),
+			_kill_target_floor = 3,
+			_blockade_travel_fee = BLOCKADE_TRAVEL_FEE_MOUNTAIN
 		)
 	)
 
 /datum/controller/subsystem/regionthreat/fire(resumed)
-	var/player_count = GLOB.player_list.len
-	var/ishighpop = player_count >= LOWPOP_THRESHOLD
+	// Respects simulated_player_scalar so admin testing can drive it, matching SSeconomy's own checks.
+	var/pop = (SSeconomy && SSeconomy.simulated_player_scalar > 0) ? SSeconomy.simulated_player_scalar : get_active_player_count()
 	for(var/T in threat_regions)
 		var/datum/threat_region/TR = T
-		if(ishighpop)
-			TR.increase_latent_ambush(TR.highpop_tick)
+		var/tick
+		if(pop < THREAT_LOWPOP_THRESHOLD)
+			var/tick_mult = clamp(pop / THREAT_LOWPOP_THRESHOLD, THREAT_LOWPOP_TICK_MIN_MULT, 1.0)
+			tick = TR.lowpop_tick * tick_mult
 		else
-			TR.increase_latent_ambush(TR.lowpop_tick)
+			// Ramps on to highpop_tick by REF_POP instead of snapping to it at THRESHOLD - avoids
+			// a single player crossing the threshold instantly doubling a region's threat gain.
+			var/ramp_frac = clamp((pop - THREAT_LOWPOP_THRESHOLD) / (THREAT_TICK_HIGHPOP_REF_POP - THREAT_LOWPOP_THRESHOLD), 0.0, 1.0)
+			tick = TR.lowpop_tick + (TR.highpop_tick - TR.lowpop_tick) * ramp_frac
+		TR.increase_latent_ambush(tick)
 
 /datum/controller/subsystem/regionthreat/proc/get_region(region_name)
 	for(var/T in threat_regions)
@@ -155,10 +160,6 @@ SUBSYSTEM_DEF(regionthreat)
 			return TR
 	return null
 
-/// Weighted pick of a region that allows the given quest type, weighted by fill ratio
-/// (latent_ambush / max_ambush). Regions with more relative threat are picked more often, so
-/// as adventurers clear a region its quest share naturally drops. Returns null if no region
-/// allows the type.
 /datum/controller/subsystem/regionthreat/proc/pick_region_for_quest(quest_type)
 	var/list/weights = list()
 	for(var/T in threat_regions)
@@ -196,3 +197,33 @@ SUBSYSTEM_DEF(regionthreat)
 		TRS.ic_description = TR.get_ic_description()
 		threat_region_displays += TRS
 	return threat_region_displays
+
+/datum/controller/subsystem/regionthreat/proc/build_scout_region_rows()
+	var/list/blockade_by_threat_name = list()
+	for(var/datum/blockade/B as anything in GLOB.active_blockades)
+		if(B.threat_region_name)
+			blockade_by_threat_name[B.threat_region_name] = B
+	var/list/rows = list()
+	for(var/datum/threat_region/TR as anything in threat_regions)
+		var/list/row = list()
+		row["region_name"] = TR.region_name
+		row["danger_level"] = TR.get_danger_level()
+		row["danger_color"] = TR.get_danger_color()
+		row["ic_descriptions"] = TR.get_ic_description()
+		var/datum/blockade/B = blockade_by_threat_name[TR.region_name]
+		if(B)
+			var/datum/quest_faction/F = B.get_faction()
+			var/datum/economic_region/ER = B.get_region()
+			row["blockaded"] = TRUE
+			row["blockade_writ_out"] = B.has_active_scroll() ? TRUE : FALSE
+			row["blockade_faction_label"] = F ? "[F.group_word] of [F.name_plural]" : (B.faction_id || "")
+			row["blockade_region_label"] = ER ? ER.name : (B.region_id || "")
+			row["blockade_days_active"] = max(0, GLOB.dayspassed - B.day_started)
+		else
+			row["blockaded"] = FALSE
+			row["blockade_writ_out"] = FALSE
+			row["blockade_faction_label"] = ""
+			row["blockade_region_label"] = ""
+			row["blockade_days_active"] = 0
+		rows += list(row)
+	return rows

@@ -66,7 +66,7 @@ h1.alert, h2.alert	{color: #c9c1ba;font-family: Pterra, TrueType;}
 .userdanger				{color: #c71d76;	font-weight: bold;	font-size: 120%;}
 .danger					{color: #b9322b;	font-weight: bold;}
 .warning				{color: #bb4e28;	font-size: 75%;}
-.warningbig 			{color: #ad1f1a;	font-size: 110%;}
+.warningbig			{color: #ad1f1a;	font-size: 110%;}
 .boldwarning			{color: #bb4e28;	font-weight: bold}
 .announce				{color: #c51e1e;	font-weight: bold;}
 .boldannounce			{color: #c51e1e;	font-weight: bold;}
@@ -145,7 +145,7 @@ h1.alert, h2.alert	{color: #c9c1ba;font-family: Pterra, TrueType;}
 .beast					{font-family: "Thief by The Riddler", Pterra;}
 .reptile				{font-family: "Kingthings Petrock", Pterra; font-size: 120%;}
 .grenzelhoftian			{font-family: "Emperialisme", Pterra; font-size: 120%;}
-.kazengunese 			{font-family: "Yuji Boku", Pterra;}
+.kazengunese			{font-family: "Yuji Boku", Pterra;}
 .lingyuese				{font-family: "ZCOOL XiaoWei", Pterra;}
 .otavan					{font-family: "ArkansasDB", "Pterra"; font-size: 120%;}
 .etruscan				{font-family: "Feronia", "Pterra"; font-size: 100%;}
@@ -183,7 +183,7 @@ h1.alert, h2.alert	{color: #c9c1ba;font-family: Pterra, TrueType;}
 
 .monkeyhive				{color: #774704;}
 .monkeylead				{color: #774704;	font-size: 2;}
-
+.racialstatinfo			{color: #6a8cb7;	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;	font-weight: bold;}
 .dead					{color: #b280df;}
 .bloody					{color: #cc0f0f;}
 .artery					{color: #9B5455;}

@@ -9,7 +9,7 @@
 	max_integrity = 0
 	var/aportalloc = "a"
 
-/obj/structure/fluff/testportal/Initialize()
+/obj/structure/fluff/testportal/Initialize(mapload)
 	name = aportalloc
 	..()
 
@@ -49,7 +49,7 @@
 	var/travel_access_hint = null
 	var/watchable = TRUE
 
-/obj/structure/fluff/traveltile/Initialize()
+/obj/structure/fluff/traveltile/Initialize(mapload)
 	GLOB.traveltiles += src
 	. = ..()
 
@@ -175,27 +175,28 @@
 		for(var/mob/living/carbon/human/species/human/northern/goon/goon in qualified_squad)
 			goon.forceMove(T.loc)
 			goon.recent_travel = world.time
-		
+
 		for(var/mob/living/carbon/human/species/human/northern/goon/goon in squad.followers)
 			if(!(goon in qualified_squad))
 				squad.remove_follower(goon)
-	
+
 
 	return
 
 /obj/structure/fluff/traveltile/proc/has_access(atom/movable/AM)
-	var/may_access = FALSE
-	if(!length(required_jobs) && !length(required_traits)) // tiles without any required jobs or traits are public
-		may_access = TRUE
-	if(required_jobs && ishuman(AM))
+	if(!length(required_jobs) && !length(required_traits))
+		return TRUE
+	var/has_job = FALSE
+	var/has_trait = FALSE
+	if(length(required_jobs) && ishuman(AM))
 		var/mob/living/carbon/human/H = AM
-		may_access = (H.job in required_jobs)
+		has_job = (H.job in required_jobs)
 	if(length(required_traits) && isliving(AM))
 		for(var/trait in required_traits)
 			if(HAS_TRAIT(AM, trait))
-				may_access = TRUE
+				has_trait = TRUE
 				break
-	return may_access
+	return (has_job || has_trait)
 
 /obj/structure/fluff/traveltile/proc/can_go(atom/movable/AM)
 	var/cooldown_limit = 15 SECONDS
@@ -262,7 +263,7 @@
 	required_traits = list(TRAIT_ZURCH) //I'd tie this to trait_outlaw but unfortunately the heresiarch virtue exists so we're making a new trait instead.
 /obj/structure/fluff/traveltile/drow
 	required_traits = list(TRAIT_CAVEDWELLER)
-	
+
 /obj/structure/fluff/traveltile/dungeon
 	name = "gate"
 	desc = "This gate's enveloping darkness is so opressive you dread to step through it."

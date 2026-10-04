@@ -1,18 +1,20 @@
-/mob/living/carbon/Initialize()
+/mob/living/carbon/Initialize(mapload)
 	..()
 
-	pain_threshold = STAWIL * 10
-
-	if(HAS_TRAIT(src, TRAIT_NOPAIN))
-		pain_threshold = 250
+	recalculate_pain_threshold()
 
 	create_reagents(1000)
 	update_body_parts() //to update the carbon's new bodyparts appearance
 	GLOB.carbon_list += src
 
+/mob/living/carbon/proc/recalculate_pain_threshold()
+	pain_threshold = STAWIL * 10
+	if(HAS_TRAIT(src, TRAIT_NOPAIN))
+		pain_threshold = 250
+
 /mob/living/carbon/Destroy()
 	//This must be done first, so the mob ghosts correctly before DNA etc is nulled
-	. =  ..()
+	. =	..()
 
 	QDEL_LIST(hand_bodyparts)
 	QDEL_LIST(internal_organs)
@@ -92,7 +94,7 @@
 		selhand = (active_hand_index % held_items.len)+1
 
 	if(istext(selhand))
-		selhand = lowertext(selhand)
+		selhand = LOWER_TEXT(selhand)
 		if(selhand == "right" || selhand == "r")
 			selhand = 2
 		if(selhand == "left" || selhand == "l")
@@ -256,6 +258,9 @@
 			if(HAS_TRAIT(src, TRAIT_PACIFISM) && I.throwforce)
 				to_chat(src, "<span class='notice'>I set [I] down gently on the ground.</span>")
 				return
+			if(HAS_TRAIT(src, TRAIT_DEADITE)) //Zombies are too stupid to throw things at all...
+				to_chat(src, "<span class='warning'>...What?</span>")
+				return
 
 	if(thrown_thing)
 		if(rogue_sneaking)
@@ -276,6 +281,8 @@
 		playsound(get_turf(src), used_sound, 60, FALSE)
 
 /mob/living/carbon/restrained(ignore_grab = TRUE)
+	if(..())
+		return TRUE
 //	. = (handcuffed || (!ignore_grab && pulledby && pulledby.grab_state >= GRAB_AGGRESSIVE))
 	if(handcuffed)
 		return TRUE
@@ -283,6 +290,9 @@
 		if(pulledby != src)
 			if(pulledby.grab_state >= GRAB_AGGRESSIVE)
 				return TRUE
+
+/mob/living/carbon/is_legbound()
+	return !!legcuffed
 
 /mob/living/carbon/proc/canBeHandcuffed()
 	return 0
@@ -310,7 +320,7 @@
 
 	for(var/i in 1 to held_items.len)
 		var/obj/item/I = get_item_for_held_index(i)
-		dat += "<BR><B>[get_held_index_name(i)]:</B> </td><td><A href='?src=[REF(src)];item=[SLOT_HANDS];hand_index=[i]'>[(I && !(I.item_flags & ABSTRACT)) ? I : "Nothing"]</a>"
+		dat += "<BR><B>[get_held_index_name(i)]:</B> <A href='?src=[REF(src)];item=[SLOT_HANDS];hand_index=[i]'>[(I && !(I.item_flags & ABSTRACT)) ? I : "Nothing"]</a>"
 
 	dat += "<BR><B>Back:</B> <A href='?src=[REF(src)];item=[SLOT_BACK]'>[back ? back : "Nothing"]</A>"
 
@@ -346,6 +356,9 @@
 	var/breakoutextra = 30 SECONDS
 
 /mob/living/carbon/resist_buckle()
+	if(IsStun())
+		to_chat(src, span_warning("I can't do that right now!"))
+		return
 	if(restrained())
 		changeNext_move(CLICK_CD_BREAKOUT)
 		last_special = world.time + CLICK_CD_BREAKOUT
@@ -375,23 +388,31 @@
 		buckled.user_unbuckle_mob(src,src)
 
 /mob/living/carbon/resist_fire()
+	if(IsStun() || IsImmobilized())
+		to_chat(src, span_warning("I can't do that right now!"))
+		return
 	adjust_fire_stacks(-2, /datum/status_effect/fire_handler/fire_stacks)
 	adjust_fire_stacks(-2, /datum/status_effect/fire_handler/fire_stacks/sunder)
 	adjust_fire_stacks(-2, /datum/status_effect/fire_handler/fire_stacks/divine)
+	adjust_fire_stacks(-1, /datum/status_effect/fire_handler/fire_stacks/vheslyn) //Harder to remove
 
 	var/datum/status_effect/fire_handler/fire_stacks/fire_status = has_status_effect(/datum/status_effect/fire_handler/fire_stacks)
 	var/datum/status_effect/fire_handler/fire_stacks/sunder_status = has_status_effect(/datum/status_effect/fire_handler/fire_stacks/sunder)
 	var/datum/status_effect/fire_handler/fire_stacks/divine_status = has_status_effect(/datum/status_effect/fire_handler/fire_stacks/divine)
+	var/datum/status_effect/fire_handler/fire_stacks/vheslyn_status = has_status_effect(/datum/status_effect/fire_handler/fire_stacks/vheslyn)
 	var/datum/status_effect/fire_handler/fire_stacks/sunder/blessed/blessed_sunder = has_status_effect(/datum/status_effect/fire_handler/fire_stacks/sunder/blessed)
 
-	if(fire_status?.stacks + sunder_status?.stacks + divine_status?.stacks + blessed_sunder?.stacks > 10 || !(mobility_flags & MOBILITY_STAND))
-		Paralyze(50, TRUE, TRUE)
-		spin(32,2)
-		adjust_fire_stacks(-5, /datum/status_effect/fire_handler/fire_stacks)
-		adjust_fire_stacks(-5, /datum/status_effect/fire_handler/fire_stacks/sunder)
-		adjust_fire_stacks(-5, /datum/status_effect/fire_handler/fire_stacks/divine)
-		adjust_fire_stacks(-5, /datum/status_effect/fire_handler/fire_stacks/sunder/blessed)
-		visible_message(span_warning("[src] rolls on the ground, trying to put [p_them()]self out!"))
+	if(!mind || !cmode)
+		if(fire_status?.stacks + sunder_status?.stacks + vheslyn_status?.stacks + divine_status?.stacks + blessed_sunder?.stacks > 10 || !(mobility_flags & MOBILITY_STAND))
+			Paralyze(30, TRUE, TRUE)
+			Knockdown(50)
+			spin(32,2)
+			adjust_fire_stacks(-4, /datum/status_effect/fire_handler/fire_stacks)
+			adjust_fire_stacks(-4, /datum/status_effect/fire_handler/fire_stacks/sunder)
+			adjust_fire_stacks(-4, /datum/status_effect/fire_handler/fire_stacks/divine)
+			adjust_fire_stacks(-4, /datum/status_effect/fire_handler/fire_stacks/sunder/blessed)
+			adjust_fire_stacks(-2, /datum/status_effect/fire_handler/fire_stacks/vheslyn) //Harder to remove
+			visible_message(span_warning("[src] rolls on the ground, trying to put [p_them()]self out!"))
 	else
 		visible_message(span_notice("[src] pats the flames to extinguish them."))
 	addtimer(CALLBACK(src, PROC_REF(check_try_extinguish)), 3 SECONDS)
@@ -401,6 +422,9 @@
 		extinguish_mob(TRUE)
 
 /mob/living/carbon/resist_restraints()
+	if(IsStun())
+		to_chat(src, span_warning("I can't do that right now!"))
+		return
 	var/obj/item/I = null
 	var/type = 0
 	if(handcuffed)
@@ -594,7 +618,7 @@
 /mob/living/carbon/proc/vomit(lost_nutrition = 50, blood = FALSE, stun = TRUE, distance = 1, message = TRUE, toxic = FALSE, harm = FALSE, force = FALSE)
 	if(HAS_TRAIT(src, TRAIT_IRONMAN))
 		return TRUE
-	
+
 	if(HAS_TRAIT(src, TRAIT_TOXINLOVER) && !force)
 		return TRUE
 
@@ -728,31 +752,10 @@
 /mob/living/carbon/updatehealth()
 	if(status_flags & GODMODE)
 		return
-	var/total_burn = 0
 	var/total_stamina = 0
 	var/total_tox = getToxLoss()
 	var/total_oxy = getOxyLoss()
 	var/used_damage = 0
-	// Burn hardcrit - total burn across all bodyparts vs threshold (scales to chest max HP / CON)
-	for(var/obj/item/bodypart/BP as anything in bodyparts)
-		total_burn += BP.burn_dam
-	if(total_burn > 0)
-		var/obj/item/bodypart/chest/C = get_bodypart(BODY_ZONE_CHEST)
-		var/burn_threshold = C ? C.max_damage : FIRE_HARDCRIT_BASE
-		if((HAS_TRAIT(src, TRAIT_NOPAIN) || HAS_TRAIT(src, TRAIT_NOPAINSTUN)) && !HAS_TRAIT(src, TRAIT_NOBURN_RESIST))
-			burn_threshold *= FIRE_HARDCRIT_NOPAIN_MULT
-		var/burn_ratio = total_burn / burn_threshold
-		if(!burn_warning_shown)
-			if(burn_ratio >= 1.0)
-				burn_warning_shown = TRUE
-				balloon_alert_to_viewers("<font color='#bb2b2b'>burnt down!</font>")
-			else if(burn_ratio >= 0.75)
-				burn_warning_shown = TRUE
-				balloon_alert_to_viewers("<font color='#bb2b2b'>burning down!</font>")
-		else if(burn_ratio < 0.75)
-			burn_warning_shown = FALSE
-		var/burn_damage = burn_ratio * maxHealth
-		used_damage = max(used_damage, burn_damage)
 	if(used_damage < total_tox)
 		used_damage = total_tox
 	if(used_damage < total_oxy)
@@ -814,6 +817,10 @@
 		see_in_dark = max(see_in_dark, 12)
 
 	if(HAS_TRAIT(src, TRAIT_NITEVISION))
+		lighting_alpha = min(lighting_alpha, LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE)
+		see_in_dark = max(see_in_dark, 12)
+
+	if(HAS_TRAIT(src, TRAIT_BLIND))
 		lighting_alpha = min(lighting_alpha, LIGHTING_PLANE_ALPHA_MOSTLY_INVISIBLE)
 		see_in_dark = max(see_in_dark, 12)
 
@@ -996,31 +1003,34 @@
 		overlay_fullscreen("brute", /atom/movable/screen/fullscreen/brute, severity)
 	else
 		clear_fullscreen("brute")*/
+	var/hurtdamage = 0
 	if(show_redflash())
-		var/hurtdamage = ((get_complex_pain() / (STAWIL * 10)) * 100) //what percent out of 100 to max pain
-		if(hurtdamage > 5) //float
-			var/severity = 0
-			switch(hurtdamage)
-				if(5 to 20)
-					severity = 1
-				if(20 to 40)
-					severity = 2
-				if(40 to 60)
-					severity = 3
-					overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-				if(60 to 80)
-					severity = 4
-					overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-				if(80 to 99)
-					severity = 5
-					overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-				if(99 to INFINITY)
-					severity = 6
-					overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
-			overlay_fullscreen("brute", /atom/movable/screen/fullscreen/brute, severity)
+		// Divide by 0 prevention, for sanity sake.
+		hurtdamage = ((get_complex_pain() / (max(STAWIL, 1) * 10)) * 100) //what percent out of 100 to max pain
+	if(hurtdamage > 5) //float
+		var/severity = 0
+		switch(hurtdamage)
+			if(5 to 20)
+				severity = 1
+			if(20 to 40)
+				severity = 2
+			if(40 to 60)
+				severity = 3
+			if(60 to 80)
+				severity = 4
+			if(80 to 99)
+				severity = 5
+			if(99 to INFINITY)
+				severity = 6
+		overlay_fullscreen("brute", /atom/movable/screen/fullscreen/brute, severity)
+		//drops to 30 stops rapid health changes at this threshold from spamming the overlay.
+		if(hurtdamage >= 40 || (screens["painflash"] && hurtdamage > 30))
+			overlay_fullscreen("painflash", /atom/movable/screen/fullscreen/painflash)
 		else
-			clear_fullscreen("brute")
 			clear_fullscreen("painflash")
+	else
+		clear_fullscreen("brute")
+		clear_fullscreen("painflash")
 
 /mob/living/carbon/update_health_hud(shown_health_amount)
 	if(!client || !hud_used)
@@ -1068,7 +1078,6 @@
 				var/bled_out = (blood_volume in -INFINITY to BLOOD_VOLUME_SURVIVE) && !HAS_TRAIT(src, TRAIT_BLOODLOSS_IMMUNE)
 				var/suffocating = getOxyLoss() > 75
 				var/poisoned = health <= HEALTH_THRESHOLD_FULLCRIT && getToxLoss() >= getFireLoss() && getToxLoss() >= getBruteLoss()
-				var/burned = health <= HEALTH_THRESHOLD_FULLCRIT && getFireLoss() >= getBruteLoss()
 				if(bled_out)
 					visible_message(span_danger("<b>[src] collapses, [src.p_their()] skin pale as parchment!</b>"), \
 						span_userdanger("My blood... there is nothing left. I cannot feel my limbs."))
@@ -1081,11 +1090,6 @@
 					visible_message(span_danger("<b>[src] collapses, [src.p_their()] body wracked with poison!</b>"), \
 						span_userdanger("The poison is too much... I cannot go on."))
 					balloon_alert_to_viewers("<font color='#2b8a3e'>poisoned!</font>")
-				else if(burned)
-					visible_message(span_danger("<b>[src] collapses, [src.p_their()] flesh charred and smoking!</b>"), \
-						span_userdanger("My body is too burnt to go on!"))
-					balloon_alert_to_viewers("<font color='#bb2b2b'>burnt down!</font>")
-					playsound(src, 'sound/health/burning.ogg', 60, TRUE)
 				else if(health <= HEALTH_THRESHOLD_FULLCRIT)
 					visible_message(span_danger("<b>[src] collapses, broken and bloodied!</b>"), \
 						span_userdanger("My bones are shattered... I cannot go on."))
@@ -1229,7 +1233,7 @@
 
 /mob/living/carbon/vv_get_dropdown()
 	. = ..()
-	VV_DROPDOWN_OPTION("", "---------")
+	VV_DROPDOWN_OPTION("", "--- /carbon ---")
 	VV_DROPDOWN_OPTION(VV_HK_MODIFY_BODYPART, "Modify bodypart")
 	VV_DROPDOWN_OPTION(VV_HK_MODIFY_ORGANS, "Modify organs")
 	VV_DROPDOWN_OPTION(VV_HK_HALLUCINATION, "Hallucinate")
@@ -1348,8 +1352,6 @@
 		return TRUE
 	if(IsSleeping())
 		return TRUE
-	if(HAS_TRAIT(src, TRAIT_DUMB))
-		return TRUE
 
 /mob/living/carbon/can_speak_vocal()
 	. = ..()
@@ -1368,3 +1370,12 @@
 	if((cmode) && (mind) && (!handcuffed) && (stat == CONSCIOUS))
 		return 0
 	. = ..()
+
+// reset_perspective is called for things like z-level transitions. however, revs specifically need to not have their perspective reset if their
+// body moves away from their head; otherwise you get rev bodies with full sight
+/mob/living/carbon/reset_perspective(atom/A)
+	var/obj/item/organ/dullahan_vision/vision = getorganslot(ORGAN_SLOT_HUD)
+	var/datum/species/dullahan/our_species = dna?.species
+	if(!A && istype(vision) && vision.viewing_head && istype(our_species))
+		return ..(our_species.my_head)
+	return ..()

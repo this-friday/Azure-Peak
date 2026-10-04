@@ -8,7 +8,7 @@
 	antag_hud_type = ANTAG_HUD_VAMPIRE
 	antag_hud_name = "vamplord"
 	confess_lines = list(
-		"I AM ANCIENT!",
+		"I AM THE ANCIENT!",
 		"I AM THE LAND!",
 		"I AM THE ETERNAL!",
 		"I AM THE INHERITOR!",
@@ -35,28 +35,39 @@
 		owner.person_knows_me(MF)
 
 	var/mob/living/carbon/human/H = owner.current
+	for(var/datum/charflaw/cf in H.charflaws)
+		if(istype(cf, /datum/charflaw/hunted) || istype(cf, /datum/charflaw/targeted))
+			H.charflaws.Remove(cf)
+			QDEL_NULL(cf)
 	H.equipOutfit(/datum/outfit/job/vamplord)
-	H.set_patron(/datum/patron/inhumen/zizo)
+	H.set_patron(/datum/patron/godless) //FORESAKEN BY GODS, THYNE OWN DIVINITY CARVED BY MYNE OWN HANDS.
+	//Progress dominion has an undead check anyway, so don't worry about them not worshipping Zizo. She'd do it out of spite anyway.
 	add_verb(H, /mob/living/carbon/human/proc/demand_submission)
-	H.maxbloodpool += 3000
-	H.adjust_bloodpool(3000)
+	H.maxbloodpool += 4000
+	H.adjust_bloodpool(4000)
 	for(var/S in MOBSTATS)
-		H.change_stat(S, 2)
+		H.change_stat(S, 4)
 	H.forceMove(pick(GLOB.vlord_starts))
 	ADD_TRAIT(H, TRAIT_DUSTABLE, TRAIT_GENERIC) //They are ancient walking calamities, no take backs.
 	ADD_TRAIT(H, TRAIT_HEAVYARMOR, TRAIT_GENERIC) //Brute-forced method to ensure that Vampire Lords, no matter what, receive their most important traits.
+	ADD_TRAIT(H, TRAIT_ARMOR_NOSPDCAP, TRAIT_GENERIC) //Their armor never weighs on their stride.
 	ADD_TRAIT(H, TRAIT_INFINITE_ENERGY, TRAIT_GENERIC) //Playing it safe, with the assumption that Vampire Lords already inherit any traits given to regular Vampires.
 	ADD_TRAIT(H, TRAIT_STRENGTH_UNCAPPED, TRAIT_GENERIC)
 	ADD_TRAIT(H, TRAIT_STRONGBITE, TRAIT_GENERIC)
 	ADD_TRAIT(H, TRAIT_NOBLE, TRAIT_GENERIC)
 	ADD_TRAIT(H, TRAIT_STEELHEARTED, TRAIT_GENERIC)
+	ADD_TRAIT(H, TRAIT_GRABIMMUNE, TRAIT_GENERIC) //Melee-orientated antagonist, can only use vamp potencies and vitae magicka.
 	ADD_TRAIT(H, TRAIT_SELF_SUSTENANCE, TRAIT_GENERIC) //Heavy-Antag Role, lets you repair your armor with tools + level to journeyman.
 	ADD_TRAIT(H, TRAIT_NOMOOD, TRAIT_GENERIC) //Stops you getting moodnuked and dropping your weapon non-stop. I didn't want to have to give them this off-the-bat but after seeing this happen, yeaaaah.
+	H.update_move_intent_slowdown()
 
 /datum/antagonist/vampire/lord/greet()
 	to_chat(owner.current, span_userdanger("I am ancient. I am the Land. And I am now awoken to trespassers upon my domain."))
-	to_chat(owner.current, span_boldwarning("I should check my immedate surroundings, from the bloodstained stone I can recall my Ichor fang at will should I lose it again and from the Crimson Crucible I can begin my various projects of collective sacrifice of vitae between myself and my servants to reclaim my long-lost power and kingdom."))
 	owner.current.playsound_local(get_turf(owner.current), 'sound/villain/dreamer_warning.ogg', 80, FALSE, pressure_affected = FALSE) //Extra bit of AURA
+	to_chat(owner.current, span_boldwarning("</br>I should check my immedate surroundings, from the bloodstained stone I can recall my Ichor fang at will should I lose it."))
+	to_chat(owner.current, span_boldwarning("</br>From the Crimson Crucible I can begin my various projects of collective sacrifice of vitae between myself and my servants to reclaim my long-lost power and kingdom."))
+	to_chat(owner.current, span_boldwarning("</br>When I have Minions from either the Crucible or any non-resisting sires of my bloodline, I should assign them to positions using the clan menu so I can PUNISH and COMMAND them."))
+	to_chat(owner.current, span_danger("</br>Now, tyme to show them how a lord gets it done."))
 	. = ..()
 
 /datum/outfit/job/vamplord/pre_equip(mob/living/carbon/human/H)
@@ -129,7 +140,7 @@
 	set category = "RoleUnique.Vampire"
 
 	if(!clan_position)
-		to_chat(src, span_warning("You have no subordinates to punish."))
+		to_chat(src, span_warning("You have no subordinates to punish!"))
 		return
 
 	var/list/possible = list()
@@ -139,7 +150,7 @@
 			continue
 		possible[member.real_name] = member
 	if(!length(possible))
-		to_chat(src, span_warning("You have no subordinates to punish."))
+		to_chat(src, span_warning("You have no subordinates to punish , assign them in the clan menu!"))
 		return
 	var/name_choice = input(src, "Who to punish?", "PUNISHMENT") as null|anything in possible
 	if(!name_choice)
@@ -147,7 +158,7 @@
 	var/mob/living/carbon/human/choice = possible[name_choice]
 	if(!choice || QDELETED(choice))
 		return
-	var/punishmentlevels = list("Pause", "Pain", "DESTROY")
+	var/punishmentlevels = list("Pause", "Pain", "OBLITERATE")
 	var/punishment = input(src, "Severity?", "PUNISHMENT") as null|anything in punishmentlevels
 	if(!punishment)
 		return
@@ -156,16 +167,73 @@
 			to_chat(choice, span_boldnotice("You are wracked with pain as your master punishes you!"))
 			choice.apply_damage(30, BRUTE)
 			choice.emote_scream()
+			choice.Knockdown(5)
 			playsound(choice, 'sound/misc/obey.ogg', 100, FALSE, pressure_affected = FALSE)
 		if("Pause")
 			to_chat(choice, span_boldnotice("Your body is frozen in place as your master punishes you!"))
 			choice.Paralyze(300)
 			choice.emote_scream()
 			playsound(choice, 'sound/misc/obey.ogg', 100, FALSE, pressure_affected = FALSE)
-		if("DESTROY")
-			to_chat(choice, span_boldnotice("You feel only darkness. Your master no longer has use of you."))
-			addtimer(CALLBACK(choice, TYPE_PROC_REF(/mob/living, dust)), 10 SECONDS)
+		if("OBLITERATE") //exclusively for extreme-cases/sending someone off w/ style
+			message_admins("[real_name] ([ckey]) used OBLITERATE punishment on [choice.real_name] ([choice.ckey])")
+			log_game("[real_name] ([ckey]) used OBLITERATE punishment on [choice.real_name] ([choice.ckey])")
+			//we log this, its literally a no comeback or ability to even resist permadeath. do sparingly.
+			to_chat(choice, span_userdanger("You feel only darkness. Your master no longer has use of you."))
+			choice.visible_message(span_warning("[choice] suddenly goes deathly pale for a moment, as if something terrible just happened!"))
+			choice.Knockdown(10)
+			//There is meant to be no counter, you've genuinely pushed a vlord to their wit's end to be using this.
+			ADD_TRAIT(choice, TRAIT_PACIFISM, "vlord_punish")
+			ADD_TRAIT(choice, TRAIT_SPELLCOCKBLOCK, "vlord_punish")
+			sleep(20)
+			choice.apply_damage(100, BRUTE)
+			to_chat(choice, span_userdanger("</br>NO! NO! WAIT WAIT--"))
+			playsound(choice, pick('sound/combat/fracture/headcrush (1).ogg', 'sound/combat/fracture/fracturewet (1).ogg'), 100)
+			choice.Stun(999999) //you're not meant to come back from this, at all. Even if you somehow glitch out of this
+			choice.Paralyze(999999)
+			choice.Knockdown(999999)
+			choice.emote("superagony")
+			sleep(20)
+			choice.Jitter(800)
+			choice.apply_damage(100, BRUTE)
+			choice.visible_message(span_userdanger("[choice] SCREAMS in UNBELIEVABLE AGONY as they're TORN APART by some unseen force!"), span_userdanger("</br>STOPSTOPSTOP-- IT HURTS! IT HURTS!"))
+			playsound(choice, pick('sound/combat/fracture/headcrush (1).ogg', 'sound/combat/fracture/fracturewet (1).ogg'), 100)
+			choice.emote("superagony")
+			sleep(20)
+			choice.apply_damage(100, BRUTE)
+			playsound(choice, pick('sound/combat/fracture/headcrush (1).ogg', 'sound/combat/fracture/fracturewet (1).ogg'), 100)
+			to_chat(choice, span_userdanger("</br>MAKE IT STOP!! MAKE IT STOP!!"))
+			choice.emote("superagony")
+			choice.dismember_spawn()
+			sleep(20)
+			choice.apply_damage(100, BRUTE)
+			choice.blur_eyes(40) //MORE SUFFERING WAITER, MORE SUFFERING!!
+			playsound(choice, pick('sound/combat/fracture/headcrush (1).ogg', 'sound/combat/fracture/fracturewet (1).ogg'), 100)
+			to_chat(choice, span_userdanger("</br>IT HURTS! IT HURTS! STOP--"))
+			choice.emote("superagony")
+			sleep(30) //finally, we grant you the mercy of death
+			playsound(get_turf(choice), 'sound/magic/churn.ogg', 200)
+			playsound(get_turf(choice), 'sound/combat/dismemberment/dismem (2).ogg', 100)
+			choice.visible_message(span_userdanger("[choice] suddenly explodes into a pile of gore and remains!"), span_userdanger("</br></br>As your master finally spares you the mercy of death, you've a harsh lesson learned for another tymeline."))
+			choice.gib() //aurafarming
 	visible_message(span_danger("[src] reaches out, gripping [choice]'s soul, inflicting punishment!"), ignored_mobs = list(choice))
+
+/mob/living/carbon/human/proc/dismember_spawn()
+	if(!iscarbon(src)) //godknows how the fuck this would happen but lets avoid runtimes
+		return
+
+	// Dismember limbs in sequence
+	var/static/list/dismember_order = list(
+		BODY_ZONE_L_ARM,
+		BODY_ZONE_R_ARM,
+		BODY_ZONE_L_LEG,
+		BODY_ZONE_R_LEG
+	)
+
+	for(var/zone in dismember_order)
+		var/obj/item/bodypart/BP = src.get_bodypart(zone)
+		if(BP)
+			BP.dismember(skip_checks = TRUE) //You're going to gib, we don't care for armor.
+			sleep(0.5 SECONDS)
 
 ////////OUTFITS////////
 /obj/item/clothing/suit/roguetown/shirt/vampire
@@ -188,14 +256,17 @@
 	smeltresult = /obj/item/ingot/draconic //Closest - and most valuable - analogue to obsidian.
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 
-/obj/item/clothing/head/roguetown/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //AURAFARMING BUFF
+/obj/item/clothing/head/roguetown/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //AURAFARMING BUFF
+
+/obj/item/clothing/head/roguetown/vampire/get_examine_highlight_status()
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE_CROWN)
 
 ////////BROKEN////////
 /obj/item/clothing/suit/roguetown/armor/chainmail/iron/vampire
-	name = "old ancient ceremonial vestments" //Currently invisible, due to the lack of an object sprite. Reinstate once someone adds a 'vunder' icon to the shirt.dmi.
-	desc = "An ornate aketon, woven from crimson silk and worn beneath a layer of enchanted gilbranze maille. Vheslyn, and Zizo had both failed in their pursuits - yet, the ancient truths they left behind were more valuable than lyfe itself. It's time to show them all how a Lord truly gets it done."
+	name = "regal maille"
+	desc = "An ornate aketon, woven from crimson silk and worn beneath a layer of enchanted gilbranze maille. Vheslyn and Zizo had both failed in their pursuits - yet, the ancient truths they left behind were more valuable than lyfe itself. It's time to show them all how a Lord truly gets it done."
 	icon_state = "vunder"
 	item_state = "vunder"
 	icon = 'icons/roguetown/clothing/shirts.dmi'
@@ -206,12 +277,15 @@
 	armor = ARMOR_VAMP
 	max_integrity = ARMOR_INT_CHEST_PLATE_ANTAG
 	resistance_flags = FIRE_PROOF | ACID_PROOF
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	smeltresult = /obj/item/ingot/vampire
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
 
-/obj/item/clothing/suit/roguetown/armor/chainmail/iron/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/suit/roguetown/armor/chainmail/iron/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/suit/roguetown/armor/chainmail/iron/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 ////////VAMPYRELORD-EXCLUSIVE ARMORSET////////
 /obj/item/clothing/suit/roguetown/armor/plate/vampire
@@ -227,29 +301,37 @@
 	max_integrity = ARMOR_INT_CHEST_PLATE_ANTAG
 	allowed_sex = list(MALE, FEMALE)
 	anvilrepair = /datum/skill/craft/armorsmithing
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	smeltresult = /obj/item/ingot/vampire
 	equip_delay_self = 40
 	armor_class = ARMOR_CLASS_HEAVY
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
 
-/obj/item/clothing/suit/roguetown/armor/plate/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/suit/roguetown/armor/plate/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/suit/roguetown/armor/plate/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy/vampire
 	name = "ancient ceremonial vestments"
 	desc = "An ornate aketon, woven from crimson silk and worn beneath a layer of enchanted gilbranze maille. Vheslyn, and Zizo had both failed in their pursuits - yet, the ancient truths they left behind were more valuable than lyfe itself. It's time to show them all how a Lord truly gets it done."
+	icon_state = "vhauberk"
+	item_state = "vhauberk"
 	armor_class = ARMOR_CLASS_HEAVY
 	armor = ARMOR_VAMP
 	max_integrity = ARMOR_INT_CHEST_PLATE_ANTAG
 	resistance_flags = FIRE_PROOF | ACID_PROOF
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	smeltresult = /obj/item/ingot/vampire
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
 
-/obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/suit/roguetown/armor/chainmail/hauberk/paalloy/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/under/roguetown/platelegs/vampire
 	name = "ancient ceremonial plate greaves"
@@ -263,13 +345,16 @@
 	blocksound = PLATEHIT
 	drop_sound = 'sound/foley/dropsound/armor_drop.ogg'
 	anvilrepair = /datum/skill/craft/armorsmithing
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	smeltresult = /obj/item/ingot/vampire
 	resistance_flags = FIRE_PROOF | ACID_PROOF
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
 
-/obj/item/clothing/under/roguetown/platelegs/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/under/roguetown/platelegs/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/under/roguetown/platelegs/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/shoes/roguetown/boots/armor/vampire
 	name = "ancient ceremonial sabatons"
@@ -283,12 +368,15 @@
 	blocksound = PLATEHIT
 	armor = ARMOR_VAMP
 	resistance_flags = FIRE_PROOF | ACID_PROOF
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	smeltresult = /obj/item/ingot/vampire
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
 
-/obj/item/clothing/shoes/roguetown/boots/armor/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/shoes/roguetown/boots/armor/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/shoes/roguetown/boots/armor/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/gloves/roguetown/chain/vampire
 	name = "ancient ceremonial gauntlets"
@@ -297,43 +385,52 @@
 	icon_state = "vgloves"
 	item_state = "vgloves"
 	armor = ARMOR_VAMP
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	smeltresult = /obj/item/ingot/vampire
 	body_parts_inherent = FULL_BODY
 	max_integrity = ARMOR_INT_SIDE_ANTAG
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
 	throw_on_break = FALSE //We only get one set
 
-/obj/item/clothing/gloves/roguetown/chain/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/gloves/roguetown/chain/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/gloves/roguetown/chain/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/wrists/roguetown/bracers/paalloy/vampire
 	name = "ancient ceremonial bracers"
 	desc = "Enchanted gilbranze cuffings, clasped around the wrists. They call it a 'curse', but what would they know? What would they have in five hundred years? Would the oh-so-valiant heroes truly accept death, or would they see the pointlessness in besmirching eternal lyfe?"
-	icon_state = "ancientbracers"
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	icon_state = "vbracers"
+	smeltresult = /obj/item/ingot/vampire
 	armor = ARMOR_VAMP
 	max_integrity = ARMOR_INT_SIDE_ANTAG
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
-	throw_on_break = FALSE //We only get one set
+	throw_on_break = FALSE //We only get one set.
 
-/obj/item/clothing/wrists/roguetown/bracers/paalloy/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/wrists/roguetown/bracers/paalloy/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/wrists/roguetown/bracers/paalloy/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/neck/roguetown/gorget/paalloy/vampire
 	name = "ancient ceremonial gorget"
 	desc = "A neckguard of enchanted gilbranze. Though a vampyre needn't air to lyve, they most certainly need a spine."
-	icon_state = "ancientgorget"
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	icon_state = "vgorget"
+	smeltresult = /obj/item/ingot/vampire
 	armor = ARMOR_VAMP
 	max_integrity = ARMOR_INT_SIDE_ANTAG
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
-	throw_on_break = FALSE //We only get one set
+	throw_on_break = FALSE //We only get one set.
 
-/obj/item/clothing/neck/roguetown/gorget/paalloy/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/neck/roguetown/gorget/paalloy/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/neck/roguetown/gorget/paalloy/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/head/roguetown/helmet/heavy/vampire
 	name = "ancient ceremonial sayovard"
@@ -345,14 +442,17 @@
 	block2add = FOV_BEHIND
 	stack_fovs = FALSE
 	resistance_flags = FIRE_PROOF | ACID_PROOF
-	smeltresult = /obj/item/ingot/purifiedaalloy
+	smeltresult = /obj/item/ingot/vampire
 	var/active_item = FALSE
 	unenchantable = TRUE //Its pretty much near-perfect protection, you do not need this.
-	throw_on_break = FALSE //We only get one set
+	throw_on_break = FALSE //We only get one set.
 
-/obj/item/clothing/head/roguetown/helmet/heavy/vampire/Initialize()
-  ..()
-  add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+/obj/item/clothing/head/roguetown/helmet/heavy/vampire/Initialize(mapload)
+	..()
+	add_filter(FORCE_FILTER, 2, list("type" = "outline", "color" = GLOW_COLOR_VAMPIRIC, "alpha" = 180, "size" = 1)) //Enchanted look.
+
+/obj/item/clothing/head/roguetown/helmet/heavy/vampire/get_examine_highlight_status() //best armor in the game, it shouldn't be worn lightly
+	return list(EXAMINEHIGHLIGHT_HERESYSEVERITY_VERYODD, HERESYDESC_VAMPIRE)
 
 /obj/item/clothing/head/roguetown/helmet/heavy/vampire/equipped(mob/living/user, slot)
 	. = ..()

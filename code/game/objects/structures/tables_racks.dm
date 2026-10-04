@@ -60,15 +60,16 @@
 	qdel(src)
 	new /obj/structure/table/wood(A)
 
-/obj/structure/table/attack_paw(mob/user)
-	return attack_hand(user)
-
 /obj/structure/table/attack_hand(mob/living/user)
 	if(user.m_intent == MOVE_INTENT_SNEAK)
 		var/turf/T = get_turf(src)
 		for(var/obj/structure/bars/B in T)
 			to_chat(user, span_warning("I can't fit down there with the bars in the way!"))
 			return
+		for(var/obj/structure/mineral_door/wood/deadbolt/shutter/b in T)
+			if(!b.door_opened)
+				to_chat(user, span_warning("I can't fit down there with the shutter in the way!"))
+				return
 		hideinside(user)
 		return
 	if(Adjacent(user) && user.pulling)
@@ -102,8 +103,10 @@
 	return ..()
 
 /obj/structure/table/proc/hideinside(mob/living/user)
+	if(user.in_combat_until > world.time)
+		return
 	var/sneak_level = user.get_skill_level(/datum/skill/misc/sneaking) || 0
-	var/sneaktime = max(10, 50 - (sneak_level * 10)) // Hard caps at 1 second at Expert and above.
+	var/sneaktime = max(10, 45 - (sneak_level * 5))	// 1.5 seconds at Legendary.
 	if(user.loc == src)
 		unhide(user)
 		return
@@ -111,6 +114,8 @@
 		to_chat(user, span_warning("Someone is already hiding under [src]!"))
 		return
 	if(!do_after(user, sneaktime, src))
+		return
+	if(!QDELETED(src) && !isturf(loc))//prevents folding tables from nullspacing people
 		return
 	user.forceMove(src)
 	occupied = TRUE
@@ -158,6 +163,9 @@
 /obj/structure/table/proc/tablepush(mob/living/user, mob/living/pushed_mob)
 	if(HAS_TRAIT(user, TRAIT_PACIFISM))
 		to_chat(user, span_danger("Throwing [pushed_mob] onto the table might hurt them!"))
+		return
+	if(HAS_TRAIT(user, TRAIT_DEADITE)) //Deadites are too stupid to do this.
+		to_chat(user, span_warning("...what?"))
 		return
 	var/added_passtable = FALSE
 	if(!(pushed_mob.pass_flags & PASSTABLE))
@@ -296,7 +304,7 @@
 	climb_offset = 10
 	buildstack = /obj/item/grown/log/tree/small
 
-/obj/structure/table/wood/crafted/Initialize()
+/obj/structure/table/wood/crafted/Initialize(mapload)
 	. = ..()
 	icon_state = "tablewood1"
 
@@ -423,9 +431,15 @@
 	icon = 'icons/roguetown/misc/tables.dmi'
 	icon_state = "stonetable_small"
 	max_integrity = 400
-	smooth = 0
+	smooth = 1
+	canSmoothWith = list(/obj/structure/table/finestone)
 	climb_offset = 10
 	debris = list(/obj/item/natural/stoneblock = 1)
+	var/smooth_icon = 'icons/obj/smooth_structures/stone_table.dmi'
+
+/obj/structure/table/finestone/Initialize(mapload)
+	. = ..()
+	icon = smooth_icon
 
 /obj/structure/table/vtable
 	name = "ancient wooden table"
@@ -493,7 +507,7 @@
 		/obj/structure/table/wood/fancy/royalblue)
 	var/smooth_icon = 'icons/obj/smooth_structures/fancy_table.dmi' // see Initialize()
 
-/obj/structure/table/wood/fancy/Initialize()
+/obj/structure/table/wood/fancy/Initialize(mapload)
 	. = ..()
 	// Needs to be set dynamically because table smooth sprites are 32x34,
 	// which the editor treats as a two-tile-tall object. The sprites are that
@@ -537,6 +551,19 @@
 	icon_state = "fancy_table_royalblue"
 	smooth_icon = 'icons/obj/smooth_structures/fancy_table_royalblue.dmi'
 
+/obj/structure/table/wood/betting
+	name = "betting table"
+	desc = "A table lined with cloth and edged with timber to prevent things falling off."
+	icon = 'icons/obj/structures.dmi'
+	icon_state = "betting_table"
+	smooth = 1
+	canSmoothWith = list(/obj/structure/table/wood/betting)
+	var/smooth_icon = 'icons/obj/smooth_structures/betting_table.dmi' // see Initialize()
+
+/obj/structure/table/wood/betting/Initialize(mapload)
+	. = ..()
+	icon = smooth_icon
+
 /obj/structure/table/wood/folding
 	name = "folding table"
 	desc = "A folding table, useful for setting up a temporary workspace."
@@ -554,10 +581,12 @@
 	. += span_blue("Right-Click to fold the table.")
 
 /obj/structure/table/wood/folding/attack_right(mob/user)
+	if(..())
+		return TRUE
 	user.visible_message(span_notice("[user] folds [src]."), span_notice("You fold [src]."))
 	new /obj/item/folding_table_stored(drop_location())
 	qdel(src)
-	return ..()
+	return TRUE
 
 /*
  * Racks
@@ -621,9 +650,6 @@
 				W.pixel_x = initial(W.pixel_x) + CLAMP(pixel_x + text2num(click_params["icon-x"]) - 16, pixel_x + -(world.icon_size/2), pixel_x + world.icon_size/2)
 				W.pixel_y = initial(W.pixel_y) + CLAMP(pixel_y + text2num(click_params["icon-y"]) - 16, pixel_y + -(world.icon_size/2), pixel_y + world.icon_size/2)
 				return 1
-
-/obj/structure/rack/attack_paw(mob/living/user)
-	attack_hand(user)
 
 
 
@@ -689,7 +715,7 @@
 	buckle_requires_restraints = 1
 	var/mob/living/carbon/human/patient = null
 
-/obj/structure/table/optable/Initialize()
+/obj/structure/table/optable/Initialize(mapload)
 	. = ..()
 
 /obj/structure/table/optable/tablepush(mob/living/user, mob/living/pushed_mob)

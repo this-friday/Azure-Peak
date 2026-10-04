@@ -13,7 +13,7 @@
 	sewrepair = TRUE
 	unarmed_bonus = 1
 	color = "#66584c"
-	salvage_result = null // Recipe makes 2 so we cannot make this salvageable
+	salvage_result = /obj/item/natural/hide/cured // this arbitrary nonsense was removed, only 1 glove is made per craft now
 	cold_protection = 3
 
 /obj/item/clothing/gloves/roguetown/leather/ComponentInitialize()
@@ -40,6 +40,11 @@
 	icon_state = "shadowgloves"
 	allowed_race = NON_DWARVEN_RACE_TYPES
 
+/obj/item/clothing/gloves/roguetown/fingerless/shadowgloves/spymaster
+	name = "hand's gloves"
+	desc = "Supple silk, cut at the fingertips to ensure absolute precision."
+	icon_state = "handgloves"
+
 /obj/item/clothing/gloves/roguetown/fingerless/shadowgloves/elflock
 	name = "fingerless gloves"
 	desc = "Cloth gloves to absorb palm sweat while leaving the fingers free for fine manipulation."
@@ -47,6 +52,13 @@
 	armor = ARMOR_MAILLE
 	max_integrity = ARMOR_INT_SIDE_HARDLEATHER
 	allowed_race = NON_DWARVEN_RACE_TYPES
+
+/obj/item/clothing/gloves/roguetown/fingerless/shadowgloves/elflock/loadout
+	name = "aesthetic shadowy fingerless gloves"
+
+/obj/item/clothing/gloves/roguetown/fingerless/shadowgloves/elflock/loadout/Initialize(mapload)
+	. = ..()
+	loadoutize()
 
 /obj/item/clothing/gloves/roguetown/fingerless_leather
 	name = "fingerless leather gloves"
@@ -91,7 +103,7 @@
 	armor = ARMOR_LEATHER
 	icon_state = "psydongloves"
 	item_state = "psydongloves"
-	salvage_result = /obj/item/natural/hide/cured	
+	salvage_result = /obj/item/natural/hide/cured
 	allowed_race = ALL_RACES_TYPES
 
 // Eastern gloves
@@ -152,7 +164,7 @@
 	detail_color = CLOTHING_RED
 	salvage_result = /obj/item/natural/silk
 
-/obj/item/clothing/gloves/roguetown/courtphysician/female/Initialize()
+/obj/item/clothing/gloves/roguetown/courtphysician/female/Initialize(mapload)
 	. = ..()
 	update_icon()
 
@@ -164,3 +176,69 @@
 		if(get_detail_color())
 			pic.color = get_detail_color()
 		add_overlay(pic)
+
+//
+
+/obj/item/clothing/gloves/roguetown/cloth
+	name = "padded mittens"
+	desc = "A pair of gloves, quilted from cloth. Warmth for the pilgrim, reassurance for the laborer, and protection for the militiaman."
+	icon_state = "paddedmitts"
+	armor = ARMOR_PADDED
+	max_integrity = ARMOR_INT_LEG_LEATHER
+	blocksound = SOFTUNDERHIT
+	break_sound = 'sound/foley/cloth_rip.ogg'
+	drop_sound = 'sound/foley/dropsound/cloth_drop.ogg'
+	anvilrepair = null
+	sewrepair = TRUE
+	unarmed_bonus = 1
+	salvage_result = /obj/item/natural/cloth
+	cold_protection = 6
+
+/obj/item/clothing/gloves/roguetown/cloth/ComponentInitialize()
+	AddComponent(/datum/component/armour_filtering/positive, TRAIT_FENCERDEXTERITY)
+	AddComponent(/datum/component/armour_filtering/positive, TRAIT_HONORBOUND)
+
+/obj/item/clothing/gloves/roguetown/rosa
+	name = "ivory gloves"
+	desc = "Finely crafted gloves of silk and leather."
+	icon_state = "rosagloves1"
+	icon = 'icons/roguetown/clothing/special/rosewood.dmi'
+	mob_overlay_icon = 'icons/roguetown/clothing/special/onmob/rosewood.dmi'
+	sleeved = 'icons/roguetown/clothing/special/onmob/rosewood.dmi'
+	salvage_result = /obj/item/natural/hide/cured
+
+/obj/item/clothing/gloves/roguetown/rosa/two
+	name = "scarlet gloves"
+	icon_state = "rosagloves2"
+
+/obj/item/clothing/gloves/roguetown/rosa/three
+	name = "silvered gloves"
+	icon_state = "rosagloves3"
+
+/obj/item/clothing/gloves/roguetown/rosa/four
+	name = "obsidian gloves"
+	icon_state = "rosagloves4"
+
+/obj/item/clothing/gloves/roguetown/rosa/five
+	name = "sable gloves"
+	icon_state = "rosagloves5"
+
+/obj/item/clothing/gloves/roguetown/rosa/six
+	name = "maroon gloves"
+	icon_state = "rosagloves6"
+
+/obj/item/clothing/gloves/roguetown/rosa/seven
+	name = "regal gloves"
+	icon_state = "rosagloves7"
+
+/obj/item/clothing/gloves/roguetown/rosa/eight
+	name = "courtly gloves"
+	icon_state = "rosagloves8"
+
+/obj/item/clothing/gloves/roguetown/rosa/nine
+	name = "royal gloves"
+	icon_state = "rosagloves9"
+
+/obj/item/clothing/gloves/roguetown/rosa/ten
+	name = "stately gloves"
+	icon_state = "rosagloves10"

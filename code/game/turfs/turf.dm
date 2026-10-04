@@ -23,7 +23,7 @@
 
 	flags_1 = CAN_BE_DIRTY_1
 	var/turf_flags = NONE
-	
+
 	var/list/image/blueprint_data //for the station blueprints, images of objects eg: pipes
 
 	var/explosion_level = 0	//for preventing explosion dodging
@@ -55,6 +55,15 @@
 	var/list/neighborlay_list
 	var/neighborlay_override
 	var/teleport_restricted = FALSE //whether turf teleport spells are forbidden from teleporting to this turf
+
+	// Pathfinding variables.
+	var/path_weight = 0
+	/// How many dense climbable atoms does this turf have?
+	var/climbable_atom_count = 0
+	/// How many atoms on this turf act as platforms (have BLOCK_Z_OUT_DOWN)?
+	var/platform_atom_count = 0
+	/// Cached sum of ai_path_weight from objs on this turf
+	var/ai_path_weight = 0
 
 	vis_flags = VIS_INHERIT_PLANE|VIS_INHERIT_ID
 
@@ -113,9 +122,9 @@
 		reassess_stack()
 
 	if (opacity)
-		has_opaque_atom = TRUE
-	
-	if(smooth & USES_SMOOTHING)  
+		opaque_atom_count = 1 // we count ourselves
+
+	if(smooth & USES_SMOOTHING)
 		QUEUE_SMOOTH(src)
 		QUEUE_SMOOTH_NEIGHBORS(src)
 
@@ -274,7 +283,7 @@
 				continue
 
 		// If the thing is dense AND we're including mobs or the thing isn't a mob AND if there's a source atom and
-		// it cannot pass through the thing on the turf,  we consider the turf blocked.
+		// it cannot pass through the thing on the turf,	we consider the turf blocked.
 		if(movable_content.density && (!exclude_mobs || !ismob(movable_content)))
 			if(source_atom && movable_content.CanPass(source_atom, get_dir(src, source_atom)))
 				continue
@@ -406,32 +415,49 @@
 		if(QDELETED(mover))
 			return FALSE		//We were deleted.
 
-/turf/Entered(atom/movable/AM)
+/turf/Entered(atom/movable/entered_movable)
 	..()
-	SEND_SIGNAL(src, COMSIG_TURF_ENTERED, AM)
-	SEND_SIGNAL(AM, COMSIG_MOVABLE_TURF_ENTERED, src)
-
-	if(explosion_level && AM.ex_check(explosion_id))
-		AM.ex_act(explosion_level)
-
+	SEND_SIGNAL(src, COMSIG_TURF_ENTERED, entered_movable)
+	SEND_SIGNAL(entered_movable, COMSIG_MOVABLE_TURF_ENTERED, src)
+	if(explosion_level && entered_movable.ex_check(explosion_id))
+		entered_movable.ex_act(explosion_level)
 	// If an opaque movable atom moves around we need to potentially update visibility.
-	if (AM.opacity)
-		has_opaque_atom = TRUE // Make sure to do this before reconsider_lights(), incase we're on instant updates. Guaranteed to be on in this case.
+	if (entered_movable.opacity)
+		opaque_atom_count++ // Make sure to do this before reconsider_lights(), incase we're on instant updates.
 		reconsider_lights()
+	if(isstructure(entered_movable))
+		var/obj/structure/entered_structure = entered_movable
+		if(entered_structure.density && entered_structure.climbable)
+			climbable_atom_count += 1
+		if(entered_structure.obj_flags & BLOCK_Z_OUT_DOWN)
+			platform_atom_count += 1
+	if(isobj(entered_movable))
+		var/obj/entered_obj = entered_movable
+		if(entered_obj.ai_path_weight)
+			ai_path_weight += entered_obj.ai_path_weight
 
 	if(LAZYLEN(panel_listeners))
 		notify_listed_turf_viewers()
 
-/turf/Exited(atom/movable/Obj, atom/newloc)
+/turf/Exited(atom/movable/gone, atom/newloc)
 	. = ..()
 
-	if(istype(Obj))
-		SEND_SIGNAL(src, COMSIG_TURF_EXITED, Obj, newloc)
-		SEND_SIGNAL(Obj, COMSIG_MOVABLE_TURF_EXITED, src, newloc)
-
-	if (Obj && Obj.opacity)
-		recalc_atom_opacity() // Make sure to do this before reconsider_lights(), incase we're on instant updates.
-		reconsider_lights()
+	if(istype(gone))
+		SEND_SIGNAL(src, COMSIG_TURF_EXITED, gone, newloc)
+		SEND_SIGNAL(gone, COMSIG_MOVABLE_TURF_EXITED, src, newloc)
+		if (gone.opacity)
+			opaque_atom_count-- // Make sure to do this before reconsider_lights(), incase we're on instant updates.
+			reconsider_lights()
+		if(isstructure(gone))
+			var/obj/structure/exited_structure = gone
+			if(exited_structure.density && exited_structure.climbable)
+				climbable_atom_count -= 1
+			if(exited_structure.obj_flags & BLOCK_Z_OUT_DOWN)
+				platform_atom_count -= 1
+		if(isobj(gone))
+			var/obj/exited_obj = gone
+			if(exited_obj.ai_path_weight)
+				ai_path_weight -= exited_obj.ai_path_weight
 
 	if(LAZYLEN(panel_listeners))
 		notify_listed_turf_viewers()
@@ -441,7 +467,7 @@
 		if(QDELETED(C) || C.mob?.listed_turf != src)
 			LAZYREMOVE(panel_listeners, C)
 			continue
-		C.update_listed_turf()
+		C.listedturf_dirty = TRUE
 
 /turf/open/Entered(atom/movable/AM)
 	..()
@@ -546,9 +572,9 @@
 /turf/proc/Distance(turf/T, mob/traverser)
 	return get_dist(src,T)
 
-//  This Distance proc assumes that only cardinal movement is
-//  possible. It results in more efficient (CPU-wise) pathing
-//  for bots and anything else that only moves in cardinal dirs.
+//	This Distance proc assumes that only cardinal movement is
+//	possible. It results in more efficient (CPU-wise) pathing
+//	for bots and anything else that only moves in cardinal dirs.
 /turf/proc/Distance_cardinal(turf/T, mob/traverser)
 	if(!src || !T)
 		return FALSE
@@ -560,24 +586,20 @@
 		return FALSE
 	return abs(x - T.x) + abs(y - T.y) + abs(z - T.z)
 
+// TODO: cache certain parts of this per-tile and update on /entered and /exited
+// that way we can avoid iterating contents
 /// Returns an additional distance factor based on slowdown and other factors.
 /turf/proc/get_heuristic_slowdown(mob/traverser, travel_dir)
 	. = get_slowdown(traverser)
-	// add cost from climbable obstacles
-	for(var/obj/structure/some_object in src)
-		if(some_object.density && some_object.climbable)
-			. += 1 // extra tile penalty
-			break
 	var/obj/structure/mineral_door/door = locate() in src
 	if(door && door.density && !door.locked && door.anchored) // door will have to be opened
 		. += 2 // try to avoid closed doors where possible
-	for(var/obj/O in src)
-		. += O.ai_path_weight
-
-	for(var/obj/structure/O in contents)
-		if(O.obj_flags & BLOCK_Z_OUT_DOWN)
-			return
-	. += path_weight
+	. += ai_path_weight
+	// add cost from climbable obstacles
+	if(climbable_atom_count > 0)
+		. += 1 // extra tile penalty
+	if(platform_atom_count <= 0)
+		. += path_weight
 
 // Like Distance_cardinal, but includes additional weighting to make A* prefer turfs that are easier to pass through.
 /turf/proc/Heuristic_cardinal(turf/T, mob/traverser)
@@ -697,7 +719,7 @@
 
 /proc/clear_reagents_to_vomit_pool(mob/living/carbon/M, obj/effect/decal/cleanable/vomit/V)
 	M.reagents.trans_to(V, M.reagents.total_volume / 10, transfered_by = M)
-	for(var/datum/reagent/R in M.reagents.reagent_list)                //clears the stomach of anything that might be digested as food
+	for(var/datum/reagent/R in M.reagents.reagent_list)				//clears the stomach of anything that might be digested as food
 		if(istype(R, /datum/reagent/consumable))
 			var/datum/reagent/consumable/nutri_check = R
 			if(nutri_check.nutriment_factor >0)
@@ -708,6 +730,63 @@
 /turf/proc/Melt()
 	return ScrapeAway(flags = CHANGETURF_INHERIT_AIR)
 
+/atom/proc/set_adj_in_dir(direction, direction_flag, list/smoothing_list, new_junction)
+	. = new_junction
+	var/smooth_border = (smooth & SMOOTH_BORDER)
+	var/smooth_obj = (smooth & SMOOTH_OBJ)
+	var/smooth_edge = (smooth & SMOOTH_EDGE)
+
+	var/turf/neighbor = get_step(src, direction);
+	if(!neighbor) {
+		if(smooth_border) {
+			. |= direction_flag;
+		};
+		return
+	};
+	if(smooth_edge && type == neighbor.type) {
+		return
+	};
+	if(smooth_obj) {
+		for(var/atom/movable/thing as anything in neighbor) {
+			if(!thing.anchored) {
+				continue;
+			};
+			if(!smoothing_list) {
+				if(type == thing.type) {
+					. |= direction_flag;
+					return
+				};
+				continue;
+			};
+			var/thing_smoothing_groups = thing.smoothing_groups;
+			if(!thing_smoothing_groups) {
+				continue;
+			};
+			for(var/target in smoothing_list) {
+				if(smoothing_list[target] & thing_smoothing_groups[target]) {
+					. |= direction_flag;
+					return
+				};
+			};
+		};
+	};
+	if(!smoothing_list) {
+		if(type == neighbor.type) {
+			. |= direction_flag;
+		};
+		return
+	};
+	var/neighbor_smoothing_groups = neighbor.smoothing_groups;
+	if(neighbor_smoothing_groups) {
+		for(var/target as anything in smoothing_list) {
+			if(smoothing_list[target] & neighbor_smoothing_groups[target]) {
+				. |= direction_flag;
+				return
+			};
+		};
+	};
+	return
+
 /atom/proc/smooth()
 	if(!smoothing_icon)
 		smoothing_icon = initial(icon_state)
@@ -716,68 +795,10 @@
 	// cache for sanic speed
 	var/smoothing_list = src.smoothing_list
 
-	var/smooth_border = (smooth & SMOOTH_BORDER)
-	var/smooth_obj = (smooth & SMOOTH_OBJ)
 	var/smooth_edge = (smooth & SMOOTH_EDGE)
 
-	#define SET_ADJ_IN_DIR(direction, direction_flag) \
-		set_adj_in_dir: { \
-			do { \
-				var/turf/neighbor = get_step(src, direction); \
-				if(!neighbor) { \
-					if(smooth_border) { \
-						new_junction |= direction_flag; \
-					}; \
-					break set_adj_in_dir; \
-				}; \
-				if(smooth_edge && type == neighbor.type) { \
-					break set_adj_in_dir; \
-				}; \
-				if(smooth_obj) { \
-					for(var/atom/movable/thing as anything in neighbor) { \
-						if(!thing.anchored) { \
-							continue; \
-						}; \
-						if(!smoothing_list) { \
-							if(type == thing.type) { \
-								new_junction |= direction_flag; \
-								break set_adj_in_dir; \
-							}; \
-							continue; \
-						}; \
-						var/thing_smoothing_groups = thing.smoothing_groups; \
-						if(!thing_smoothing_groups) { \
-							continue; \
-						}; \
-						for(var/target in smoothing_list) { \
-							if(smoothing_list[target] & thing_smoothing_groups[target]) { \
-								new_junction |= direction_flag; \
-								break set_adj_in_dir; \
-							}; \
-						}; \
-					}; \
-				}; \
-				if(!smoothing_list) { \
-					if(type == neighbor.type) { \
-						new_junction |= direction_flag; \
-					}; \
-					break set_adj_in_dir; \
-				}; \
-				var/neighbor_smoothing_groups = neighbor.smoothing_groups; \
-				if(neighbor_smoothing_groups) { \
-					for(var/target as anything in smoothing_list) { \
-						if(smoothing_list[target] & neighbor_smoothing_groups[target]) { \
-							new_junction |= direction_flag; \
-							break set_adj_in_dir; \
-						}; \
-					}; \
-				}; \
-				break set_adj_in_dir; \
-			} while(FALSE) \
-		}
-
 	for(var/direction as anything in GLOB.cardinals) //Cardinal case first.
-		SET_ADJ_IN_DIR(direction, direction)
+		new_junction = set_adj_in_dir(direction, direction, smoothing_list, new_junction)
 
 	if(smooth_edge)
 		if(!isturf(src))
@@ -792,21 +813,19 @@
 
 	if(new_junction & NORTH_JUNCTION)
 		if(new_junction & WEST_JUNCTION)
-			SET_ADJ_IN_DIR(NORTHWEST, NORTHWEST_JUNCTION)
+			new_junction = set_adj_in_dir(NORTHWEST, NORTHWEST_JUNCTION, smoothing_list, new_junction)
 
 		if(new_junction & EAST_JUNCTION)
-			SET_ADJ_IN_DIR(NORTHEAST, NORTHEAST_JUNCTION)
+			new_junction = set_adj_in_dir(NORTHEAST, NORTHEAST_JUNCTION, smoothing_list, new_junction)
 
 	if(new_junction & SOUTH_JUNCTION)
 		if(new_junction & WEST_JUNCTION)
-			SET_ADJ_IN_DIR(SOUTHWEST, SOUTHWEST_JUNCTION)
+			new_junction = set_adj_in_dir(SOUTHWEST, SOUTHWEST_JUNCTION, smoothing_list, new_junction)
 
 		if(new_junction & EAST_JUNCTION)
-			SET_ADJ_IN_DIR(SOUTHEAST, SOUTHEAST_JUNCTION)
+			new_junction = set_adj_in_dir(SOUTHEAST, SOUTHEAST_JUNCTION, smoothing_list, new_junction)
 
 	set_smoothed_icon_state(new_junction)
-
-	#undef SET_ADJ_IN_DIR
 
 ///Changes the icon state based on the new junction bitmask.
 /atom/proc/set_smoothed_icon_state(new_junction)

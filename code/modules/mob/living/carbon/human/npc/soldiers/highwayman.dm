@@ -1,6 +1,5 @@
-GLOBAL_LIST_INIT(highwayman_aggro, world.file2list("strings/rt/highwaymanaggrolines.txt"))
-
 /mob/living/carbon/human/species/human/northern/highwayman
+	npc_archetype = /datum/npc_archetype/highwayman
 	ai_controller = /datum/ai_controller/human_npc
 	faction = list(FACTION_BANDITS, FACTION_STATION)
 	ambushable = FALSE
@@ -9,161 +8,41 @@ GLOBAL_LIST_INIT(highwayman_aggro, world.file2list("strings/rt/highwaymanaggroli
 	blood_toll_bucket = STATS_KILLED_HIGHWAYMEN
 
 /mob/living/carbon/human/species/human/northern/highwayman/ambush
-	threat_point = THREAT_MODERATE
-	ambush_faction = "bandits"
-
-/mob/living/carbon/human/species/human/northern/highwayman/mount_reaver
-	name = "mount reaver"
 	threat_point = THREAT_HIGH
 	ambush_faction = "bandits"
 
-/mob/living/carbon/human/species/human/northern/highwayman/mount_reaver/after_creation()
-	..()
-	job = "Mount Reaver"
-	equipOutfit(new /datum/outfit/job/roguetown/human/species/human/northern/mount_reaver)
+/mob/living/carbon/human/species/human/northern/highwayman/mount_reaver
+	npc_archetype = /datum/npc_archetype/highwayman/mount_reaver
+	name = "mount reaver"
+	threat_point = THREAT_TOUGH
+	ambush_faction = "bandits"
 
+/mob/living/carbon/human/species/human/northern/highwayman/archer
+	npc_archetype = /datum/npc_archetype/highwayman/archer
+	threat_point = THREAT_HIGH
+	ambush_faction = "bandits"
 
+/mob/living/carbon/human/species/human/northern/highwayman/crossbowman
+	npc_archetype = /datum/npc_archetype/highwayman/crossbowman
+	threat_point = THREAT_HIGH
+	ambush_faction = "bandits"
 
-/mob/living/carbon/human/species/human/northern/highwayman/Initialize()
-	. = ..()
-	set_species(/datum/species/human/northern)
-	addtimer(CALLBACK(src, PROC_REF(after_creation)), 1 SECONDS)
+/mob/living/carbon/human/species/human/northern/highwayman/road_knight
+	npc_archetype = /datum/npc_archetype/highwayman/road_knight
+	threat_point = THREAT_DEADLY
+	ambush_faction = "bandits"
 
+/mob/living/carbon/human/species/human/northern/highwayman/sharpshooter
+	npc_archetype = /datum/npc_archetype/highwayman/sharpshooter
+	threat_point = THREAT_DEADLY
+	ambush_faction = "bandits"
 
-/mob/living/carbon/human/species/human/northern/highwayman/after_creation()
-	..()
-	AddComponent(/datum/component/ai_aggro_system)
-	SEND_SIGNAL(src, COMSIG_MOB_MODIFY_AGGRO_LINES, GLOB.highwayman_aggro, TRUE)
-	job = "Highwayman"
-	ADD_TRAIT(src, TRAIT_NOMOOD, TRAIT_GENERIC)
-	ADD_TRAIT(src, TRAIT_NOHUNGER, TRAIT_GENERIC)
-	ADD_TRAIT(src, TRAIT_LEECHIMMUNE, INNATE_TRAIT)
-	ADD_TRAIT(src, TRAIT_BREADY, TRAIT_GENERIC)
-	ADD_TRAIT(src, TRAIT_MEDIUMARMOR, TRAIT_GENERIC)
-	equipOutfit(new /datum/outfit/job/roguetown/human/species/human/northern/highwayman)
-	var/obj/item/organ/eyes/organ_eyes = getorgan(/obj/item/organ/eyes)
-	if(organ_eyes)
-		organ_eyes.eye_color = pick("27becc", "35cc27", "000000")
-	update_hair()
-	update_body()
-	var/obj/item/bodypart/head/head = get_bodypart(BODY_ZONE_HEAD)
-	head.sellprice = HEAD_BOUNTY_HIGHWAYMAN
-	AddComponent(/datum/component/npc_death_line, null, 25)
+/mob/living/carbon/human/species/human/northern/highwayman/light
+	npc_archetype = /datum/npc_archetype/highwayman/light
+	threat_point = THREAT_HIGH
+	ambush_faction = "bandits"
 
-
-/datum/outfit/job/roguetown/human/species/human/northern/highwayman/pre_equip(mob/living/carbon/human/H)
-	wrists = /obj/item/clothing/wrists/roguetown/bracers/leather
-	if(prob(50))
-		mask = /obj/item/clothing/mask/rogue/ragmask/red
-	armor = /obj/item/clothing/suit/roguetown/armor/leather
-	shirt = /obj/item/clothing/suit/roguetown/shirt/undershirt/vagrant
-	if(prob(50))
-		shirt = /obj/item/clothing/suit/roguetown/armor/gambeson/light
-	pants = /obj/item/clothing/under/roguetown/trou/leather
-	if(prob(50))
-		head = /obj/item/clothing/head/roguetown/helmet/leather
-	if(prob(30))
-		head = /obj/item/clothing/head/roguetown/helmet/leather/volfhelm
-	if(prob(50))
-		neck = /obj/item/clothing/neck/roguetown/coif
-	gloves = /obj/item/clothing/gloves/roguetown/leather
-	H.STASTR = rand(12,14) //GENDER EQUALITY!!
-	H.STASPD = 11
-	H.STACON = 6
-	H.STAWIL = 6
-	H.STAPER = 10
-	H.STAINT = 8
-	if(prob(50))
-		r_hand = /obj/item/rogueweapon/sword/short/iron
-	else
-		r_hand = /obj/item/rogueweapon/mace/cudgel
-	if(prob(20))
-		r_hand = /obj/item/rogueweapon/sword/falchion/militia
-	if(prob(20))
-		r_hand = /obj/item/rogueweapon/pick/militia
-	if(prob(25))
-		l_hand = /obj/item/rogueweapon/shield/wood
-	if(prob(10))
-		l_hand = /obj/item/rogueweapon/shield/buckler/palloy
-	if(prob(10))
-		belt = /obj/item/storage/belt/rogue/leather/knifebelt/iron
-		H.adjust_skillrank(/datum/skill/combat/knives, 2, TRUE)
-	shoes = /obj/item/clothing/shoes/roguetown/boots/leather
-	if(prob(30))
-		neck = /obj/item/clothing/neck/roguetown/leather
-	H.eye_color = "27becc"
-	H.hair_color = "61310f"
-	H.facial_hair_color = H.hair_color
-	if(H.gender == FEMALE)
-		H.hairstyle =  "Messy (Rogue)"
-	else
-		H.hairstyle = "Messy"
-		H.facial_hairstyle = "Beard (Manly)"
-	H.adjust_skillrank(/datum/skill/combat/polearms, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/maces, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/axes, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/swords, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/shields, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/unarmed, 2, TRUE) // Trash mobs, untrained.
-	H.adjust_skillrank(/datum/skill/combat/wrestling, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/misc/swimming, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/misc/climbing, 2, TRUE)
-
-/datum/outfit/job/roguetown/human/species/human/northern/mount_reaver/pre_equip(mob/living/carbon/human/H)
-	wrists = /obj/item/clothing/wrists/roguetown/bracers/leather
-	if(prob(50))
-		mask = /obj/item/clothing/mask/rogue/ragmask/red
-	armor = /obj/item/clothing/suit/roguetown/armor/plate/cuirass/iron
-	shirt = /obj/item/clothing/suit/roguetown/armor/gambeson
-	pants = /obj/item/clothing/under/roguetown/trou/leather
-	if(prob(55))
-		head = /obj/item/clothing/head/roguetown/helmet/skullcap
-	else if(prob(30))
-		head = /obj/item/clothing/head/roguetown/helmet/sallet/visored/iron
-	else if(prob(30))
-		head = /obj/item/clothing/head/roguetown/helmet/heavy/barbute
-	else
-		head = /obj/item/clothing/head/roguetown/helmet/kettle/iron
-	if(prob(70))
-		neck = /obj/item/clothing/neck/roguetown/coif
-	gloves = /obj/item/clothing/gloves/roguetown/leather
-	H.STASTR = 12
-	H.STASPD = 11
-	H.STACON = 8
-	H.STAWIL = 8
-	H.STAPER = 11
-	H.STAINT = 8
-	if(prob(35))
-		r_hand = /obj/item/rogueweapon/sword/short/iron
-	else if(prob(30))
-		r_hand = /obj/item/rogueweapon/sword/falchion/militia
-	else if(prob(20))
-		r_hand = /obj/item/rogueweapon/mace/cudgel
-	else
-		r_hand = /obj/item/rogueweapon/pick/militia
-	if(prob(30))
-		l_hand = /obj/item/rogueweapon/shield/tower
-	else if(prob(35))
-		l_hand = /obj/item/rogueweapon/shield/wood
-	else if(prob(15))
-		l_hand = /obj/item/rogueweapon/shield/buckler/palloy
-	if(prob(25))
-		neck = /obj/item/storage/belt/rogue/pouch/bombs
-	shoes = /obj/item/clothing/shoes/roguetown/boots/leather
-	H.eye_color = "27becc"
-	H.hair_color = "61310f"
-	H.facial_hair_color = H.hair_color
-	if(H.gender == FEMALE)
-		H.hairstyle =  "Messy (Rogue)"
-	else
-		H.hairstyle = "Messy"
-		H.facial_hairstyle = "Beard (Manly)"
-	H.adjust_skillrank(/datum/skill/combat/polearms, 3, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/maces, 3, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/axes, 3, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/swords, 3, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/shields, 3, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/unarmed, 3, TRUE)
-	H.adjust_skillrank(/datum/skill/combat/wrestling, 3, TRUE)
-	H.adjust_skillrank(/datum/skill/misc/swimming, 2, TRUE)
-	H.adjust_skillrank(/datum/skill/misc/climbing, 3, TRUE)
+/mob/living/carbon/human/species/human/northern/highwayman/bulwark
+	npc_archetype = /datum/npc_archetype/highwayman/bulwark
+	threat_point = THREAT_TOUGH
+	ambush_faction = "bandits"

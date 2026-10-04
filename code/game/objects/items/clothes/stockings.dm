@@ -9,7 +9,7 @@
 	break_sound = 'sound/foley/cloth_rip.ogg'
 	blade_dulling = DULLING_CUT
 	max_integrity = 200
-	integrity_failure = ARMOR_INTEG_FAILURE
+	integrity_failure = GENERIC_INTEG_FAILURE
 	throw_speed = 0.5
 	drop_sound = 'sound/foley/dropsound/cloth_drop.ogg'
 	var/gendered
@@ -23,6 +23,8 @@
 /obj/item/legwears/attack(mob/M, mob/user, def_zone)
 	if(ishuman(M))
 		var/mob/living/carbon/human/H = M
+		if(NO_UNDERWEAR in H.dna.species.species_traits)
+			return
 		if(!H.legwear_socks)
 			if(!get_location_accessible(H, BODY_ZONE_PRECISE_L_FOOT))
 				return
@@ -45,7 +47,7 @@
 	legwears_feature = null
 	return ..()
 
-/obj/item/legwears/random/Initialize()
+/obj/item/legwears/random/Initialize(mapload)
 	. = ..()
 	color = pick("#e6e5e5", CLOTHING_BLACK, CLOTHING_BLUE, "#6F0000", "#664357")
 
@@ -71,7 +73,7 @@
 	desc = "A legwear made just for the pure aesthetics. Made out of thin silk. Popular among nobles."
 	icon_state = "silk"
 
-/obj/item/legwears/silk/random/Initialize()
+/obj/item/legwears/silk/random/Initialize(mapload)
 	. = ..()
 	color = pick("#e6e5e5", CLOTHING_BLACK, CLOTHING_BLUE, "#6F0000", "#664357")
 
@@ -97,7 +99,7 @@
 	desc = "A legwear popular among wenches."
 	icon_state = "fishnet"
 
-/obj/item/legwears/fishnet/random/Initialize()
+/obj/item/legwears/fishnet/random/Initialize(mapload)
 	. = ..()
 	color = pick("#e6e5e5", CLOTHING_BLACK, CLOTHING_BLUE, "#6F0000", "#664357")
 
@@ -123,7 +125,7 @@
 	desc = "A legwear popular among those who plan to venture into colder climates."
 	icon_state = "thigh"
 
-/obj/item/legwears/thigh_high/random/Initialize()
+/obj/item/legwears/thigh_high/random/Initialize(mapload)
 	. = ..()
 	color = pick("#e6e5e5", CLOTHING_BLACK, CLOTHING_BLUE, "#6F0000", "#664357")
 
@@ -145,7 +147,7 @@
 	desc = "A legwear popular among those who enjoy taller boots."
 	icon_state = "knee"
 
-/obj/item/legwears/knee_high/random/Initialize()
+/obj/item/legwears/knee_high/random/Initialize(mapload)
 	. = ..()
 	color = pick("#e6e5e5", CLOTHING_BLACK, CLOTHING_BLUE, "#6F0000", "#664357")
 
@@ -159,6 +161,42 @@
 	icon_state = "knee_silk"
 
 /obj/item/legwears/knee_high_silk/white
+	color = "#e6e5e5"
+
+//Sleeves - Knee-high
+/obj/item/legwears/sleeve_knee_silk
+	name = "silk knee-high sleeves"
+	desc = "A legwear for those who happen to possess sharp claws."
+	icon_state = "sleeve_k_silk"
+
+/obj/item/legwears/sleeve_knee_silk/white
+	color = "#e6e5e5"
+
+//Sleeves - Knee-high
+/obj/item/legwears/sleeve_stir_knee_silk
+	name = "silk knee-high sleeves (stirrup)"
+	desc = "A legwear for those who happen to possess sharp claws."
+	icon_state = "sleeve_k_silk"
+
+/obj/item/legwears/sleeve_stir_knee_silk/white
+	color = "#e6e5e5"
+
+//Sleeves - Thigh-high
+/obj/item/legwears/sleeve_stir_thigh_silk
+	name = "silk knee-high sleeves (stirrup)"
+	desc = "A legwear for those who happen to possess sharp claws. For the modest types."
+	icon_state = "sleeve_ts_silk"
+
+/obj/item/legwears/sleeve_stir_thigh_silk/white
+	color = "#e6e5e5"
+
+//Sleeves - Ankle-high
+/obj/item/legwears/sleeve_stir_ankle_silk
+	name = "silk knee-high sleeves (stirrup)"
+	desc = "A legwear for those who happen to possess sharp claws. Are you even trying at this point?"
+	icon_state = "sleeve_as_silk"
+
+/obj/item/legwears/sleeve_stir_ankle_silk/white
 	color = "#e6e5e5"
 
 // Supply
@@ -349,3 +387,31 @@
 	result = list(/obj/item/legwears/fishnet/white)
 	reqs = list(/obj/item/natural/fibers = 2)
 	craftdiff = 3
+
+/datum/crafting_recipe/roguetown/sewing/sleeves_knee_silk_white
+	name = "silk sleeves - knee"
+	result = list(/obj/item/legwears/sleeve_knee_silk/white)
+	reqs = list(/obj/item/natural/silk = 1,
+				/obj/item/natural/fibers = 1)
+	craftdiff = 5
+
+/datum/crafting_recipe/roguetown/sewing/sleeves_knee_silk_white
+	name = "silk sleeves - knee (stirrup)"
+	result = list(/obj/item/legwears/sleeve_stir_knee_silk/white)
+	reqs = list(/obj/item/natural/silk = 1,
+				/obj/item/natural/fibers = 1)
+	craftdiff = 5
+
+/datum/crafting_recipe/roguetown/sewing/sleeves_thigh_silk_white
+	name = "silk sleeves - thigh (stirrup)"
+	result = list(/obj/item/legwears/sleeve_stir_thigh_silk/white)
+	reqs = list(/obj/item/natural/silk = 1,
+				/obj/item/natural/fibers = 1)
+	craftdiff = 5
+
+/datum/crafting_recipe/roguetown/sewing/sleeves_ankle_silk_white
+	name = "silk sleeves - ankle (stirrup)"
+	result = list(/obj/item/legwears/sleeve_stir_ankle_silk/white)
+	reqs = list(/obj/item/natural/silk = 1,
+				/obj/item/natural/fibers = 1)
+	craftdiff = 5

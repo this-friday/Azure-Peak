@@ -1,7 +1,7 @@
 //The code execution of the emote datum is located at code/datums/emotes.dm
-/mob/proc/emote(act, m_type = null, message = null, intentional = FALSE, forced = FALSE, targetted = FALSE, custom_me = FALSE, animal = FALSE)
+/mob/proc/emote(act, m_type = null, message = null, intentional = FALSE, forced = FALSE, targetted = FALSE, custom_me = FALSE, animal = FALSE, quiet = FALSE)
 	var/oldact = act
-	act = lowertext(act)
+	act = LOWER_TEXT(act)
 
 	if(HAS_TRAIT(src, TRAIT_NOBREATH))
 		var/static/list/nobreath_blocked = list(
@@ -56,8 +56,10 @@
 				return
 
 	// autopunctuation
-	if((act == "me" || act == "subtle") && !client?.prefs?.no_autopunctuate)
-		param = autopunct_bare(param)
+	if((act == "me" || act == "subtle"))
+		param = accent_emote_quotes(param)
+		if(!client?.prefs?.no_autopunctuate)
+			param = autopunct_bare(param)
 
 	var/list/key_emotes = GLOB.emote_list[act]
 	var/mute_time = 0
@@ -71,8 +73,10 @@
 	else
 		for(var/datum/emote/P in key_emotes)
 			mute_time = P.mute_time
-			if(P.run_emote(src, param, m_type, intentional, targetted, (animal ? animal : P.is_animal)))
+			if(P.run_emote(src, param, m_type, intentional, targetted, (animal ? animal : P.is_animal), quiet))
 				break
+		if(intentional)
+			SEND_SIGNAL(src, COMSIG_MOB_EMOTED, act, intentional)
 
 	if(custom_me)
 		next_me_emote = world.time + mute_time
@@ -81,9 +85,25 @@
 
 /atom/movable/proc/send_speech_emote(message, range = 7, obj/source = src, bubble_type, list/spans, datum/language/message_language = null, message_mode, original_message)
 	var/rendered = compose_message(src, message_language, message, , spans, message_mode)
-	for(var/_AM in get_hearers_in_view(range, source))
+	var/list/hearers = get_hearers_in_view(range, source)
+	for(var/_AM in hearers)
 		var/atom/movable/AM = _AM
 		AM.Hear(rendered, src, message_language, message, , spans, message_mode)
+
+	if(SEND_SIGNAL(src, COMSIG_MOVABLE_QUEUE_BARK, hearers, args) || vocal_bark || vocal_bark_id)
+		for(var/mob/M in hearers)
+			if(!M.client)
+				continue
+			if((M.client.prefs.mute_barks))
+				hearers -= M
+		var/barks = min(round((LAZYLEN(message) / vocal_speed)) + 1, BARK_MAX_BARKS)
+		var/total_delay
+		vocal_current_bark = world.time //this is juuuuust random enough to reliably be unique every time send_speech() is called, in most scenarios
+		for(var/i in 1 to barks)
+			if(total_delay > BARK_MAX_TIME)
+				break
+			addtimer(CALLBACK(src, PROC_REF(bark), hearers, range, vocal_volume, BARK_DO_VARY(vocal_pitch, vocal_pitch_range), vocal_current_bark), total_delay)
+			total_delay += rand(DS2TICKS(vocal_speed / BARK_SPEED_BASELINE), DS2TICKS(vocal_speed / BARK_SPEED_BASELINE) + DS2TICKS(vocal_speed / BARK_SPEED_BASELINE)) TICKS
 //	if(intentional)
 //		to_chat(src, span_notice("Unusable emote '[act]'. Say *help for a list."))
 /*
@@ -113,7 +133,7 @@
 	return FALSE
 
 
-/datum/emote/spin/run_emote(mob/user, params ,  type_override, intentional)
+/datum/emote/spin/run_emote(mob/user, params ,	type_override, intentional)
 	. = ..()
 	if(.)
 		user.spin(20, 1)
@@ -146,7 +166,7 @@
 		var/sound/tmp_sound = P.get_sound(src)
 		if(!istype(tmp_sound))
 			tmp_sound = sound(get_sfx(tmp_sound))
-		
+
 		if(tmp_sound)
 			tmp_sound.frequency = pitch
 			if(tmp_sound.file)
@@ -166,13 +186,6 @@
 				pre_color_msg = trim(replacetext(pre_color_msg, "$n", "[emotelocation]"))
 			else
 				msg = "[styled_name] [msg]"
-
-			for(var/mob/M in GLOB.dead_mob_list)
-				if(!M.client || isnewplayer(M))
-					continue
-				var/turf/T = get_turf(emotelocation)
-				if(M.stat == DEAD && M.client && (M.client.prefs?.chat_toggles & CHAT_GHOSTSIGHT) && !(M in viewers(T, null)))
-					M.show_message(msg)
 
 			var/runechat_msg_to_use = P.show_runechat ? (P.runechat_msg ? P.runechat_msg : pre_color_msg) : null
 			if(P.emote_type == EMOTE_AUDIBLE)

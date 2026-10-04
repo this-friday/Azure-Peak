@@ -8,8 +8,8 @@
 	origin = "Gronn"
 	base_name = "Godtouched"
 	is_subrace = TRUE
-	desc = "<b>Goblin</b><br>\
-	Goblins are a short race of humanoids with large ears and typically green skin. \
+	desc_title = "Goblin"
+	desc = "Goblins are a short race of humanoids with large ears and typically green skin. \
 	Supposedly formed from the blood spilled by the savage War God Graggar’s conquest, \
 	the prehistory of the Goblin race is spent in mindless servitude to the Conqueror God. \
 	With Graggar’s defeat, Goblins were at last able to exercise free will, \
@@ -25,8 +25,7 @@
 	though this often comes with other environmental adaptations befitting the home of such a tribe. \
 	Goblins are also known to have an instinctual form of tribalism, \
 	wherein a large group of Goblins in an area seem to universally act in more primitive ways, \
-	often resulting in mischief - and sometimes violence.<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 SPD</b></span><br>" 
+	often resulting in mischief - and sometimes violence."
 	species_traits = list(EYECOLOR,LIPS,STUBBLE)
 	possible_ages = ALL_AGES_LIST
 	use_skintones = TRUE
@@ -52,6 +51,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		//ORGAN_SLOT_TESTICLES = /obj/item/organ/testicles,
 		//ORGAN_SLOT_PENIS = /obj/item/organ/penis,
 		//ORGAN_SLOT_BREASTS = /obj/item/organ/breasts,
@@ -87,8 +87,12 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/human,
 		/datum/customizer/organ/vagina/human_anthro,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		/datum/customizer/organ/ears/goblin,
+		/datum/customizer/organ/horns/humanoid/goblin,
 		/datum/customizer/organ/horns/tusks,
+		/datum/customizer/organ/tail/goblin,
 		)
 	languages = list(
 		/datum/language/common,
@@ -133,12 +137,3 @@
 		"Hadal" = SKIN_COLOR_HADAL,
 		"Pea" = SKIN_COLOR_PEA,
 	)
-
-/datum/species/goblinp/on_species_gain(mob/living/carbon/C, datum/species/old_species)
-	..()
-	C.cmode_music = 'sound/music/combat_gronn.ogg'
-	RegisterSignal(C, COMSIG_MOB_SAY, PROC_REF(handle_speech))
-
-/datum/species/goblinp/on_species_loss(mob/living/carbon/C)
-	. = ..()
-	UnregisterSignal(C, COMSIG_MOB_SAY)

@@ -28,7 +28,7 @@
 
 	if(ismob(the_target)) //Target is in godmode, ignore it.
 		var/mob/M = the_target
-		if(M.status_flags & GODMODE)
+		if(GODMODE_HIDDEN(M))
 			return FALSE
 
 	if(living_mob.see_invisible < the_target.invisibility)//Target's invisible to us, forget it
@@ -57,3 +57,20 @@
 
 /datum/targetting_datum/basic/ignore_faction/faction_check(mob/living/living_mob, mob/living/the_target)
 	return FALSE
+
+GLOBAL_DATUM_INIT(conjured_targetting, /datum/targetting_datum/basic/conjured, new)
+
+/datum/targetting_datum/basic/conjured
+
+/datum/targetting_datum/basic/conjured/can_attack(mob/living/living_mob, atom/the_target)
+	. = ..()
+	if(!.)
+		return FALSE
+	var/datum/component/conjured_minion/comp = living_mob.GetComponent(/datum/component/conjured_minion)
+	if(!comp)
+		return TRUE
+	var/mob/living/summoner = comp.summoner_ref?.resolve()
+	if(!summoner || summoner.z != living_mob.z)
+		return TRUE
+	if(get_dist(the_target, summoner) > comp.leash_range + 1)
+		return FALSE

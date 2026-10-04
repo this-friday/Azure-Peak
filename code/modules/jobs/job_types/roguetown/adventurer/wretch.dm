@@ -1,4 +1,4 @@
-// Wretch, soft antagonists. Giving them 9 points as stat (matching mercs) on average since they're a driving antagonist on AP or assistant antagonist. 
+// Wretch, soft antagonists. Giving them 9 points as stat (matching mercs) on average since they're a driving antagonist on AP or assistant antagonist.
 /datum/job/roguetown/wretch
 	title = "Wretch"
 	flag = WRETCH
@@ -6,7 +6,7 @@
 	faction = "Station"
 	total_positions = 0
 	spawn_positions = 0
-	
+
 	tutorial = "Somewhere in your lyfe, you fell to the wrong side of civilization. Hounded by the consequences of your actions, you spend your daes prowling the roads for easy marks and loose purses, scraping to get by."
 	outfit = null
 	outfit_female = null
@@ -15,7 +15,7 @@
 	min_pq = 10
 	max_pq = null
 
-	obsfuscated_job = TRUE
+	obfuscated_job = TRUE
 	class_categories = TRUE
 
 	advclass_cat_rolls = list(CTAG_WRETCH = 20)
@@ -28,12 +28,12 @@
 	always_show_on_latechoices = TRUE
 	job_reopens_slots_on_death = FALSE
 	same_job_respawn_delay = 1 MINUTES
-	virtue_restrictions = list(/datum/virtue/heretic/zchurch_keyholder) //all wretch classes automatically get this
+	virtue_restrictions = list(/datum/virtue/heretic/zchurch_keyholder) //all wretch classes automatically get this ///
 	job_traits = list(TRAIT_STEELHEARTED, TRAIT_OUTLAW, TRAIT_HERESIARCH, TRAIT_SELF_SUSTENANCE, TRAIT_ZURCH)
 	job_subclasses = list(
 		/datum/advclass/wretch/licker,
+		/datum/advclass/wretch/deserter_knight,
 		/datum/advclass/wretch/deserter,
-		/datum/advclass/wretch/deserter/generic,
 		/datum/advclass/wretch/berserker,
 		/datum/advclass/wretch/roguemage,
 		/datum/advclass/wretch/necromancer,
@@ -47,12 +47,64 @@
 		/datum/advclass/wretch/vigilante,
 		/datum/advclass/wretch/munitioneer,
 		/datum/advclass/wretch/pariah,
+		/datum/advclass/wretch/profane_champion,
 		/datum/advclass/wretch/heretic_spellblade,
 		/datum/advclass/wretch/ancient_spellblade,
 		/datum/advclass/wretch/ancient_deathknight,
 		/datum/advclass/wretch/slasher,
-		/datum/advclass/wretch/maestro
+		/datum/advclass/wretch/maestro,
+		/datum/advclass/wretch/freeblade
 	)
+	has_subprefs = TRUE
+	default_subprefs = list("bounty_poster_key" = null, "bounty_severity_key" = null, "my_crime" = null, "favorite_advclass" = null)
+
+// for future viewers, here's how you add subprefs to a job. adventurer provides a simpler example for how to merely add subclass favoriting.
+/datum/job/roguetown/wretch/Topic(href, list/href_list)
+	var/client/C = usr.client // gettin the usual vars setup
+	if(!C || !C.prefs)
+		return
+	var/list/roleprefs = get_roleprefs(C)
+	if(href_list["poster"]) // here, we handle the actual user input. in this case, poster is a tgui select
+		var/list/poster_choices = list()
+		for(var/key in GLOB.bounty_posters)
+			poster_choices[GLOB.bounty_posters[key]] = key
+		roleprefs["bounty_poster_key"] = poster_choices[tgui_input_list(usr, "Who placed a bounty on you?", "Bounty Poster", poster_choices)]
+		update_subprefs_window(usr) // make sure to call this every time you change data so the ui will actually reflect it!
+	if(href_list["severity"]) // ...and same for severity
+		var/list/sev_choices = list()
+		for(var/key in GLOB.wretch_severities)
+			sev_choices[GLOB.wretch_severities[key]] = key
+		roleprefs["bounty_severity_key"] = sev_choices[tgui_input_list(usr, "How severe are your crimes?", "Bounty Amount", sev_choices)]
+		update_subprefs_window(usr)
+	if(href_list["crime"])
+		roleprefs["my_crime"] = tgui_input_text(usr, "What is your crime?", "Crime", roleprefs["my_crime"], multiline=TRUE, encode=FALSE) // this is filtered with html_encode later; doing so twice would lead to strangeness
+		update_subprefs_window(usr)
+	. = ..()
+
+// this is where we put the actual window setup. it'll be called once each update, to keep the information up-to-date, so just read from prefs n display it
+/datum/job/roguetown/wretch/update_subprefs_window(mob/user)
+	var/client/C = usr.client
+	if(!C || !C.prefs)
+		return
+	var/list/roleprefs = get_roleprefs(C)
+	var/datum/advclass/favorite = roleprefs["favorite_advclass"] // note that this key is shared between a bunch of different things n is treated specially. if it's set, you'll automatically try to roll that subclass
+	var/favorite_name = favorite ? favorite::name : "Choose"
+	var/HTML = {"
+		<i>You can choose a favorite subclass here. You'll automatically select this subclass on roundstart if possible.</i><br/><br/>
+		<b>Selected class:</b> <a href="?src=[REF(src)];class=1">[favorite_name]</a><br/><br/>
+		<i>Set your [title]-specific bounty here. If a global bounty is set, this will override it.</i><br><i>Any fields set here will not prompt you at roundstart.</i><br/><br/>
+		<b>Bounty Poster:</b> <a href="?src=[REF(src)];poster=1">[roleprefs["bounty_poster_key"]?GLOB.bounty_posters[roleprefs["bounty_poster_key"]]:"Unset"]</a><br/>
+		<b>Bounty Severity:</b> <a href="?src=[REF(src)];severity=1">[roleprefs["bounty_severity_key"]?GLOB.wretch_severities[roleprefs["bounty_severity_key"]]:"Unset"]</a><br/>
+		<b>Bounty Reason:</b> <a href="?src=[REF(src)];crime=1">[roleprefs["my_crime"]?"Edit":"Unset"]</a><br/>
+		[roleprefs["my_crime"]?"<hr/>[roleprefs["my_crime"]]<hr/>":""]<br/>
+		<center><a href="?src=[REF(src)];subprefsexit=1">EXIT</a>\t\t<a href="?src=[REF(src)];subprefsreset=1">RESET</a></center>
+	"}
+	// the fact that the window width/height will be different each time is the main reason this isn't all done in a parent proc on /datum/job
+	var/datum/browser/popup = new(user, "[JOB_SUBPREFS_WINDOW_ID]", "<div align='center'>[title] Preferences</div>", 500, 500)
+	popup.set_content(HTML)
+	popup.open(FALSE)
+	if(winexists(usr, "[JOB_SUBPREFS_WINDOW_ID]"))
+		winset(usr, "[JOB_SUBPREFS_WINDOW_ID]", "focus=true")
 
 /datum/job/roguetown/wretch/special_job_check(mob/dead/new_player/player)
 	if(is_storyteller_soft_antag_blocked())
@@ -86,8 +138,12 @@
 	var/bounty_poster_key
 	var/bounty_severity_key
 	var/my_crime
-
-	if(P?.preset_bounty_enabled)
+	var/list/roleprefs = P?.job_subprefs?["Wretch"]
+	if(roleprefs && length(roleprefs))
+		bounty_poster_key = roleprefs["bounty_poster_key"]
+		bounty_severity_key = roleprefs["bounty_severity_key"]
+		my_crime = roleprefs["my_crime"]
+	else if(P?.preset_bounty_enabled)
 		bounty_poster_key = P.preset_bounty_poster_key
 		bounty_severity_key = P.preset_bounty_severity_key
 		my_crime = P.preset_bounty_crime
@@ -140,7 +196,10 @@
 		d_list, H, list(MOB_DESCRIPTOR_SLOT_VOICE), "%DESC1%"
 	)
 	add_bounty(H.real_name, race, gender, descriptor_height, descriptor_body, descriptor_voice, bounty_total, FALSE, my_crime, bounty_poster)
-	to_chat(H, span_danger("You are playing an Antagonist role. By choosing to spawn as a Wretch, you are expected to actively create conflict with other players. Failing to play this role with the appropriate gravitas may result in punishment for Low Roleplay standards."))
+	if(H.has_flaw(/datum/charflaw/wanted))
+		to_chat(H, span_danger("You are wanted; you have a price on your head. Expect conflict to find you whether you seek it or not."))
+	else
+		to_chat(H, span_danger("You are playing an Antagonist role. By choosing to spawn as a Wretch, you are expected to actively create conflict with other players. Failing to play this role with the appropriate gravitas may result in punishment for Low Roleplay standards."))
 
 /// Returns an assoc list with all intermediate wretch scaling values for admin display.
 /// If override_player_count is provided (e.g. from readied player count at roundstart), use that instead of the live joined list.
@@ -149,38 +208,13 @@
 	var/player_count = override_player_count || length(GLOB.joined_player_list)
 	result["player_count"] = player_count
 	var/cap = SSgamemode.current_storyteller?.wretch_slot_cap
+	if(!SSgamemode.allow_vote && !isnull(SSgamemode.admin_slots["Wretch"]))
+		cap = max(0, SSgamemode.admin_slots["Wretch"])
 	if(isnull(cap))
 		cap = 10
 	result["cap"] = cap
-	if(is_storyteller_soft_antag_blocked())
-		result["tier1_slots"] = 0
-		result["major_antag_active"] = FALSE
-		result["garrison"] = SSgamemode.garrison
-		result["holy_warrior"] = SSgamemode.holy_warrior
-		result["acolyte"] = SSgamemode.half_combatant
-		result["combat_total"] = SSgamemode.garrison + SSgamemode.holy_warrior + FLOOR(SSgamemode.half_combatant * 0.5, 1)
-		result["tier2_extra"] = 0
-		result["final_slots"] = 0
-		return result
 
-	// Tier 1: Population scaling, +1 per 10 players above 40, capped per pantheon
-	var/slots = 5
-	if(player_count > 40)
-		slots += floor((player_count - 40) / 10)
-	slots = min(slots, cap)
-	result["tier1_slots"] = slots
-
-	// Check for major round antagonists (lich, vampire lord, any bandits) — hard cap at tier 1
-	var/major_antag_active = FALSE
-	for(var/datum/antagonist/antag as anything in GLOB.antagonists)
-		if(QDELETED(antag) || QDELETED(antag.owner))
-			continue
-		if(istype(antag, /datum/antagonist/lich) || istype(antag, /datum/antagonist/vampire/lord) || istype(antag, /datum/antagonist/bandit))
-			major_antag_active = TRUE
-			break
-	result["major_antag_active"] = major_antag_active
-
-	// Tier 2: Garrison-gated expansion above 10, bounded by per-pantheon cap.
+	// Combat population (garrison + holy warriors + half-weight acolytes) - used for tier 2 and the readout.
 	var/garrison_count = SSgamemode.garrison
 	var/holy_count = SSgamemode.holy_warrior
 	var/acolyte_count = SSgamemode.half_combatant
@@ -190,6 +224,38 @@
 	result["acolyte"] = acolyte_count
 	result["combat_total"] = combat_count
 
+	if(is_storyteller_soft_antag_blocked())
+		result["tier1_slots"] = 0
+		result["major_antag_active"] = FALSE
+		result["tier2_extra"] = 0
+		result["final_slots"] = 0
+		return result
+
+	// Check for major round antagonists (lich, vampire lord, any bandits) — they lock tier 2.
+	var/major_antag_active = FALSE
+	for(var/datum/antagonist/antag as anything in GLOB.antagonists)
+		if(QDELETED(antag) || QDELETED(antag.owner))
+			continue
+		if(istype(antag, /datum/antagonist/lich) || istype(antag, /datum/antagonist/vampire/lord) || istype(antag, /datum/antagonist/bandit))
+			major_antag_active = TRUE
+			break
+	result["major_antag_active"] = major_antag_active
+
+	// Admin disabled soft scaling: wretches are fixed at the admin's chosen number (the cap), no pop scaling.
+	if(!SSgamemode.allow_vote && !SSgamemode.soft_scaling)
+		result["tier1_slots"] = cap
+		result["tier2_extra"] = 0
+		result["final_slots"] = cap
+		return result
+
+	// Tier 1: base 5, +1 per 10 players above 40, clamped to cap. (Unchanged preset scaling.)
+	var/slots = 5
+	if(player_count > 40)
+		slots += floor((player_count - 40) / 10)
+	slots = min(slots, cap)
+	result["tier1_slots"] = slots
+
+	// Tier 2: Garrison-gated expansion above 10, bounded by the cap.
 	var/tier2_max = 0
 	if(slots >= 10 && cap > 10 && !major_antag_active)
 		tier2_max = min(max(0, combat_count - 10), 5, cap - slots)
@@ -205,6 +271,7 @@
 		return
 	if(wretch_job.admin_slot_override)
 		return
+	// Admin fine-tuning (the Wretch slot as a scaling cap) is handled inside calculate_wretch_scaling().
 	var/list/scaling = calculate_wretch_scaling(override_player_count)
 	var/slots = max(0, scaling["final_slots"])
 	// Never reduce below current occupancy

@@ -22,6 +22,13 @@
 	if(!CheckAdminHref(href, href_list))
 		return
 
+	if(href_list["read_letter"])
+		var/index = text2num(href_list["read_letter"])
+		if(index >= 1 && index <= length(SSroguemachine.letter_archive))
+			var/datum/letter_record/R = SSroguemachine.letter_archive[index]
+			R.show_letter(usr)
+		return
+
 	// Open Heal Panel from Player Panel
 	if(href_list["heal_panel"])
 		var/mob/living/M = locate(href_list["heal_panel"])
@@ -133,7 +140,7 @@
 				current_value = M.getToxLoss()
 			else if(damage_type == "oxy")
 				current_value = M.getOxyLoss()
-			
+
 			var/new_value = input(usr, "Set [damage_type] damage:", "Edit Damage", current_value) as num|null
 			if(new_value != null)
 				new_value = max(0, new_value)
@@ -160,7 +167,7 @@
 				current_value = H.getToxLoss()
 			else if(damage_type == "oxy")
 				current_value = H.getOxyLoss()
-			
+
 			var/new_value = input(usr, "Set [damage_type] damage:", "Edit Damage", current_value) as num|null
 			if(new_value != null)
 				new_value = max(0, new_value)
@@ -183,7 +190,7 @@
 				current_value = BP.brute_dam
 			else if(damage_type == "burn")
 				current_value = BP.burn_dam
-			
+
 			var/new_value = input(usr, "Set [damage_type] damage for [BP.name]:", "Edit Damage", current_value) as num|null
 			if(new_value != null)
 				new_value = max(0, new_value)
@@ -227,29 +234,29 @@
 			if(wound_choice)
 				var/wound_path = wound_types[wound_choice]
 				// Apply body-part-specific wound variants
-				
+
 				if(wound_choice == "Fracture")
 					if(BP.body_zone == BODY_ZONE_HEAD)
 						wound_path = /datum/wound/fracture/head
 					else if(BP.body_zone == BODY_ZONE_CHEST)
 						wound_path = /datum/wound/fracture/chest
-				
+
 				else if(wound_choice == "Artery")
 					if(BP.body_zone == BODY_ZONE_HEAD)
 						wound_path = /datum/wound/artery/neck
 					else if(BP.body_zone == BODY_ZONE_CHEST)
 						wound_path = /datum/wound/artery/chest
-				
+
 				else if(wound_choice == "Integrity")
 					if(BP.body_zone == BODY_ZONE_HEAD)
 						wound_path = /datum/wound/integrity/neck
 					else if(BP.body_zone == BODY_ZONE_CHEST)
 						wound_path = /datum/wound/integrity/chest
-				
+
 				else if(wound_choice == "Dislocation")
 					if(BP.body_zone == BODY_ZONE_HEAD)
 						wound_path = /datum/wound/dislocation/neck
-				
+
 				// Check for wound subtypes (like small/large punctures, small/large slashes, etc.)
 				var/list/wound_subtypes = list()
 				for(var/subtype in subtypesof(wound_path))
@@ -257,7 +264,7 @@
 					var/wound_name = initial(W.name)
 					if(wound_name && wound_name != initial(wound_path:name))
 						wound_subtypes[wound_name] = subtype
-				
+
 				// If there are subtypes, let the user choose
 				if(wound_subtypes.len > 0)
 					var/subtype_choice = input(usr, "Select wound severity:", "Wound Tier") as null|anything in wound_subtypes
@@ -266,7 +273,7 @@
 					else
 						show_heal_panel(M)
 						return
-				
+
 				BP.add_wound(wound_path)
 				var/datum/wound/applied_wound = wound_path
 				var/wound_display_name = initial(applied_wound:name)
@@ -462,7 +469,7 @@
 
 		var/delmob = TRUE
 		if(!isobserver(M))
-			switch(alert("Delete old mob?","Message","Yes","No","Cancel"))
+			switch(alert(usr, "Delete old mob?","Message","Yes","No","Cancel"))
 				if("Cancel")
 					return
 				if("No")
@@ -480,8 +487,6 @@
 				var/mob/living/carbon/human/newmob = M.change_mob_type( /mob/living/carbon/human , null, null, delmob )
 				if(posttransformoutfit && istype(newmob))
 					newmob.equipOutfit(posttransformoutfit)
-			if("monkey")
-				M.change_mob_type( /mob/living/carbon/monkey , null, null, delmob )
 			if("cat")
 				M.change_mob_type( /mob/living/simple_animal/pet/cat , null, null, delmob )
 			if("runtime")
@@ -555,7 +560,7 @@
 	else if(href_list["deletemessage"])
 		if(!check_rights(R_BAN))
 			return
-		var/safety = alert("Delete message/note?",,"Yes","No");
+		var/safety = alert(usr, "Delete message/note?",,"Yes","No");
 		if (safety == "Yes")
 			var/message_id = href_list["deletemessage"]
 			delete_message(message_id)
@@ -563,7 +568,7 @@
 	else if(href_list["deletemessageempty"])
 		if(!check_rights(R_BAN))
 			return
-		var/safety = alert("Delete message/note?",,"Yes","No");
+		var/safety = alert(usr, "Delete message/note?",,"Yes","No");
 		if (safety == "Yes")
 			var/message_id = href_list["deletemessageempty"]
 			delete_message(message_id, browse = TRUE)
@@ -692,7 +697,7 @@
 		GLOB.master_mode = href_list["c_mode2"]
 		log_admin("[key_name(usr)] set the mode as [GLOB.master_mode].")
 		message_admins(span_adminnotice("[key_name_admin(usr)] set the mode as [GLOB.master_mode]."))
-		to_chat(world, span_adminnotice("<b>The mode is now: [GLOB.master_mode]</b>"))
+		to_world(span_adminnotice("<b>The mode is now: [GLOB.master_mode]</b>"))
 		Game() // updates the main game menu
 		if (askuser(usr, "Would you like to save this as the default mode for the server?", "Save mode", "Yes", "No", Timeout = null) == 1)
 			SSticker.save_mode(GLOB.master_mode)
@@ -711,32 +716,6 @@
 		message_admins(span_adminnotice("[key_name_admin(usr)] set the forced secret mode as [GLOB.secret_force_mode]."))
 		Game() // updates the main game menu
 		HandleFSecret()
-
-	else if(href_list["monkeyone"])
-		if(!check_rights(R_SPAWN))
-			return
-
-		var/mob/living/carbon/human/H = locate(href_list["monkeyone"])
-		if(!istype(H))
-			to_chat(usr, "This can only be used on instances of type /mob/living/carbon/human.")
-			return
-
-		log_admin("[key_name(usr)] attempting to monkeyize [key_name(H)].")
-		message_admins(span_adminnotice("[key_name_admin(usr)] attempting to monkeyize [key_name_admin(H)]."))
-		H.monkeyize()
-
-	else if(href_list["humanone"])
-		if(!check_rights(R_SPAWN))
-			return
-
-		var/mob/living/carbon/monkey/Mo = locate(href_list["humanone"])
-		if(!istype(Mo))
-			to_chat(usr, "This can only be used on instances of type /mob/living/carbon/monkey.")
-			return
-
-		log_admin("[key_name(usr)] attempting to humanize [key_name(Mo)].")
-		message_admins(span_adminnotice("[key_name_admin(usr)] attempting to humanize [key_name_admin(Mo)]."))
-		Mo.humanize()
 
 	else if(href_list["corgione"])
 		if(!check_rights(R_SPAWN))
@@ -760,7 +739,7 @@
 		if(!ismob(M))
 			to_chat(usr, "this can only be used on instances of type /mob.")
 
-		var/speech = input("What will [key_name(M)] say?", "Force speech", "")// Don't need to sanitize, since it does that in say(), we also trust our admins.
+		var/speech = input(usr, "What will [key_name(M)] say?", "Force speech", "")// Don't need to sanitize, since it does that in say(), we also trust our admins.
 		if(!speech)
 			return
 		M.say(speech, forced = "admin speech")
@@ -802,7 +781,10 @@
 			to_chat(usr, span_warning("[M] doesn't seem to have an active client."))
 			return
 		var/datum/job/mob_job
-		var/target_job = SSrole_class_handler.get_advclass_by_name(M.advjob)
+		var/datum/advclass/target_job
+		if(ishuman(M))
+			var/mob/living/carbon/human/H = M
+			target_job = H.get_advclass_datum()
 		if(M.mind)
 			mob_job = SSjob.GetJob(M.mind.assigned_role)
 			if(mob_job)
@@ -818,7 +800,6 @@
 		log_admin("[key_name(usr)] has sent [key_name(M)] back to the Lobby.")
 		GLOB.chosen_names -= M.real_name
 		LAZYREMOVE(GLOB.actors_list, M.mobid)
-		LAZYREMOVE(GLOB.roleplay_ads, M.mobid)
 		SSdroning.kill_droning(M.client)
 		SSdroning.kill_loop(M.client)
 		SSdroning.kill_rain(M.client)
@@ -864,26 +845,7 @@
 		if(!isobserver(usr) && !check_rights(R_ADMIN))
 			return
 
-		var/atom/movable/AM = locate(href_list["adminplayerobservefollow"])
-
-		var/client/C = usr.client
-		var/can_ghost = TRUE
-		if(!isobserver(usr))
-			can_ghost = C.admin_ghost()
-
-		if(!can_ghost)
-			return
-		var/mob/dead/observer/A = C.mob
-		A.ManualFollow(AM)
-
-	else if(href_list["admingetmovable"])
-		if(!check_rights(R_ADMIN))
-			return
-
-		var/atom/movable/AM = locate(href_list["admingetmovable"])
-		if(QDELETED(AM))
-			return
-		AM.forceMove(get_turf(usr))
+		usr.client?.admin_follow(locate(href_list["adminplayerobservefollow"]))
 
 	else if(href_list["adminplayerobservecoodjump"])
 		if(!isobserver(usr) && !check_rights(R_ADMIN))
@@ -1179,18 +1141,18 @@
 		var/patron_type = text2path(href_list["patron"])
 		if(!patron_type)
 			return
-		
+
 		// For divine spellcasters (those with devotion), we need to handle spells specially
 		var/is_divine_caster = FALSE
 		if(ishuman(M))
 			var/mob/living/carbon/human/H = M
 			if(H.devotion)
 				is_divine_caster = TRUE
-		
+
 		// Remove old patron bonuses/spells
 		if(M.patron)
 			M.patron.on_loss(M)
-			
+
 			// For divine casters, remove devotion spells from old patron
 			if(is_divine_caster && ishuman(M))
 				var/mob/living/carbon/human/H = M
@@ -1198,10 +1160,10 @@
 					for(var/spell_type in M.patron.miracles)
 						if(H.mind?.has_spell(spell_type))
 							H.mind.RemoveSpell(spell_type)
-		
+
 		// Set new patron
 		M.set_patron(patron_type)
-		
+
 		// For divine casters, grant new patron's devotion spells
 		if(is_divine_caster && ishuman(M))
 			var/mob/living/carbon/human/H = M
@@ -1210,7 +1172,7 @@
 				H.devotion.patron = M.patron
 				// Update the level to trigger spell granting
 				H.devotion.try_add_spells(silent = FALSE)
-		
+
 		message_admins(span_danger("Admin [key_name_admin(usr)] changed [key_name_admin(M)]'s patron to [initial(M.patron.name)]"))
 		log_admin("[usr] changed [M]'s patron to [initial(M.patron.name)].")
 		show_player_panel_next(M, "patron")
@@ -1246,6 +1208,17 @@
 			return
 
 		show_individual_logging_panel(M, href_list["log_src"], href_list["log_type"])
+	else if(href_list["examine_player"])
+		if(!check_rights(R_ADMIN))
+			return
+
+		var/mob/living/target = locate(href_list["examine_player"]) in GLOB.mob_list
+		if(!isliving(target))
+			return
+
+		var/datum/examine_panel/mob_examine_panel = new(target)
+		mob_examine_panel.viewing = usr
+		mob_examine_panel.ui_interact(usr)
 	else if(href_list["languagemenu"])
 		if(!check_rights(R_ADMIN))
 			return
@@ -1262,7 +1235,7 @@
 			return
 
 		if(!SSticker.HasRoundStarted())
-			alert("The game hasn't started yet!")
+			alert(usr, "The game hasn't started yet!")
 			return
 
 		var/mob/M = locate(href_list["traitor"])
@@ -1333,10 +1306,10 @@
 			paths += path
 
 		if(!paths)
-			alert("The path list you sent is empty.")
+			alert(usr, "The path list you sent is empty.")
 			return
 		if(length(paths) > 5)
-			alert("Select fewer object types, (max 5).")
+			alert(usr, "Select fewer object types, (max 5).")
 			return
 
 		var/list/offset = splittext(href_list["offset"],",")
@@ -1353,7 +1326,7 @@
 		var/obj_quality_set = FALSE
 		if(length(quality_raw))
 			obj_quality = text2num(quality_raw)
-			if(obj_quality != null && obj_quality >= ITEM_QUALITY_RUINED && obj_quality <= ITEM_QUALITY_MASTERWORK)
+			if(!isnull(obj_quality) && obj_quality >= ITEM_QUALITY_RUINED && obj_quality <= ITEM_QUALITY_MASTERWORK)
 				obj_quality_set = TRUE
 			else
 				obj_quality = null
@@ -1427,9 +1400,7 @@
 									var/obj/item/ingot/ING = spawned_item
 									ING.apply_smelt_quality(obj_quality)
 								else if(spawned_item.has_item_quality)
-									spawned_item.item_quality = obj_quality
-									if(initial(spawned_item.sellprice) > 0)
-										spawned_item.sellprice = max(1, round(initial(spawned_item.sellprice) * ITEM_QUALITY_MULT(obj_quality)))
+									spawned_item.apply_quality(null, null, obj_quality)
 							if(obj_name)
 								O.name = obj_name
 								if(ismob(O))
@@ -1455,8 +1426,8 @@
 									ADD_TRAIT(living_mob, TRAIT_DUST_DELETE_GEAR, TRAIT_GENERIC)
 							if(ishuman(O))
 								var/mob/living/carbon/human/spawned_human = O
-								spawned_human.taints_loot_on_death = !!href_list["taint_loot"]
-								if(!spawned_human.taints_loot_on_death)
+								spawned_human.taints_loot = !!href_list["taints_loot"]
+								if(!spawned_human.taints_loot)
 									for(var/obj/item/I in spawned_human.get_equipped_items(TRUE) + spawned_human.held_items)
 										I.unmark_as_looted()
 							if(where == "inhand" && isliving(usr) && isitem(O))
@@ -1489,7 +1460,7 @@
 			return
 		if(SSticker.IsRoundInProgress())
 			var/afkonly = text2num(href_list["afkonly"])
-			if(alert("Are you sure you want to kick all [afkonly ? "AFK" : ""] clients from the lobby??","Message","Yes","Cancel") != "Yes")
+			if(alert(usr, "Are you sure you want to kick all [afkonly ? "AFK" : ""] clients from the lobby??","Message","Yes","Cancel") != "Yes")
 				to_chat(usr, "Kick clients from lobby aborted")
 				return
 			var/list/listkicked = kick_clients_in_lobby(span_danger("I were kicked from the lobby by [usr.client.holder.fakekey ? "an Administrator" : "[usr.client.key]"]."), afkonly)
@@ -1592,7 +1563,7 @@
 	else if(href_list["rebootworld"])
 		if(!check_rights(R_ADMIN))
 			return
-		var/confirm = alert("Are you sure you want to reboot the server?", "Confirm Reboot", "Yes", "No")
+		var/confirm = alert(usr, "Are you sure you want to reboot the server?", "Confirm Reboot", "Yes", "No")
 		if(confirm == "No")
 			return
 		if(confirm == "Yes")
@@ -1650,15 +1621,15 @@
 			return
 		var/mob/M = locate(href_list["mob"]) in GLOB.mob_list
 		var/client/mob_client = M.client
-		var/amt2change = input("How much to modify the PQ by? (20 to -20, or 0 to just add a note)") as null|num
+		var/amt2change = input(usr, "How much to modify the PQ by? (20 to -20, or 0 to just add a note)") as null|num
 		if(!check_rights(R_BAN,0))
 			amt2change = CLAMP(amt2change, -20, 20)
-		var/raisin = stripped_input("State a short reason for this change", "Game Master", "", null)
+		var/raisin = stripped_input(usr, "State a short reason for this change", "Game Master", "", null)
 		if((!isnull(amt2change) && amt2change != 0) && !raisin)
 			return
 		adjust_playerquality(amt2change, mob_client.ckey, usr.ckey, raisin)
 		for(var/client/C in GLOB.clients) // I hate this, but I'm not refactoring the cancer above this point.
-			if(lowertext(C.key) == lowertext(mob_client.ckey))
+			if(LOWER_TEXT(C.key) == LOWER_TEXT(mob_client.ckey))
 				to_chat(C, "<span class=\"admin\"><span class=\"prefix\">ADMIN LOG:</span> <span class=\"message linkify\">Your PQ has been adjusted by [amt2change] by [usr.key] for reason: [raisin]</span></span>")
 				return
 	else if(href_list["showpq"])
@@ -1681,7 +1652,7 @@
 		var/raisin = stripped_input(usr, "State a short reason for this change", "Game Master", null, null)
 		if(!amt2change || !raisin)
 			return
-		M.adjust_triumphs(amt2change, FALSE, raisin)
+		M.adjust_triumphs(amt2change, FALSE, "Edit Triumphs (Game Master panel) by [usr.key]: [raisin]")
 		message_admins("[usr.key] adjusted [M.key]'s triumphs by [amt2change] with [!raisin ? "no reason given" : "reason: [raisin]"].")
 		log_admin("[usr.key] adjusted [M.key]'s triumphs by [amt2change] with [!raisin ? "no reason given" : "reason: [raisin]"].")
 

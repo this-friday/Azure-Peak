@@ -27,14 +27,22 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	var/loot_budget = 0
 	/// Pool key for grouping multiple sub-areas into one shared pool. Areas with the same key share one budget. Defaults to own type path.
 	var/loot_pool_key
-	/// If TRUE, this area's pool is not auto-processed at SSatoms init. Use for areas built incrementally by the dungeon generator - call process_deferred_loot_pools() once generation finishes.
-	var/loot_pool_deferred = FALSE
 	var/no_structure_craft = FALSE
 
-/area/rogue/Entered(mob/living/carbon/human/guy)
+/area/rogue/Entered(atom/movable/AM)
 	. = ..()
+	if(!ishuman(AM))
+		return
+	var/mob/living/carbon/human/guy = AM
 	if((src.town_area == TRUE) && HAS_TRAIT(guy, TRAIT_GUARDSMAN) && !guy.has_status_effect(/datum/status_effect/buff/guardbuffone)) //man at arms
 		guy.apply_status_effect(/datum/status_effect/buff/guardbuffone)
+	if(GLOB.roguetown_areas_typecache[type]) // risen peasant rebels regain their fervor in town and its underways
+		var/datum/antagonist/prebel/rebel_datum = guy.mind ? guy.mind.has_antag_datum(/datum/antagonist/prebel) : null
+		if(rebel_datum && rebel_datum.uprisen)
+			if(!guy.has_status_effect(/datum/status_effect/buff/rebel_town_gated/uprising))
+				guy.apply_status_effect(/datum/status_effect/buff/rebel_town_gated/uprising)
+			if(istype(rebel_datum, /datum/antagonist/prebel/head) && !guy.has_status_effect(/datum/status_effect/buff/rebel_town_gated/leader))
+				guy.apply_status_effect(/datum/status_effect/buff/rebel_town_gated/leader)
 	if((src.tavern_area == TRUE) && HAS_TRAIT(guy, TRAIT_TAVERN_FIGHTER) && !guy.has_status_effect(/datum/status_effect/buff/innkeeperbuff)) // THE FIGHTER
 		guy.apply_status_effect(/datum/status_effect/buff/innkeeperbuff)
 	if((src.warden_area == TRUE) && HAS_TRAIT(guy, TRAIT_WOODSMAN) && !guy.has_status_effect(/datum/status_effect/buff/wardenbuff)) // Warden
@@ -95,7 +103,7 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 /area/rogue/indoors/ravoxarena/can_craft_here()
 	return FALSE
 
-/area/rogue/indoors/ravoxarena/proc/cleanthearena(var/turf/returnzone)
+/area/rogue/indoors/ravoxarena/proc/cleanthearena(turf/returnzone)
 	for(var/obj/item/trash in src)
 		do_teleport(trash, returnzone)
 	GLOB.arenafolks.len = list()
@@ -155,6 +163,7 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	soundenv = 17
 	converted_type = /area/rogue/indoors/shelter/mountains
 	deathsight_message = "a twisted tangle of soaring peaks"
+	area_sniff_message = "You smell little but stone."
 	// I SURE HOPE NO ONE USE THIS HUH
 
 
@@ -169,20 +178,17 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	name = "Azure Basin"
 	icon_state = "rtfield"
 	soundenv = 19
-	ambush_times = list("night")
+	ambush_factions = list()
 	ambush_mobs = list(
-				/mob/living/simple_animal/hostile/retaliate/rogue/badger = 10,
-				/mob/living/simple_animal/hostile/retaliate/rogue/raccoon = 25,
-				/mob/living/simple_animal/hostile/retaliate/rogue/bobcat = 20,
-				/mob/living/simple_animal/hostile/retaliate/rogue/wolf = 30,
-				/mob/living/simple_animal/hostile/retaliate/rogue/fox = 30,
-				/mob/living/carbon/human/species/skeleton/npc/supereasy = 30)
+		/mob/living/simple_animal/hostile/retaliate/rogue/fox = 26,
+	)
 	first_time_text = "AZURE BASIN"
 	droning_sound = 'sound/music/area/field.ogg'
 	droning_sound_dusk = 'sound/music/area/septimus.ogg'
 	droning_sound_night = 'sound/music/area/sleeping.ogg'
 	converted_type = /area/rogue/indoors/shelter/rtfield
 	deathsight_message = "somewhere in the wilds, next to towering walls"
+	area_sniff_message = "You smell the fields, grass, and the distant stench of town."
 	warden_area = TRUE
 	threat_region = THREAT_REGION_AZURE_BASIN
 
@@ -193,6 +199,7 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	droning_sound = list('sound/ambience/riverday (1).ogg','sound/ambience/riverday (2).ogg','sound/ambience/riverday (3).ogg')
 	droning_sound_dusk = 'sound/music/area/septimus.ogg'
 	droning_sound_night = list ('sound/ambience/rivernight (1).ogg','sound/ambience/rivernight (2).ogg','sound/ambience/rivernight (3).ogg' )
+	area_sniff_message = "You smell old roots and burnt swampweed."
 
 /area/rogue/indoors/shelter/rtfield
 	icon_state = "rtfield"
@@ -228,16 +235,16 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	ambientnight = AMB_CAVELAVA
 	spookysounds = SPOOKY_CAVE
 	spookynight = SPOOKY_CAVE
-	ambush_times = list("night","dawn","dusk","day")
+	ambush_factions = list()
 	ambush_mobs = list(
-				/mob/living/simple_animal/hostile/retaliate/rogue/bigrat = 10,
-				/mob/living/carbon/human/species/skeleton/npc/ambush = 20,
-				/mob/living/carbon/human/species/goblin/npc/hell = 25,
-				/mob/living/simple_animal/hostile/retaliate/rogue/minotaur = 15)
+		/mob/living/simple_animal/hostile/retaliate/rogue/bigrat = 25,
+		/mob/living/carbon/human/species/skeleton/npc/ambush = 50,
+	)
 	droning_sound = 'sound/music/area/decap.ogg'
 	droning_sound_dusk = null
 	droning_sound_night = null
 	converted_type = /area/rogue/outdoors/exposed/decap
+	area_sniff_message = "You smell sulfur"
 
 /area/rogue/outdoors/exposed/decap
 	icon_state = "decap"
@@ -295,13 +302,14 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	first_time_text = "THE CITY OF AZURE PEAK"
 	town_area = TRUE
 	fog_protected = TRUE
+	area_sniff_message = "You smell the stench of the town."
 
 /area/rogue/indoors/shelter/town
 	icon_state = "town"
 	droning_sound = 'sound/music/area/townstreets.ogg'
 	droning_sound_dusk = 'sound/music/area/septimus.ogg'
 	droning_sound_night = 'sound/music/area/sleeping.ogg'
-
+	area_sniff_message = "You smell the stench of the town."
 
 /area/rogue/outdoors/town/sargoth
 	name = "outdoors"
@@ -312,6 +320,7 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	droning_sound_night = null
 	converted_type = /area/rogue/indoors/shelter/town/sargoth
 	first_time_text = "SARGOTH"
+
 /area/rogue/indoors/shelter/town/sargoth
 	icon_state = "sargoth"
 	droning_sound = 'sound/music/area/sargoth.ogg'
@@ -337,6 +346,7 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	icon_state = "manor"
 	keep_area = TRUE
 	town_area = TRUE
+	area_sniff_message = "You smell the stench of the keep."
 
 /area/rogue/indoors/shelter/town/roofs
 	icon_state = "roofs"
@@ -353,6 +363,7 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	first_time_text = "The Dwarven Quarter"
 	soundenv = 16
 	converted_type = /area/rogue/indoors/shelter/town/dwarf
+
 /area/rogue/indoors/shelter/town/dwarf
 	icon_state = "dwarf"
 	droning_sound = 'sound/music/area/dwarf.ogg'
@@ -436,7 +447,7 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	name = "a roughly-hewn tunnel"
 	icon_state = "indoors"
 	soundenv = 18
-	converted_type = /area/rogue/outdoors/warcamp/outskirts/cave	
+	converted_type = /area/rogue/outdoors/warcamp/outskirts/cave
 	first_time_text = "A TUNNEL BELOW"
 	ambientsounds = AMB_CAVEWATER
 	ambientnight = AMB_CAVEWATER
@@ -560,14 +571,189 @@ GLOBAL_LIST_INIT(roguetown_areas_typecache, typecacheof(list(/area/rogue/indoors
 	name = "dream realm"
 	icon_state = "dream"
 	first_time_text = "Abyssal Dream"
-
-
+	deathsight_message = "a vast, endless dreamscape"
+	area_sniff_message = "YOU SMELL ANCIENT HORROR."
 
 /area/rogue/indoors/deathsedge
 	name = "Death's Precipice"
-	deathsight_message = "an place bordering necra's grasp"
+	deathsight_message = "a place bordering necra's grasp"
 	necra_area = TRUE
 	droning_sound = 'sound/music/area/underworlddrone.ogg'
 	droning_sound_dusk = null
 	droning_sound_night = null
 	first_time_text = "DEATHS PRECIPICE"
+//PILGRIM
+
+/area/rogue/outdoors/rtfield/grim
+	name = "Jaggedjaw Basin"
+	icon_state = "rtfield"
+	soundenv = 19
+	ambush_factions = list()
+	ambush_mobs = list(
+		/mob/living/simple_animal/hostile/retaliate/rogue/fox = 26,
+	)
+	first_time_text = "JAGGEDJAW BASIN"
+	droning_sound = list(, 'sound/music/area/grimtwilight.ogg', 'sound/music/area/grimdrama.ogg')
+	droning_sound_dusk = 'sound/music/area/grimdusk.ogg'
+	droning_sound_night = 'sound/music/area/grimfield.ogg'
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	converted_type = /area/rogue/indoors/shelter/rtfield/grim
+	deathsight_message = "Somewhere in the wilds, near a flowing river and flanking cliffs"
+	warden_area = TRUE
+	threat_region = THREAT_REGION_AZURE_BASIN
+
+/area/rogue/outdoors/rtfield/grim/south
+	name = "Jaggedjaw Basin South"
+	icon_state = "rtfield"
+	soundenv = 19
+	ambush_factions = list()
+	ambush_mobs = list(
+		/mob/living/simple_animal/hostile/retaliate/rogue/fox = 26,
+	)
+	first_time_text = "JAGGEDJAW BASIN SOUTH"
+	droning_sound = list(, 'sound/music/area/grimtwilight.ogg', 'sound/music/area/grimdrama.ogg')
+	droning_sound_dusk = 'sound/music/area/grimdusk.ogg'
+	droning_sound_night = 'sound/music/area/grimfield.ogg'
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	converted_type = /area/rogue/indoors/shelter/rtfield/grim
+	deathsight_message = "Somewhere in the wilds, within a basin of woods"
+	warden_area = TRUE
+	threat_region = THREAT_REGION_AZURE_BASIN
+
+/area/rogue/outdoors/town/grim
+	name = "pilgrim outdoors"
+	icon_state = "town"
+	soundenv = 16
+	droning_sound = list('sound/music/area/towngen.ogg', 'sound/music/area/townchill.ogg', 'sound/music/area/townstroll.ogg', 'sound/music/area/townwander.ogg')
+	droning_sound_dusk = 'sound/music/area/townalright.ogg'
+	droning_sound_night = list('sound/music/area/townambient.ogg', 'sound/music/area/grimnight.ogg')
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	converted_type = /area/rogue/indoors/shelter/town/grim
+	first_time_text = "THE CITY OF PILGRIM"
+	town_area = TRUE
+	fog_protected = TRUE
+
+/area/rogue/indoors/shelter/town/grim
+	icon_state = "town"
+	droning_sound = list('sound/music/area/towngen.ogg', 'sound/music/area/townchill.ogg', 'sound/music/area/townstroll.ogg', 'sound/music/area/townwander.ogg')
+	droning_sound_dusk = 'sound/music/area/townalright.ogg'
+	droning_sound_night = list('sound/music/area/townambient.ogg', 'sound/music/area/grimnight.ogg')
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	deathsight_message = "A vague indoor space- somewhere in the city"
+
+/area/rogue/druidsgrove/grim
+	name = "jaggedjaw Druids grove"
+	icon_state = "rtfield"
+	first_time_text = "Druids grove"
+	droning_sound = list('sound/ambience/riverday (1).ogg','sound/ambience/riverday (2).ogg','sound/ambience/riverday (3).ogg')
+	droning_sound_dusk = 'sound/music/area/grimdusk.ogg'
+	droning_sound_night = list ('sound/ambience/rivernight (1).ogg','sound/ambience/rivernight (2).ogg','sound/ambience/rivernight (3).ogg' )
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+
+/area/rogue/druidsgrove/grim/tree
+	name = "jaggedjaw Druids tree"
+	icon_state = "rtfield"
+	first_time_text = "Druids tree"
+	converted_type = /area/rogue/druidsgrove/grim
+	droning_sound = list('sound/ambience/riverday (1).ogg','sound/ambience/riverday (2).ogg','sound/ambience/riverday (3).ogg')
+	droning_sound_dusk = 'sound/music/area/grimdusk.ogg'
+	droning_sound_night = list ('sound/ambience/rivernight (1).ogg','sound/ambience/rivernight (2).ogg','sound/ambience/rivernight (3).ogg' )
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+
+/area/rogue/indoors/shelter/rtfield/grim
+	icon_state = "rtfield"
+	droning_sound = list(, 'sound/music/area/grimtwilight.ogg', 'sound/music/area/grimdrama.ogg')
+	droning_sound_dusk = 'sound/music/area/grimdusk.ogg'
+	droning_sound_night = 'sound/music/area/grimfield.ogg'
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	deathsight_message = "Undercover wilderness, near city walls"
+
+/area/rogue/outdoors/mountains/grim
+	name = "jaggedjaw Mountains"
+	icon_state = "mountains"
+	ambientsounds = AMB_MOUNTAIN
+	ambientnight = AMB_MOUNTAIN
+	spookysounds = SPOOKY_GEN
+	spookynight = SPOOKY_GEN
+	droning_sound = list(, 'sound/music/area/grimtwilight.ogg', 'sound/music/area/grimdrama.ogg')
+	droning_sound_dusk = 'sound/music/area/grimdusk.ogg'
+	droning_sound_night = 'sound/music/area/grimfield.ogg'
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	warden_area = TRUE
+	soundenv = 17
+	converted_type = /area/rogue/indoors/shelter/mountains/grim
+	deathsight_message = "Jagged peaks, treetops and cliffs"
+
+/area/rogue/indoors/shelter/mountains/grim
+	icon_state = "jaggedjaw mountains shelter"
+	first_time_text = null
+	droning_sound = list(, 'sound/music/area/grimtwilight.ogg', 'sound/music/area/grimdrama.ogg')
+	droning_sound_dusk = 'sound/music/area/grimdusk.ogg'
+	droning_sound_night = 'sound/music/area/grimfield.ogg'
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	deathsight_message = "Jagged peaks, treetops and cliffs"
+
+/area/rogue/outdoors/town/roofs/grim
+	name = "pilgrim roofs"
+	icon_state = "roofs"
+	first_time_text = null
+	ambientsounds = AMB_MOUNTAIN
+	ambientnight = AMB_MOUNTAIN
+	spookysounds = SPOOKY_GEN
+	spookynight = SPOOKY_GEN
+	droning_sound = list('sound/music/area/towngen.ogg', 'sound/music/area/townchill.ogg', 'sound/music/area/townstroll.ogg', 'sound/music/area/townwander.ogg')
+	droning_sound_dusk = 'sound/music/area/townalright.ogg'
+	droning_sound_night = list('sound/music/area/townambient.ogg', 'sound/music/area/grimnight.ogg')
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	soundenv = 17
+	converted_type = /area/rogue/indoors/shelter/town/roofs/grim
+	deathsight_message = "Vast rooftops overlooking city streets"
+
+
+/area/rogue/outdoors/town/roofs/keep/grim
+	name = "pilgrim Keep Rooftops"
+	icon_state = "manor"
+	first_time_text = null
+	droning_sound = list('sound/music/area/towngen.ogg', 'sound/music/area/townchill.ogg', 'sound/music/area/townstroll.ogg', 'sound/music/area/townwander.ogg')
+	droning_sound_dusk = 'sound/music/area/townalright.ogg'
+	droning_sound_night = list('sound/music/area/townambient.ogg', 'sound/music/area/grimnight.ogg')
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	keep_area = TRUE
+	town_area = TRUE
+	deathsight_message = "Rooftops overlooking the keep"
+
+/area/rogue/indoors/shelter/town/roofs/grim
+	icon_state = "roofs"
+	first_time_text = null
+	droning_sound = list('sound/music/area/towngen.ogg', 'sound/music/area/townchill.ogg', 'sound/music/area/townstroll.ogg', 'sound/music/area/townwander.ogg')
+	droning_sound_dusk = 'sound/music/area/townalright.ogg'
+	droning_sound_night = list('sound/music/area/townambient.ogg', 'sound/music/area/grimnight.ogg')
+	droning_sound_dawn = 'sound/music/area/grimdawn.ogg'
+	deathsight_message = "Undercover rooftops overlooking city streets"
+
+/area/rogue/under/cave/licharena/grim
+	name = "lich's manor"
+	loot_budget = LOOT_BUDGET_LICH_MANOR
+	loot_pool_key = "lich_arena"
+	icon_state = "under"
+	first_time_text = "THE LICH'S MANOR"
+	droning_sound = 'sound/music/area/grimlich.ogg'
+	droning_sound_dusk = null
+	droning_sound_night = null
+	ceiling_protected = TRUE
+	detail_text = DETAIL_TEXT_LICH_DOMAIN
+	deathsight_message = "A decrepit domain writhe with remains and risen dead around each bend"
+
+/area/rogue/under/cave/licharena/bossroom/grim
+	name = "the lich's lab"
+	loot_budget = LOOT_BUDGET_LICH_LAB
+	first_time_text = "THE LICH'S LABORATORY"
+	droning_sound = 'sound/music/area/grimlich.ogg'
+	droning_sound_dusk = null
+	droning_sound_night = null
+	deathsight_message = "A decrepit laboratory filled with death and decay"
+
+/area/rogue/under/cave/licharena/bossroom/grim/can_craft_here()
+	return FALSE
+
+//PILGRIM END

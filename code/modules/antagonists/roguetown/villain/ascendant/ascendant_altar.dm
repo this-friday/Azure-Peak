@@ -1,7 +1,7 @@
 // OH GOD IT'S SO SHITTY IM SO SORRY PLEASE PLEAS EPLEASEP ELEA
 
 GLOBAL_LIST_INIT(psydon_pool, list(
-	/obj/item/clothing/suit/roguetown/armor/chainmail/hauberk,  //todo: items lol
+	/obj/item/clothing/suit/roguetown/armor/chainmail/hauberk,	//todo: items lol
 	/obj/item/clothing/suit/roguetown/armor/gambeson,
 	/obj/item/clothing/suit/roguetown/armor/leather,
 	/obj/item/reagent_containers/glass/bottle/waterskin,
@@ -79,7 +79,11 @@ GLOBAL_LIST_INIT(capstone_pool, list(
 	//check what ascendpoint they are on and add that trait
 	switch(ascendpoints)
 		if(1)
-			ADD_TRAIT(user, TRAIT_DECEIVING_MEEKNESS, TRAIT_GENERIC)
+			ADD_TRAIT(user, TRAIT_DECEIVING_MEEKNESS, TRAIT_VIRTUE)
+			add_verb(user, /mob/living/carbon/human/proc/toggle_descriptors)
+			add_verb(user, /mob/living/carbon/human/proc/emote_ffsalute)
+			add_verb(user, /mob/living/carbon/human/proc/toggle_guarded)
+
 			ADD_TRAIT(user, TRAIT_EMPATH, TRAIT_GENERIC)
 			ADD_TRAIT(user, TRAIT_STEELHEARTED, TRAIT_GENERIC)
 			to_chat(user, span_userdanger("I bow my head in humility as I begin my journey. MAJOR ARCANA : TEMPERANCE, UPRIGHT."))
@@ -91,7 +95,6 @@ GLOBAL_LIST_INIT(capstone_pool, list(
 		if(3)
 			ADD_TRAIT(user, TRAIT_NOPAIN, TRAIT_GENERIC)
 			ADD_TRAIT(user, TRAIT_NOPAINSTUN, TRAIT_GENERIC)
-			user.mind.AddSpell(new /datum/action/cooldown/spell/projectile/fireball)
 			user.mind.AddSpell(new /datum/action/cooldown/spell/projectile/lightning_bolt)
 			to_chat(user, span_userdanger("I have many enemies- AND they HAVE NOTHING. TEN OF SWORDS, UPRIGHT"))
 		if(4)
@@ -220,4 +223,4 @@ GLOBAL_LIST_INIT(capstone_pool, list(
 /obj/structure/ascendant_altar/proc/heavensaysdanger()
 	priority_announce("THE DREAMER HAS ASCENDED - MAJOR ARCANA : T$yh3 TOW##ER, RE v3RSED", "GOD IS COMING", 'sound/villain/ascendant_intro.ogg')
 	sleep(15 SECONDS)
-	to_chat(world, span_danger("The ground underneath THE THRONE shakes. The sky is opening."))
+	to_world(span_danger("The ground underneath THE THRONE shakes. The sky is opening."))

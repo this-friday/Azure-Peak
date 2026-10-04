@@ -5,13 +5,13 @@
 	name = "Wild-Kin"
 	id = "anthromorph"
 	base_name = "Beastvolk"
+	desc_title = "Wild-Kin"
 	desc = "A product of Dendor's enigmatic meddling in mortals races. The average wild-kin suffers from animalistic urges that vary in severity, \
 	from simply avoiding certain foods to smoldering desires to howl at the moon or chase prey. Usually these urges are tied to the animal that the wild-kin is melded with, \
 	making them rather predictable. Despite this, the way each wild-kin approaches their bizarre physiology and psychology varies, \
 	creating a diverse race of people who may not even empathise with one another. And whilst Dendor is considered the main culprit for Wild-kin, there are those created through other means, \
 	akin to Noc's stolen knowledge that created lupians and other abstract experimentation or circumstance. \
-	(Wild-kin are not a template race to play your own custom race. If you play a wild-kin, you are expected to roleplay to the setting and the race's lore.)<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 CON | +1 PER </b></span><br>"
+	(Wild-kin are not a template race to play your own custom race. If you play a wild-kin, you are expected to roleplay to the setting and the race's lore.)"
 	default_color = "444"
 	species_traits = list(
 		MUTCOLORS,
@@ -61,6 +61,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		ORGAN_SLOT_SNOUT = /obj/item/organ/snout/lupian
 		)
 	bodypart_features = list(
@@ -76,18 +77,20 @@
 		/datum/customizer/bodypart_feature/underwear,
 		/datum/customizer/bodypart_feature/legwear,
 		/datum/customizer/bodypart_feature/piercing,
+		/datum/customizer/organ/wings/anthro,
 		/datum/customizer/organ/tail/anthro,
 		/datum/customizer/organ/tail_feature/anthro,
 		/datum/customizer/organ/snout/anthro,
 		/datum/customizer/organ/ears/anthro,
 		/datum/customizer/organ/horns/anthro,
 		/datum/customizer/organ/frills/anthro,
-		/datum/customizer/organ/wings/anthro,
 		/datum/customizer/organ/neck_feature/anthro,
 		/datum/customizer/organ/testicles/anthro,
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/animal,
 		/datum/customizer/organ/vagina/anthro,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		)
 	body_marking_sets = list(
 		/datum/body_marking_set/none,
@@ -127,6 +130,9 @@
 		/datum/body_marking/bangs,
 		/datum/body_marking/bun,
 		/datum/body_marking/gradient,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 	descriptor_choices = list(
 		/datum/descriptor_choice/trait,
@@ -142,14 +148,6 @@
 		/datum/descriptor_choice/prominent_three_wild,
 		/datum/descriptor_choice/prominent_four_wild,
 	)
-
-/datum/species/anthromorph/on_species_gain(mob/living/carbon/C, datum/species/old_species)
-	..()
-	RegisterSignal(C, COMSIG_MOB_SAY, PROC_REF(handle_speech))
-
-/datum/species/anthromorph/on_species_loss(mob/living/carbon/C)
-	. = ..()
-	UnregisterSignal(C, COMSIG_MOB_SAY)
 
 /datum/species/anthromorph/check_roundstart_eligible()
 	return TRUE

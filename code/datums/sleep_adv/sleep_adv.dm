@@ -72,6 +72,9 @@
 
 /datum/sleep_adv/proc/add_sleep_experience(skill, amt, silent = FALSE, _show_xp = TRUE)
 	var/mob/living/L = mind.current
+	var/datum/skill/sleep_gate = GetSkillRef(skill)
+	if(sleep_gate && !sleep_gate.learnable_in_sleep)
+		return
 	var/show_xp = _show_xp
 	if(!(L.client?.prefs.combat_toggles & XP_TEXT))
 		show_xp = FALSE
@@ -147,8 +150,8 @@
 		show_xp = FALSE
 	if(!can_advance_pre && can_advance_post && !silent)
 		to_chat(mind.current, span_nicegreen(pick(list(
-			"I'm getting a better grasp at [lowertext(skillref.name)]...",
-			"With some rest, I feel like I can get better at [lowertext(skillref.name)]...",
+			"I'm getting a better grasp at [LOWER_TEXT(skillref.name)]...",
+			"With some rest, I feel like I can get better at [LOWER_TEXT(skillref.name)]...",
 			"[skillref.name] starts making more sense to me...",
 		))))
 		if(!COOLDOWN_FINISHED(src, level_up))
@@ -159,7 +162,7 @@
 		show_xp = FALSE
 	if(!capped_pre && capped_post && !silent)
 		to_chat(mind.current, span_nicegreen(pick(list(
-			"My [lowertext(skillref.name)] can no longer improve without some rest and meditation...",
+			"My [LOWER_TEXT(skillref.name)] can no longer improve without some rest and meditation...",
 		))))
 		if(!COOLDOWN_FINISHED(src, level_up))
 			if((L.client?.prefs.combat_toggles & XP_TEXT))
@@ -186,6 +189,9 @@
 
 	var/dream_dust = retained_dust
 	dream_dust += BASE_DREAM_DUST
+
+	if(HAS_TRAIT(mind.current, TRAIT_GOODSLEEP))
+		dream_dust += floor(BASE_DREAM_DUST)
 
 	var/int = mind.current.STAINT
 	dream_dust += mind.current.STAINT * DREAM_DUST_PER_INT //25% dream points for each int
@@ -217,6 +223,8 @@
 	retained_dust = dream_dust_modulo
 
 	sleep_adv_points += dream_points + 1 //Have a dream point. Because you're awesome.
+	if(HAS_TRAIT(mind.current, TRAIT_DEEP_DREAMER)) // God of Dreams and Nightmares check
+		sleep_adv_points += rand(1,2)
 	sleep_adv_cycle++
 
 	show_ui(mind.current)
@@ -302,6 +310,9 @@
 		return
 	if(!enough_sleep_xp_to_advance(skill_type, 1))
 		return
+	var/datum/skill/bought_skill = GetSkillRef(skill_type)
+	if(bought_skill && !bought_skill.learnable_in_sleep)
+		return
 	if(HAS_TRAIT(mind.current, TRAIT_CURSE_MALUM))
 		to_chat(mind.current, span_warning("My dreams turn to nitemares."))
 		return
@@ -327,6 +338,8 @@
 	for(var/skill_type in SSskills.all_skills)
 		var/datum/skill/skill = GetSkillRef(skill_type)
 		if(!skill.randomable_dream_xp)
+			continue
+		if(!skill.learnable_in_sleep)
 			continue
 		if(enough_sleep_xp_to_advance(skill_type, 1))
 			continue
@@ -354,7 +367,7 @@
 			skill_string += " and "
 		else if(i != 1)
 			skill_string += ", "
-		skill_string += lowertext(skill_name)
+		skill_string += LOWER_TEXT(skill_name)
 	to_chat(mind.current, span_notice("I feel inspired about [skill_string]..."))
 
 
@@ -362,7 +375,7 @@
 	if(!can_buy_special())
 		return
 	// Apply special here
-	 //TODO SLEEP ADV SPECIALS
+		//TODO SLEEP ADV SPECIALS
 	sleep_adv_points -= get_special_cost()
 
 /datum/sleep_adv/proc/finish()

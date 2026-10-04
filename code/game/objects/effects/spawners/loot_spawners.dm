@@ -150,7 +150,7 @@
 		/obj/item/reagent_containers/food/snacks/rogue/raisins = 3,
 		/obj/item/reagent_containers/food/snacks/rogue/crackerscooked = 1,
 		/obj/item/reagent_containers/powder/salt = 3,
-		/obj/item/reagent_containers/food/snacks/egg = 1,
+		/obj/item/reagent_containers/food/snacks/rogue/egg = 1,
 	)
 
 /obj/effect/spawner/lootdrop/general_loot_mid
@@ -317,7 +317,7 @@
 		/obj/item/reagent_containers/food/snacks/rogue/raisins = 3,
 		/obj/item/reagent_containers/food/snacks/rogue/crackerscooked = 1,
 		/obj/item/reagent_containers/powder/salt = 3,
-		/obj/item/reagent_containers/food/snacks/egg = 1,
+		/obj/item/reagent_containers/food/snacks/rogue/egg = 1,
 	)
 
 /obj/effect/spawner/lootdrop/general_loot_hi
@@ -365,7 +365,7 @@
 		/obj/item/natural/bundle/cloth/bandage/full = 3,
 		//weapons
 		/obj/item/gun/ballistic/revolver/grenadelauncher/bow/recurve = 4,
-		/obj/item/gun/ballistic/revolver/grenadelauncher/bow/longbow  = 4,
+		/obj/item/gun/ballistic/revolver/grenadelauncher/bow/longbow	= 4,
 		/obj/item/gun/ballistic/revolver/grenadelauncher/crossbow = 3,
 		/obj/item/gun/ballistic/revolver/grenadelauncher/sling = 4,
 		/obj/item/quiver/arrows = 2,
@@ -402,7 +402,7 @@
 		/obj/item/rogueweapon/stoneaxe/woodcut/steel = 1,
 		/obj/item/rogueweapon/sword/silver = 1,
 		/obj/item/rogueweapon/mace/steel/silver = 1,
-		/obj/item/rogueweapon/greataxe/silver = 1,
+		/obj/item/rogueweapon/greataxe/steel/knight/silver = 1,
 		/obj/item/rogueweapon/flail/sflail/silver = 1,
 		/obj/item/rogueweapon/huntingknife/idagger/silver = 3,
 		/obj/item/rogueweapon/mace/warhammer/steel/silver = 1,
@@ -462,6 +462,7 @@
 		/obj/item/reagent_containers/food/snacks/rogue/cheddarwedge/aged = 1,
 		/obj/item/reagent_containers/food/snacks/rogue/meat/salami = 1,
 		/obj/item/reagent_containers/food/snacks/grown/apple/gold = 1,
+		/obj/item/heelkit = 1,
 	)
 
 //x3 of the above
@@ -546,8 +547,8 @@
 ⢠⠎⠉⠐⠀⠀⠸⡆⠀⠀⠀⠀⠀⠀⠠⠄⡀⠀⠀⠀⢹⠊⠈⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣘⠢⢤⣠⡔⣎⠀⡇⡌⠃⠀⡸⢠⢣⡇⢆⢠⠁⢠⢻⠀⣌⣸⠀⢃⠎⡸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⢸⣆⠀⠀⠀⠀⢸⠃⠀⠀⢰⠉⠑⠤⠃⠀⡇⠀⠀⠀⠀⢂⠀⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⢲⣿⡟⣾⣾⡦⠱⣸⣿⠘⠀⣰⡡⠁⠸⣇⢀⠇⠀⠎⡌⣼⡪⢷⠸⠃⡰⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠙⠲⠤⠄⠀⠎⠀⠀⠀⠈⢆⢄⠀⠀⢠⠃⠀⠀⠀⠀⠀⠱⡀⠀⠀⠀⠀⠑⠀⠀⠀⠀⠀⠈⠉⡝⠚⠿⠃⠆⡝⡝⡆⡴⠟⢁⠂⢀⢋⣬⢀⢊⡜⡼⠋⠀⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀  ⠀⠑⠒⠂⠁⠀⠀⠀⠀⠀⠀⠀⠈⢢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢰⣣⡘⡀⠀⡎⢀⡧⠂⡏⡰⢱⠊⠀⠀⠀⠈⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀  ⠑⠤⠀⣀⣀⣀⣀⣀⣀⣀⠀⠀⠤⠐⠂⠈⠋⡏⢱⢠⣿⡇⣬⣀⠀⢷⠁⠈⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀	⠀⠑⠒⠂⠁⠀⠀⠀⠀⠀⠀⠀⠈⢢⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢰⣣⡘⡀⠀⡎⢀⡧⠂⡏⡰⢱⠊⠀⠀⠀⠈⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠀	⠑⠤⠀⣀⣀⣀⣀⣀⣀⣀⠀⠀⠤⠐⠂⠈⠋⡏⢱⢠⣿⡇⣬⣀⠀⢷⠁⠈⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠰⡉⠀⠀⡇⠀⠀⠀⠉⠀⠉⠉⠉⠉⠉⠁⣠⡔⠛⢆⠰⡼⣣⠀⠀⠀⠀⠀⠀⡠⠊⠀⡇⣿⣾⠛⠳⠇⠶⣭⣺⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ ⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⣀⠤⠤⠴⠿⡷⡀⠘⡄⢻⡿⠆⠀⠀⡠⠔⠁⠀⠀⣀⣿⣽⠟⠠⠠⠐⠂⠙⠋⣁⡅⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 */

@@ -14,17 +14,25 @@
 	no_loot_taint = TRUE
 	var/listening = TRUE
 	var/speaking = TRUE
-	var/loudmouth_listening = TRUE
 	var/garrisonline = TRUE
 	var/messagereceivedsound = 'sound/misc/scom.ogg'
 	var/hearrange = 0 // Only hearable by wearer
 	is_important = TRUE
+	materia = list(/datum/materia_aspect/solar) // i don't think i have to explain this one
+	var/register_as_roguemachine_crown = TRUE // New vars to allow custom donor crowns. Does not prevent custom crowns from being replaced by the original, though.
+	var/replace_existing_roguemachine_crown = FALSE
 
-/obj/item/clothing/head/roguetown/crown/serpcrown/Initialize()
+/obj/item/clothing/head/roguetown/crown/serpcrown/get_examine_highlight_status()
+	return list(EXAMINEHIGHLIGHT_VIBE_CROWN, VIBEDESC_CROWN)
+
+/obj/item/clothing/head/roguetown/crown/serpcrown/Initialize(mapload)
 	. = ..()
-	if(SSroguemachine.crown)
-		qdel(src)
-	else
+	if(register_as_roguemachine_crown)
+		if(SSroguemachine.crown)
+			if(!replace_existing_roguemachine_crown)
+				qdel(src)
+				return
+			qdel(SSroguemachine.crown)
 		SSroguemachine.crown = src
 		SSroguemachine.scomm_machines += src
 	become_hearing_sensitive()
@@ -65,12 +73,6 @@
 				S.repeat_message(input_text, src, usedcolor)
 			SSroguemachine.crown?.repeat_message(input_text, src, usedcolor)
 
-			GLOB.broadcast_list += list(list(
-			"message"   = input_text,
-			"tag"		= "The Crown of Azuria",
-			"timestamp" = station_time_timestamp("hh:mm:ss")
-			))
-
 		if(garrisonline)
 			input_text = "<big><span style='color: [GARRISON_CROWN_COLOR]'>[input_text]</span></big>" // Prettying up for Garrison line
 			for(var/obj/item/scomstone/bad/garrison/S in SSroguemachine.scomm_machines)
@@ -95,15 +97,9 @@
 		return
 	user.changeNext_move(CLICK_CD_MELEE)
 	playsound(loc, 'sound/misc/beep.ogg', 100, FALSE, -1)
-	if(loudmouth_listening)
-		to_chat(user, span_info("I quell the Loudmouth's prattling on the scomstone. It may be muted entirely still."))
-		loudmouth_listening = FALSE
-	else
-		listening = !listening
-		speaking = !speaking
-		to_chat(user, span_info("I [speaking ? "unmute" : "mute"] the crown's SCOM capabilities."))
-		if(listening)
-			loudmouth_listening = TRUE
+	listening = !listening
+	speaking = !speaking
+	to_chat(user, span_info("I [speaking ? "unmute" : "mute"] the crown's SCOM capabilities."))
 	update_icon()
 
 /obj/item/clothing/head/roguetown/crown/serpcrown/proc/repeat_message(message, atom/A, tcolor, message_language)
@@ -131,6 +127,9 @@
 		send_speech(message, hearrange, src, , spans, message_language=language)
 
 /obj/item/clothing/head/roguetown/crown/serpcrown/Destroy()
+	SSroguemachine.scomm_machines -= src
+	if(SSroguemachine.crown == src)
+		SSroguemachine.crown = null
 	lose_hearing_sensitivity()
 	return ..()
 

@@ -8,9 +8,8 @@
 	origin_default = /datum/virtue/origin/lirvas
 	origin = "Lirvas"
 	base_name = "Zard"
-	desc = "<b>Drakian</b><br>\
-	Mighty scaled individuals who claim to be descendants of the dragons of yore.<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 STR</b></span><br>"
+	desc_title = "Drakian"
+	desc = "Hailing from Lirvas, Drakians are winged relatives of the Zardmen, results of Matthios's doomed attempts to mimic the forms of drakkyn. Though they may share visual similarities, and their pride tends to befit such, no Drakian would ever claim to be a descendent of the drakkyn, as to do so is to invite a terrible wasting curse."
 	species_traits = list(EYECOLOR,LIPS,STUBBLE,MUTCOLORS)
 	possible_ages = ALL_AGES_LIST
 	changesource_flags = MIRROR_BADMIN | WABBAJACK | MIRROR_MAGIC | MIRROR_PRIDE | RACE_SWAP | SLIME_EXTRACT
@@ -47,6 +46,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		ORGAN_SLOT_TAIL = /obj/item/organ/tail/lizard,
 		ORGAN_SLOT_SNOUT = /obj/item/organ/snout/lizard,
 		ORGAN_SLOT_TAIL_FEATURE = /obj/item/organ/tail_feature/lizard_spines,
@@ -78,6 +78,8 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/animal,
 		/datum/customizer/organ/vagina/animal,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		/datum/customizer/organ/ears/anthro,
 		)
 	body_marking_sets = list(
@@ -115,6 +117,9 @@
 		/datum/body_marking/bangs,
 		/datum/body_marking/bun,
 		/datum/body_marking/gradient,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 	languages = list(
 		/datum/language/common,
@@ -140,14 +145,6 @@
 
 /datum/species/dracon/qualifies_for_rank(rank, list/features)
 	return TRUE
-
-/datum/species/dracon/on_species_gain(mob/living/carbon/C, datum/species/old_species)
-	..()
-	RegisterSignal(C, COMSIG_MOB_SAY, PROC_REF(handle_speech))
-
-/datum/species/dracon/on_species_loss(mob/living/carbon/C)
-	. = ..()
-	UnregisterSignal(C, COMSIG_MOB_SAY)
 
 /datum/species/dracon/get_random_body_markings(list/passed_features)
 	return assemble_body_markings_from_set(GLOB.body_marking_sets_by_type[/datum/body_marking_set/bellyscale], passed_features, src)

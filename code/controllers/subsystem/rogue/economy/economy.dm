@@ -8,6 +8,7 @@ SUBSYSTEM_DEF(economy)
 	var/list/daily_report_diff = null
 	var/last_petition_day = -1
 	var/petitions_today = 0
+	var/blockade_replenish_spent = 0
 	var/list/event_path_cooldowns = list()
 	var/list/goods_with_producers = list()
 	var/list/goods_with_demand = list()
@@ -18,7 +19,7 @@ SUBSYSTEM_DEF(economy)
 		return simulated_player_scalar
 	return get_active_player_count()
 
-/datum/controller/subsystem/economy/Initialize()
+/datum/controller/subsystem/economy/Initialize(mapload)
 	populate_standing_order_templates()
 	for(var/region_id in GLOB.economic_regions)
 		var/datum/economic_region/region = GLOB.economic_regions[region_id]
@@ -206,10 +207,16 @@ SUBSYSTEM_DEF(economy)
 		var/datum/economic_region/region = GLOB.economic_regions[region_id]
 		region.produces_today = list()
 		region.demands_today = list()
+		region.produces_day_start = list()
+		region.demands_day_start = list()
 		for(var/good_id in region.produces)
-			region.produces_today[good_id] = max(1, round(region.produces[good_id] * pop_mult))
+			var/produced_units = max(1, round(region.produces[good_id] * pop_mult))
+			region.produces_today[good_id] = produced_units
+			region.produces_day_start[good_id] = produced_units
 		for(var/good_id in region.demands)
-			region.demands_today[good_id] = max(1, round(region.demands[good_id] * pop_mult))
+			var/demanded_units = max(1, round(region.demands[good_id] * pop_mult))
+			region.demands_today[good_id] = demanded_units
+			region.demands_day_start[good_id] = demanded_units
 	SStreasury.dirty_market_view()
 
 	var/list/expired = list()
@@ -226,6 +233,11 @@ SUBSYSTEM_DEF(economy)
 
 	expire_economic_events()
 	roll_economic_events()
+
+	// Runs after today's prices/events settle, so active orders track current pop/prices.
+	recompute_active_order_payouts()
+
+	tick_blockade_replenish()
 	tick_banditry_drain()
 
 	// Runs after events/blockades so auto-import sees the day's fresh price_mods, blockade
@@ -314,9 +326,9 @@ SUBSYSTEM_DEF(economy)
 	for(var/path in subtypesof(/datum/economic_event))
 		var/datum/economic_event/probe = path
 		if(!initial(probe.name))
-			continue  // abstract
+			continue	// abstract
 		if(initial(probe.event_type) == ECON_EVENT_NARRATIVE)
-			continue  // narrative events don't roll in v1
+			continue	// narrative events don't roll in v1
 		var/cooled_until = event_path_cooldowns[path]
 		if(cooled_until && GLOB.dayspassed < cooled_until)
 			continue
@@ -500,13 +512,31 @@ SUBSYSTEM_DEF(economy)
 			counted++
 	return total
 
+/// Also stamps order.base_payout/scarcity_bonus_pct as a side effect, so the UI and daily
+/// recompute don't need to re-derive the breakdown separately.
 /datum/controller/subsystem/economy/proc/compute_order_payout(datum/standing_order/order, datum/economic_region/region)
 	var/total = 0
 	for(var/good_id in order.required_items)
 		total += compute_good_unit_payout(order, good_id) * order.required_items[good_id]
 	if(order.petitioned)
 		total = round(total * PETITION_TAX_MULT)
+	order.base_payout = round(total)
+	// Boosts payout (never required quantity) below reference pop - Crown income only.
+	var/scarcity_mult = clamp(1.0 + (STANDING_ORDER_SCARCITY_REFERENCE_POP - get_effective_player_count()) / STANDING_ORDER_SCARCITY_REFERENCE_POP * STANDING_ORDER_SCARCITY_MAX_BONUS, 1.0, 1.0 + STANDING_ORDER_SCARCITY_MAX_BONUS)
+	order.scarcity_bonus_pct = round((scarcity_mult - 1) * 100)
+	total = round(total * scarcity_mult)
 	return round(total)
+
+/// Payouts used to lock in at roll time and never catch up to later pop/price shifts while an
+/// order sat unfulfilled. Recompute daily so active orders stay current.
+/datum/controller/subsystem/economy/proc/recompute_active_order_payouts()
+	for(var/datum/standing_order/O as anything in GLOB.standing_order_pool)
+		if(O.is_fulfilled)
+			continue
+		var/datum/economic_region/region = GLOB.economic_regions[O.region_id]
+		if(!region)
+			continue
+		O.total_payout = compute_order_payout(O, region)
 
 /// Returns the new order, or null if the template's item mix came up empty (caller decides
 /// whether that's a skip or a refund).
@@ -778,6 +808,7 @@ SUBSYSTEM_DEF(economy)
 		var/datum/roguestock/stockpile_entry = find_stockpile_by_trade_good(good_id)
 		if(stockpile_entry)
 			stockpile_entry.stockpile_amount -= delivered
+			record_material_flow(MATERIAL_FLOW_OUT, MATERIAL_SOURCE_STANDING_ORDER, stockpile_entry.item_type, delivered)
 		credit_economic_event_saturation(good_id, delivered)
 	SStreasury.dirty_market_view()
 
@@ -851,7 +882,7 @@ SUBSYSTEM_DEF(economy)
 		return null
 	return SStreasury.stockpile_by_trade_good[good_id]
 
-/datum/controller/subsystem/economy/proc/manual_import(mob/user, region_id, good_id, quantity)
+/datum/controller/subsystem/economy/proc/manual_import(mob/user, region_id, good_id, quantity, stipend = FALSE)
 	var/datum/economic_region/region = GLOB.economic_regions[region_id]
 	if(!region)
 		return 0
@@ -882,8 +913,18 @@ SUBSYSTEM_DEF(economy)
 		return 0
 
 	var/actor_suffix = user ? " by [user.real_name]" : ""
-	var/import_label = user ? "Manual Import" : "Auto Import"
-	SStreasury.burn(SStreasury.discretionary_fund, total_cost, "[import_label]: [quantity] [tg.name] from [region.name][actor_suffix]")
+	var/import_label
+	if(stipend)
+		import_label = "Subsidy Import"
+	else
+		import_label = user ? "Manual Import" : "Auto Import"
+
+	if(quantity > 1)
+		SStreasury.burn(SStreasury.discretionary_fund, total_cost, "[import_label]: [quantity] [tg.name] from [region.name][actor_suffix]")
+	else
+		SStreasury.burn(SStreasury.discretionary_fund, total_cost, "[import_label]: [tg.name] from [region.name][actor_suffix]")
+	record_treasury_expense(TREASURY_FLOW_IMPORT, user ? treasury_role_of(user) : "Automatic", total_cost)
+
 	region.produces_today[good_id] = produces_today - quantity
 	var/datum/roguestock/stockpile_entry = find_stockpile_by_trade_good(good_id)
 	if(stockpile_entry)
@@ -934,7 +975,6 @@ SUBSYSTEM_DEF(economy)
 	var/export_label = user ? "Manual Export" : "Auto Export"
 	SStreasury.dirty_market_view()
 	SStreasury.mint(SStreasury.discretionary_fund, total_revenue, "[export_label]: [quantity] [tg.name] to [region.name][actor_suffix]")
-	SStreasury.mint(SStreasury.discretionary_fund, total_revenue, "Manual Export: [quantity] [tg.name] to [region.name]")
 	SStreasury.total_export += total_revenue
 	SStreasury.economic_output += total_revenue
 	credit_economic_event_saturation(good_id, quantity)

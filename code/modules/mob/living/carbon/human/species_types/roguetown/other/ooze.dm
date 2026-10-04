@@ -1,8 +1,8 @@
 /datum/species/ooze
 	name = "Murkling"
 	id = "ooze"
-	desc = "<b>Murkling</b><br>\
-	Few know the true origins of the Murklings. Ancient records place their beginnings deep within the cold caverns of the Underdark \
+	desc_title = "Murkling"
+	desc = "Few know the true origins of the Murklings. Ancient records place their beginnings deep within the cold caverns of the Underdark \
 	where primordial ooze infested tunnels and defended its spawning pits with relentless hostility. \
 	For centuries, Dark Elves and Dwarven delvers alike sealed these regions away, leaving the living mire undisturbed. \
 	Only within the last century did the ooze begin to change. \
@@ -16,9 +16,7 @@
 	having consumed enough for their bodies to recreate and secrete the very substance that sustains them. \
 	Caught now in the struggles of surface faiths and kingdoms, Murklings search for purpose beyond their primordial mothers. \
 	Some turn to gods as they are susceptible to faith to fill the gaps their spawning pools left, and others reject them entirely. \
-	Yet all carry the memory of the deep: the silent, all-encompassing love and will from which they were born.<br> \
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 CON | +1 INT<br> \
-	Easy Dismember | Limb Regrowth | Inhumen Digestion</span><br><br>"
+	Yet all carry the memory of the deep: the silent, all-encompassing love and will from which they were born."
 	blood_color = "#00FFFF" //Defaults to blue, but we recolor this later to match the slime person's body color.
 	origin_default = /datum/virtue/origin/racial/underdark
 	base_name = "Ooze"
@@ -38,25 +36,16 @@
 	dam_icon_f = 'icons/roguetown/mob/bodies/dam/dam_female.dmi'
 	soundpack_m = /datum/voicepack/male
 	soundpack_f = /datum/voicepack/female
-	offset_features = list(
-		OFFSET_ID = list(0,1), OFFSET_GLOVES = list(0,1), OFFSET_WRISTS = list(0,1),\
-		OFFSET_CLOAK = list(0,1), OFFSET_FACEMASK = list(0,1), OFFSET_HEAD = list(0,1), \
-		OFFSET_FACE = list(0,1), OFFSET_BELT = list(0,1), OFFSET_BACK = list(0,1), \
-		OFFSET_NECK = list(0,1), OFFSET_MOUTH = list(0,1), OFFSET_PANTS = list(0,1), \
-		OFFSET_SHIRT = list(0,1), OFFSET_ARMOR = list(0,1), OFFSET_HANDS = list(0,1), OFFSET_UNDIES = list(0,1), \
-		OFFSET_ID_F = list(0,-1), OFFSET_GLOVES_F = list(0,0), OFFSET_WRISTS_F = list(0,0), OFFSET_HANDS_F = list(0,0), \
-		OFFSET_CLOAK_F = list(0,0), OFFSET_FACEMASK_F = list(0,-1), OFFSET_HEAD_F = list(0,-1), \
-		OFFSET_FACE_F = list(0,-1), OFFSET_BELT_F = list(0,0), OFFSET_BACK_F = list(0,-1), \
-		OFFSET_NECK_F = list(0,-1), OFFSET_MOUTH_F = list(0,-1), OFFSET_PANTS_F = list(0,0), \
-		OFFSET_SHIRT_F = list(0,0), OFFSET_ARMOR_F = list(0,0), OFFSET_UNDIES_F = list(0,-1), \
-		OFFSET_TAUR = list(-16,0), OFFSET_TAUR_F = list(-16,0), \
-		)
+	allowed_body_builds = STANDARD_BODY_BUILDS
+	default_body_build_m = BODY_BUILD_BULKY
+	default_body_build_f = BODY_BUILD_SLIM
 	race_bonus = list(STAT_CONSTITUTION = 1, STAT_INTELLIGENCE = 1)
 	inherent_traits = list(
 						TRAIT_NASTY_EATER,
 						TRAIT_EASYDISMEMBER,
 						TRAIT_REGROW_LIMBS,
 						TRAIT_ZOMBIE_IMMUNE,
+						TRAIT_WATERBREATHING,
 						)
 	enflamed_icon = "widefire"
 	customizers = list(
@@ -71,6 +60,8 @@
 		/datum/customizer/organ/breasts/human,
 		/datum/customizer/organ/vagina/human_anthro,
 		/datum/customizer/organ/testicles/anthro,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		/datum/customizer/organ/snout/anthro/slime,
 		/datum/customizer/organ/tail/slime,
 		/datum/customizer/organ/ears/slime,
@@ -91,6 +82,9 @@
 		/datum/body_marking/nose,
 		/datum/body_marking/bangs,
 		/datum/body_marking/bun,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 	organs = list(
 		ORGAN_SLOT_BRAIN = /obj/item/organ/brain/ooze,
@@ -102,6 +96,10 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver/ooze,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach/ooze,
 		)
+	
+	mechanics_explanations = list("Have no bones to break. However, upon suffering a severe blunt wound, or when a limb would experience a bone fracture, the limb melts. Lost limbs similarly melt off.",
+		"Can regenerate lost limbs by sleeping, at a great cost to their bodily nutrition.",
+		"Have uniquely colored blood that matches the color of their bodies.")
 
 ////// ORGAN SPRITES, provided by VelSlime
 /obj/item/organ/brain/ooze

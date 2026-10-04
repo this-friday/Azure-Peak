@@ -8,15 +8,14 @@
 	origin_default = /datum/virtue/origin/etrusca
 	origin = "Etrusca"
 	base_name = "Beastvolk"
-	desc = "<b>Axian</b><br>\
-	Axians are a proud, shark-like people that have a heritage founded in maritime trade, \
+	desc_title = "Axian"
+	desc = "Axians are a proud, shark-like people that have a heritage founded in maritime trade, \
 	tax evasion, and piracy. They have a strong distaste for the nobility and taxation, \
 	making them a target of discrimination in the Azurean lands. They are oftentimes scapegoats for crime. \
 	Due to their penchant for trade and travel, they can be found all over the world, oftentimes \
 	seeing places many could not even dream of. They look down at those they considered the 'settled' \
 	and often uproot themselves quite often in their lifetimes. However, due to the isolation in Azure, many Axians \
-	find their sanity being clawed away as they find themselves stuck in one place.<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 WIL | +1 CON </b></span><br>"
+	find their sanity being clawed away as they find themselves stuck in one place."
 	species_traits = list(EYECOLOR,LIPS,STUBBLE,MUTCOLORS)
 	species_traits = list(EYECOLOR,LIPS,STUBBLE,MUTCOLORS)
 	inherent_traits = list(TRAIT_WATERBREATHING, TRAIT_SEA_DRINKER)
@@ -28,18 +27,9 @@
 	dam_icon_f = 'icons/roguetown/mob/bodies/dam/dam_female.dmi'
 	soundpack_m = /datum/voicepack/male
 	soundpack_f = /datum/voicepack/female
-	offset_features = list(
-		OFFSET_ID = list(0,1), OFFSET_GLOVES = list(0,1), OFFSET_WRISTS = list(0,1),\
-		OFFSET_CLOAK = list(0,1), OFFSET_FACEMASK = list(0,1), OFFSET_HEAD = list(0,1), \
-		OFFSET_FACE = list(0,1), OFFSET_BELT = list(0,1), OFFSET_BACK = list(0,1), \
-		OFFSET_NECK = list(0,1), OFFSET_MOUTH = list(0,1), OFFSET_PANTS = list(0,1), \
-		OFFSET_SHIRT = list(0,1), OFFSET_ARMOR = list(0,1), OFFSET_HANDS = list(0,1), OFFSET_UNDIES = list(0,1), \
-		OFFSET_ID_F = list(0,-1), OFFSET_GLOVES_F = list(0,0), OFFSET_WRISTS_F = list(0,0), OFFSET_HANDS_F = list(0,0), \
-		OFFSET_CLOAK_F = list(0,0), OFFSET_FACEMASK_F = list(0,-1), OFFSET_HEAD_F = list(0,-1), \
-		OFFSET_FACE_F = list(0,-1), OFFSET_BELT_F = list(0,0), OFFSET_BACK_F = list(0,-1), \
-		OFFSET_NECK_F = list(0,-1), OFFSET_MOUTH_F = list(0,-1), OFFSET_PANTS_F = list(0,0), \
-		OFFSET_SHIRT_F = list(0,0), OFFSET_ARMOR_F = list(0,0), OFFSET_UNDIES_F = list(0,-1), \
-		)
+	allowed_body_builds = ALL_BODY_BUILDS
+	default_body_build_m = BODY_BUILD_BULKY
+	default_body_build_f = BODY_BUILD_SLIM
 	race_bonus = list(STAT_WILLPOWER = 1, STAT_CONSTITUTION = 1)
 	enflamed_icon = "widefire"
 	attack_verb = "slash"
@@ -55,6 +45,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		ORGAN_SLOT_TAIL = /obj/item/organ/tail/akula,
 		ORGAN_SLOT_SNOUT = /obj/item/organ/snout/akula,
 		//ORGAN_SLOT_TESTICLES = /obj/item/organ/testicles,
@@ -82,6 +73,8 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/human,
 		/datum/customizer/organ/vagina/human_anthro,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		)
 	body_marking_sets = list(
 		/datum/body_marking_set/none,
@@ -103,6 +96,9 @@
 		/datum/body_marking/bangs,
 		/datum/body_marking/bun,
 		/datum/body_marking/gradient,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 	descriptor_choices = list(
 		/datum/descriptor_choice/trait,
@@ -170,11 +166,3 @@
 		var/suffix = pick(world.file2list("strings/names/roguetown/axiansuffix.txt"))
 		randname = "[randname] [suffix]"
 	return randname
-
-/datum/species/akula/on_species_gain(mob/living/carbon/C, datum/species/old_species)
-	..()
-	RegisterSignal(C, COMSIG_MOB_SAY, PROC_REF(handle_speech))
-
-/datum/species/akula/on_species_loss(mob/living/carbon/C)
-	. = ..()
-	UnregisterSignal(C, COMSIG_MOB_SAY)

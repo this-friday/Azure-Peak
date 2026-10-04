@@ -11,18 +11,22 @@ SUBSYSTEM_DEF(profiler)
 	msg += "|W:[round(write_cost,1)]ms"
 	return ..(msg)
 
-/datum/controller/subsystem/profiler/Initialize()
-	if(CONFIG_GET(flag/auto_profile))
+/datum/controller/subsystem/profiler/Initialize(mapload)
+	var/profiling = CONFIG_GET(flag/auto_profile)
+	if(profiling)
 		StartProfiling()
 	else
 		StopProfiling() //Stop the early start profiler
-	wait = CONFIG_GET(number/profiler_interval)
+	var/interval = CONFIG_GET(number/profiler_interval)
+	if(interval > 0)
+		wait = interval
+	can_fire = (profiling && interval > 0)
 	return SS_INIT_SUCCESS
 
 /datum/controller/subsystem/profiler/OnConfigLoad()
 	if(CONFIG_GET(flag/auto_profile))
 		StartProfiling()
-		can_fire = TRUE
+		can_fire = (CONFIG_GET(number/profiler_interval) > 0)
 	else
 		StopProfiling()
 		can_fire = FALSE
@@ -31,7 +35,7 @@ SUBSYSTEM_DEF(profiler)
 	DumpFile(reason = "scheduled")
 
 /datum/controller/subsystem/profiler/Shutdown()
-	if(CONFIG_GET(flag/auto_profile))
+	if(CONFIG_GET(flag/auto_profile) && CONFIG_GET(number/profiler_interval) > 0)
 		DumpFile(allow_yield = FALSE, reason = "shutdown")
 		world.Profile(PROFILE_CLEAR, type = "sendmaps")
 	return ..()
@@ -52,7 +56,7 @@ SUBSYSTEM_DEF(profiler)
 	if(allow_yield)
 		CHECK_TICK
 
-	// Filename: profiler-<HH.MM.SS>-<reason>-<iteration>.json  — chronologically sortable, self-describing, collision-free.
+	// Filename: profiler-<HH.MM.SS>-<reason>-<iteration>.json	— chronologically sortable, self-describing, collision-free.
 	var/stamp = "[time2text(world.realtime, "hh.mm.ss")]-[reason]-[Master.iteration]"
 
 	if(!length(current_profile_data)) //Would be nice to have explicit proc to check this

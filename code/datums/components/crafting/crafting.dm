@@ -1,4 +1,4 @@
-/datum/component/personal_crafting/Initialize()
+/datum/component/personal_crafting/Initialize(mapload)
 	if(!ismob(parent))
 		return COMPONENT_INCOMPATIBLE
 	var/mob/living/L = parent
@@ -210,6 +210,8 @@
 	return FALSE
 
 /datum/component/personal_crafting/proc/construct_item_repeatable(mob/user, datum/crafting_recipe/R, amount = 1, auto)
+	if(R.required_trait && !HAS_TRAIT(user, R.required_trait))
+		return
 	while(amount > 0 || auto)
 		amount--
 		var/result = construct_item(user, R)
@@ -224,7 +226,9 @@
 		return
 	var/list/contents = get_surroundings(user)
 //	var/send_feedback = 1
-	var/turf/T = get_step(user, user.dir)
+	var/build_dir = user.dir
+	var/craft_dir = R.do_not_turn ? SOUTH : build_dir
+	var/turf/T = get_step(user, build_dir)
 	if(isopenturf(T) && R.wallcraft)
 		to_chat(user, span_warning("Need to craft this on a wall."))
 		return
@@ -299,6 +303,8 @@
 							prob2craft += ((10-L.STAINT)*-1)*2
 						if(HAS_TRAIT(L, TRAIT_INTELLECTUAL) && L.STAINT > 8)
 							prob2craft += 5
+						if(HAS_TRAIT(L, TRAIT_MALUMCHOSEN))
+							prob2craft += 20
 					prob2craft = CLAMP(prob2craft, 0, 99)
 					if(i == 100 && prob2craft > 0)
 						prob2craft = 100
@@ -316,13 +322,13 @@
 						for(var/IT in L)
 							var/atom/movable/I = new IT(T)
 							I.CheckParts(parts, R)
-							I.OnCrafted(user.dir, user)
+							I.OnCrafted(craft_dir, user)
 							if(isitem(I))
 								var/obj/item/CI = I
 								CI.was_crafted = TRUE
 								if(CI.has_item_quality)
 									if(R.skip_quality)
-										if(inherited_quality != null)
+										if(!isnull(inherited_quality))
 											CI.apply_quality(null, null, inherited_quality)
 									else
 										CI.apply_quality(user, R.skillcraft)
@@ -331,7 +337,7 @@
 						if(ispath(R.result, /turf))
 							var/turf/X = T.PlaceOnTop(R.result)
 							if(X)
-								X.OnCrafted(user.dir, user)
+								X.OnCrafted(craft_dir, user)
 								X.add_fingerprint(user)
 								if(R.loud)
 									X.loud_message("Construction sounds can be heard")
@@ -345,13 +351,13 @@
 							if(R.diagonal)
 								I.OnCrafted(I.SelectDiagDirection(), user)
 							else
-								I.OnCrafted(user.dir, user)
+								I.OnCrafted(craft_dir, user)
 							if(isitem(I))
 								var/obj/item/CI = I
 								CI.was_crafted = TRUE
 								if(CI.has_item_quality)
 									if(R.skip_quality)
-										if(inherited_quality != null)
+										if(!isnull(inherited_quality))
 											CI.apply_quality(null, null, inherited_quality)
 									else
 										CI.apply_quality(user, R.skillcraft)
@@ -468,7 +474,7 @@
 						if(!B.stacktype || !ispath(B.stacktype, A))
 							continue
 						if(!R.subtype_reqs && (B.stacktype in subtypesof(A)))
-							continue 
+							continue
 						if(R.blacklist.Find(B.stacktype))
 							continue
 						found_bundle = TRUE
@@ -484,7 +490,7 @@
 									var/obj/item/new_item = new stacktype(old_loc)
 									if(ishuman(old_loc))
 										var/mob/living/carbon/human/H = old_loc
-										H.put_in_hands(new_item) 
+										H.put_in_hands(new_item)
 								if(0)
 									qdel(B)
 							amt = 0
@@ -524,6 +530,11 @@
 				var/atom/movable/I
 				while(amt > 0)
 					I = locate(A) in surroundings
+					if(!I)
+						break
+					if(R.blacklist.Find(I.type))
+						surroundings -= I
+						continue
 					Deletion += I
 					surroundings -= I
 					amt--
@@ -552,7 +563,7 @@
 			var/obj/item/IT = AM
 			if(!IT.has_item_quality)
 				continue
-			if(min_q == null || IT.item_quality < min_q)
+			if(isnull(min_q) || IT.item_quality < min_q)
 				min_q = IT.item_quality
 		for(var/atom/movable/AM in .)
 			if(!isitem(AM))
@@ -560,7 +571,7 @@
 			var/obj/item/IT = AM
 			if(!IT.has_item_quality)
 				continue
-			if(min_q == null || IT.item_quality < min_q)
+			if(isnull(min_q) || IT.item_quality < min_q)
 				min_q = IT.item_quality
 		quality_out["min_quality"] = min_q
 	while(Deletion.len)
@@ -597,6 +608,8 @@
 			continue
 		if(R.required_tech_node && !R.tech_unlocked)
 			continue
+		if(R.required_trait && !HAS_TRAIT(user, R.required_trait))
+			continue
 
 		craftability[R.name] = check_contents(R, surroundings)
 
@@ -614,6 +627,8 @@
 		if(!R.always_availible && !(R.type in user?.mind?.learned_recipes))
 			continue
 		if(R.required_tech_node && !R.tech_unlocked)
+			continue
+		if(R.required_trait && !HAS_TRAIT(user, R.required_trait))
 			continue
 		if(isnull(crafting_recipes[R.cached_category]))
 			crafting_recipes[R.cached_category] = list()

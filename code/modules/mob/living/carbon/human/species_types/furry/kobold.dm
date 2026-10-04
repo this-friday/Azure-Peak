@@ -8,9 +8,8 @@
 	origin_default = /datum/virtue/origin/lirvas
 	origin = "Lirvas"
 	base_name = "Zard"
-	desc = "<b>Kobold</b><br>\
-	Short in stature and typically scrawny, these little lizards make up for it in their natural agility. People typically stereotype them as thieves, though...<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 FOR | +1 STAT of choice.</b></span><br>"
+	desc_title = "Kobold"
+	desc = "Short in stature and typically scrawny, these little lizards make up for it in their natural agility. People typically stereotype them as thieves, though..."
 	species_traits = list(EYECOLOR,LIPS,STUBBLE,MUTCOLORS)
 	possible_ages = ALL_AGES_LIST
 	changesource_flags = MIRROR_BADMIN | WABBAJACK | MIRROR_MAGIC | MIRROR_PRIDE | RACE_SWAP | SLIME_EXTRACT
@@ -59,6 +58,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		ORGAN_SLOT_TAIL = /obj/item/organ/tail/kobold,
 		ORGAN_SLOT_SNOUT = /obj/item/organ/snout/lizard,
 		ORGAN_SLOT_FRILLS = /obj/item/organ/frills/lizard,
@@ -84,6 +84,8 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/animal,
 		/datum/customizer/organ/vagina/animal,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		)
 	body_marking_sets = list(
 		/datum/body_marking_set/none,
@@ -132,14 +134,6 @@
 
 /datum/species/kobold/qualifies_for_rank(rank, list/features)
 	return TRUE
-
-/datum/species/kobold/on_species_gain(mob/living/carbon/C, datum/species/old_species)
-	..()
-	RegisterSignal(C, COMSIG_MOB_SAY, PROC_REF(handle_speech))
-
-/datum/species/kobold/on_species_loss(mob/living/carbon/C)
-	. = ..()
-	UnregisterSignal(C, COMSIG_MOB_SAY)
 
 /datum/species/kobold/get_random_body_markings(list/passed_features)
 	return assemble_body_markings_from_set(GLOB.body_marking_sets_by_type[/datum/body_marking_set/kobold_scale], passed_features, src)

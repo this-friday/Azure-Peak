@@ -7,7 +7,7 @@
 	total_positions = 1
 	spawn_positions = 1
 	spells = list()
-	vice_restrictions = list(/datum/charflaw/unintelligible)
+	vice_restrictions = list(/datum/charflaw/unintelligible, /datum/charflaw/wanted)
 	forbidden_races = list(RACES_DESPISED)
 	allowed_ages = ALL_AGES_LIST
 	cmode_music = 'sound/music/cmode/towner/combat_towner3.ogg'
@@ -36,6 +36,7 @@
 	job_subclasses = list(
 		/datum/advclass/archivist
 	)
+	has_subprefs = FALSE // only one subclass
 
 /datum/advclass/archivist
 	name = "Archivist"
@@ -69,11 +70,12 @@
 	age_mod = /datum/class_age_mod/archivist
 	subclass_mage_aspects = list("mastery" = FALSE, "major" = 1, "minor" = 1, "utilities" = 2, "ward" = TRUE)
 	subclass_skills = list(
+		/datum/skill/combat/staves = SKILL_LEVEL_JOURNEYMAN,
+		/datum/skill/combat/arcyne = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/misc/reading = SKILL_LEVEL_LEGENDARY,
 		/datum/skill/craft/alchemy = SKILL_LEVEL_LEGENDARY,
 		/datum/skill/magic/arcane = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/misc/medicine = SKILL_LEVEL_APPRENTICE,
-		/datum/skill/misc/riding = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/combat/wrestling = SKILL_LEVEL_NOVICE,
 		/datum/skill/combat/unarmed = SKILL_LEVEL_NOVICE,
 		/datum/skill/misc/swimming = SKILL_LEVEL_NOVICE,
@@ -86,7 +88,7 @@
 	H.adjust_blindness(-3)
 	if(should_wear_femme_clothes(H))
 		shirt = /obj/item/clothing/suit/roguetown/shirt/robe/archivist
-		head  = /obj/item/clothing/head/roguetown/roguehood/black
+		head	= /obj/item/clothing/head/roguetown/roguehood/black
 	else
 		shirt = /obj/item/clothing/suit/roguetown/shirt/robe/archivist
 		armor = /obj/item/clothing/suit/roguetown/armor/leather/vest/sailor/nightman
@@ -106,7 +108,7 @@
 		/obj/item/paper,
 		/obj/item/paper,
 		/obj/item/paper,
-		/obj/item/book/spellbook
+		/obj/item/rogueweapon/spellbook
 	)
 
 	if(H.mind)

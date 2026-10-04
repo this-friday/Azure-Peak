@@ -1,4 +1,5 @@
 /datum/action/cooldown/spell/caedo
+	source_aspect = /datum/magic_aspect/pseudo/spellblade
 	name = "Caedo"
 	desc = "In the old tongue, caedo - to strike or to cut down. Dash forward at blinding speed, \
 		leaving afterimages that strike every enemy in your path. \
@@ -21,7 +22,7 @@
 	charge_required = TRUE
 	weapon_cast_penalized = FALSE
 	charge_time = CHARGETIME_POKE
-	charge_drain = 0
+	hold_drain = 0
 	charge_slowdown = CHARGING_SLOWDOWN_NONE
 	charge_sound = 'sound/magic/charging.ogg'
 	cooldown_time = 12 SECONDS
@@ -91,7 +92,7 @@
 	do_teleport(H, dest, channel = TELEPORT_CHANNEL_MAGIC)
 	playsound(dest, 'sound/magic/blink.ogg', 25, TRUE)
 
-	log_combat(H, cast_on, "used Caedo on")
+	log_combat(H, cast_on, "used Caedo on", zone=H.zone_selected)
 
 	var/empowered = FALSE
 	var/datum/status_effect/buff/arcyne_momentum/momentum = H.has_status_effect(/datum/status_effect/buff/arcyne_momentum)
@@ -122,7 +123,7 @@
 	for(var/mob/living/victim in victims)
 		if(QDELETED(victim) || victim.stat == DEAD)
 			continue
-		if(spell_guard_check(victim, FALSE, deflected ? null : user))
+		if(spell_guard_check(victim, FALSE, user, punish_caster = deflected ? FALSE : null))
 			if(!deflected)
 				deflected = TRUE
 				user.Slowdown(2)
@@ -145,6 +146,8 @@
 
 /datum/action/cooldown/spell/caedo/proc/second_strike(mob/living/carbon/human/user, mob/living/victim, obj/item/weapon, def_zone)
 	if(!user || QDELETED(user) || !victim || QDELETED(victim) || victim.stat == DEAD)
+		return
+	if(spell_guard_check(victim, FALSE, user))
 		return
 	var/total_damage = strike_damage
 	arcyne_strike(user, victim, weapon, total_damage, def_zone, spell_name = "Caedo", skip_animation = TRUE)

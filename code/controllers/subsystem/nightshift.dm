@@ -9,9 +9,9 @@ SUBSYSTEM_DEF(nightshift)
 
 	var/nightshift_active = FALSE
 	var/nightshift_start_time = 576000	//4pm	//702000=7:30 PM, station time
-	var/nightshift_dawn_start = 288000		//198000=    530am
-	var/nightshift_day_start = 360000		//270000=    730am
-	var/nightshift_dusk_start = 504000		//630000=    530pm
+	var/nightshift_dawn_start = 288000		//198000=	530am
+	var/nightshift_day_start = 360000		//270000=	730am
+	var/nightshift_dusk_start = 504000		//630000=	530pm
 
 	/* Default STONEKEEP config.
 	var/nightshift_start_time = 756000	//9:00 PM - 2100 hrs
@@ -27,7 +27,7 @@ SUBSYSTEM_DEF(nightshift)
 
 	var/high_security_mode = FALSE
 
-/datum/controller/subsystem/nightshift/Initialize()
+/datum/controller/subsystem/nightshift/Initialize(mapload)
 	if(!CONFIG_GET(flag/enable_night_shifts))
 		can_fire = FALSE
 	current_tod = settod()
@@ -37,6 +37,8 @@ SUBSYSTEM_DEF(nightshift)
 	if(world.time - SSticker.round_start_time < nightshift_first_check)
 		return
 	check_nightshift()
+	if(SSticker?.sunscorched)
+		process_sunscorch()
 
 /datum/controller/subsystem/nightshift/proc/announce(message)
 	priority_announce(message, sound='sound/misc/bell.ogg')
@@ -70,6 +72,23 @@ SUBSYSTEM_DEF(nightshift)
 		A.update_tod(GLOB.tod)
 	for(var/mob/living/M in GLOB.mob_list)
 		M.update_tod(GLOB.tod)
+
+/datum/controller/subsystem/nightshift/proc/process_sunscorch()
+	if(world.time < SSticker.sunscorch_burn_start_time)
+		return
+	if(!SSticker.sunscorch_burn_warning_sent)
+		SSticker.sunscorch_burn_warning_sent = TRUE
+		to_world(span_userdanger("THE WORM CONSUMES THE SUN. Deadly radiance falls on Azuria. Those outside will be unmade. The back of my amygdala itches."))
+	for(var/mob/living/M as anything in GLOB.mob_living_list)
+		if(M.stat == DEAD || !isturf(M.loc))
+			continue
+		var/turf/current_turf = M.loc
+		if(!current_turf.can_see_sky())
+			continue
+		if(HAS_TRAIT(M, TRAIT_UNFORGIVABLE)) //Doesn't affect cultists of Vheslyn
+			continue
+		M.fire_act(1, 5)
+		CHECK_TICK
 
 /obj/proc/update_tod(todd)
 	return
@@ -106,5 +125,6 @@ SUBSYSTEM_DEF(nightshift)
 	if(!mind)
 		return
 	allmig_reward++
-	adjust_triumphs(1)
+	if(!has_flaw(/datum/charflaw/noflaw))
+		adjust_triumphs(1)
 	to_chat(src, span_danger("Days Survived: \Roman[allmig_reward]"))

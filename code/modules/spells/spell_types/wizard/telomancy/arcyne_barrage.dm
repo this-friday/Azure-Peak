@@ -24,8 +24,9 @@
 
 	charge_required = TRUE
 	weapon_cast_penalized = TRUE
+	charge_swingdelay_type = SWINGDELAY_PENALTY
 	charge_time = CHARGETIME_HEAVY
-	charge_drain = 1
+	hold_drain = 1
 	charge_slowdown = CHARGING_SLOWDOWN_MEDIUM
 	charge_sound = 'sound/magic/charging.ogg'
 	cooldown_time = 90 SECONDS
@@ -41,6 +42,11 @@
 	var/bolts_per_pulse = 5
 	var/pulse_spread = 120
 	var/channel_slowdown = 3
+
+/datum/action/cooldown/spell/projectile/arcyne_barrage/get_spell_statistics(mob/living/user)
+	var/list/stats = ..()
+	stats += span_info("Damage: 45 per bolt ([bolts_per_pulse] per pulse, pierces up to 5)")
+	return stats
 
 /datum/action/cooldown/spell/projectile/arcyne_barrage/before_cast(atom/cast_on)
 	. = ..()
@@ -112,10 +118,7 @@
 	bolt.fired_from = get_turf(H)
 	bolt.def_zone = BODY_ZONE_CHEST
 	bolt.spell_impact_intensity = SPELL_IMPACT_MEDIUM
-	bolt.accuracy += (H.STAINT - 9) * 4
-	bolt.bonus_accuracy += (H.STAINT - 8) * 3
-	if(H.mind)
-		bolt.bonus_accuracy += (H.get_skill_level(associated_skill) * 5)
+	H.apply_spell_accuracy(bolt)
 	bolt.setAngle(angle)
 	bolt.fire()
 
@@ -130,11 +133,9 @@
 	flag = "blunt"
 	range = 30
 	speed = 3
-	accuracy = 60
 	guard_deflectable = TRUE
-	npc_simple_damage_mult = 1.5
-	intdamfactor = BLUNT_DEFAULT_INT_DAMAGEFACTOR
-	movement_type = UNSTOPPABLE
+	expose_caster_on_deflect = TRUE
+	intdamfactor = 1
 	ricochets_max = 5
 	ricochet_chance = 100
 	ricochet_auto_aim_angle = 40

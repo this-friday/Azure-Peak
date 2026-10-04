@@ -9,15 +9,14 @@
 	origin = "Raneshen"
 	base_name = "Beastvolk"
 	changesource_flags = MIRROR_BADMIN | WABBAJACK | MIRROR_PRIDE | MIRROR_MAGIC | RACE_SWAP | SLIME_EXTRACT
-	desc = "<b>Tabaxi</b><br>\
-		Tabaxi are taller than most humans at six to seven feet. \
+	desc_title = "Tabaxi"
+	desc = "Tabaxi are taller than most humans at six to seven feet. \
 		Their bodies are slender and covered in spotted or striped fur. \
 		Like most felines, Tabaxi have long tails and retractable claws. \
 		Tabaxi fur color ranges from light yellow to brownish red. \
 		Tabaxi eyes are slit-pupilled and usually green or yellow. \
 		Tabaxi are competent swimmers and climbers as well as speedy runners. \
-		They have a good sense of balance and an acute sense of smell.<br>\
-		<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 SPD </b></span><br>"
+		They have a good sense of balance and an acute sense of smell."
 	skin_tone_wording = "Fur Colors"
 	use_skin_tone_wording_for_examine = FALSE
 	species_traits = list(EYECOLOR,HAIR,FACEHAIR,LIPS,STUBBLE, MUTCOLORS)
@@ -53,6 +52,7 @@
 		ORGAN_SLOT_LIVER = /obj/item/organ/liver,
 		ORGAN_SLOT_STOMACH = /obj/item/organ/stomach,
 		ORGAN_SLOT_APPENDIX = /obj/item/organ/appendix,
+		ORGAN_SLOT_GUTS = /obj/item/organ/guts,
 		ORGAN_SLOT_TAIL = /obj/item/organ/tail/cat,
 		ORGAN_SLOT_SNOUT = /obj/item/organ/snout/cat,
 		//ORGAN_SLOT_TESTICLES = /obj/item/organ/testicles,
@@ -80,6 +80,8 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/animal,
 		/datum/customizer/organ/vagina/animal,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		/datum/customizer/organ/ears/tajaran
 		)
 	body_marking_sets = list(
@@ -113,6 +115,9 @@
 		/datum/body_marking/bangs,
 		/datum/body_marking/bun,
 		/datum/body_marking/gradient,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 	languages = list(
 		/datum/language/common
@@ -179,11 +184,3 @@
 
 /datum/species/tabaxi/get_random_body_markings(list/passed_features)
 	return assemble_body_markings_from_set(GLOB.body_marking_sets_by_type[/datum/body_marking_set/tiger_dark], passed_features, src)
-
-/datum/species/tabaxi/on_species_gain(mob/living/carbon/C, datum/species/old_species)
-	..()
-	RegisterSignal(C, COMSIG_MOB_SAY, PROC_REF(handle_speech))
-
-/datum/species/tabaxi/on_species_loss(mob/living/carbon/C)
-	. = ..()
-	UnregisterSignal(C, COMSIG_MOB_SAY)

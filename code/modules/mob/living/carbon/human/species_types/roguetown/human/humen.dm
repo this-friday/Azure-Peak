@@ -8,15 +8,14 @@
 	origin_default = /datum/virtue/origin/grenzelhoft
 	origin = "Grenzelhoft"
 	sub_name = "Northern Humen"
-	desc = "<b>Humen</b><br>\
-	Humens (or \"Humans\") are the eldest of the Weeping God's creations. Noted for their \
+	desc_title = "Humen"
+	desc = "Humens (or \"Humans\") are the eldest of the Weeping God's creations. Noted for their \
 	tenacity and overwhelming population, humens are the most commonly seen race across the lands, \
 	at a rate of about ten to one in regions such as Grenzelhoft. However, to the west \
 	the opposite is true. Humens come from a vast swathe of cultures and ethnicities, most of which \
 	have historically been at odds with one another. Being the eldest creations of the Weeping God, humens \
 	tend to find fortune easier than the other races, and are so diverse that no other racial traits \
-	are dominant in their species.<br>\
-	<span style='color: #6a8cb7;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'><b>+1 INT | +1 WIL</b></span><br>"
+	are dominant in their species."
 
 	skin_tone_wording = "Ancestry"
 
@@ -34,18 +33,9 @@
 	dam_icon_f = 'icons/roguetown/mob/bodies/dam/dam_female.dmi'
 	soundpack_m = /datum/voicepack/male
 	soundpack_f = /datum/voicepack/female
-	offset_features = list(
-		OFFSET_ID = list(0,1), OFFSET_GLOVES = list(0,1), OFFSET_WRISTS = list(0,1),\
-		OFFSET_CLOAK = list(0,1), OFFSET_FACEMASK = list(0,1), OFFSET_HEAD = list(0,1), \
-		OFFSET_FACE = list(0,1), OFFSET_BELT = list(0,1), OFFSET_BACK = list(0,1), \
-		OFFSET_NECK = list(0,1), OFFSET_MOUTH = list(0,1), OFFSET_PANTS = list(0,1), \
-		OFFSET_SHIRT = list(0,1), OFFSET_ARMOR = list(0,1), OFFSET_HANDS = list(0,1), OFFSET_UNDIES = list(0,1), \
-		OFFSET_ID_F = list(0,-1), OFFSET_GLOVES_F = list(0,0), OFFSET_WRISTS_F = list(0,0), OFFSET_HANDS_F = list(0,0), \
-		OFFSET_CLOAK_F = list(0,0), OFFSET_FACEMASK_F = list(0,-1), OFFSET_HEAD_F = list(0,-1), \
-		OFFSET_FACE_F = list(0,-1), OFFSET_BELT_F = list(0,0), OFFSET_BACK_F = list(0,-1), \
-		OFFSET_NECK_F = list(0,-1), OFFSET_MOUTH_F = list(0,-1), OFFSET_PANTS_F = list(0,0), \
-		OFFSET_SHIRT_F = list(0,0), OFFSET_ARMOR_F = list(0,0), OFFSET_UNDIES_F = list(0,-1), \
-		)
+	allowed_body_builds = STANDARD_BODY_BUILDS
+	default_body_build_m = BODY_BUILD_BULKY
+	default_body_build_f = BODY_BUILD_SLIM
 	race_bonus = list(STAT_INTELLIGENCE = 1, STAT_WILLPOWER = 1)
 	enflamed_icon = "widefire"
 	customizers = list(
@@ -61,6 +51,8 @@
 		/datum/customizer/organ/penis/anthro,
 		/datum/customizer/organ/breasts/human,
 		/datum/customizer/organ/vagina/human_anthro,
+		/datum/customizer/bodypart_feature/pubes,
+		/datum/customizer/bodypart_feature/pits,
 		)
 	body_marking_sets = list(
 		/datum/body_marking_set/none,
@@ -77,11 +69,14 @@
 		/datum/body_marking/nose,
 		/datum/body_marking/bangs,
 		/datum/body_marking/bun,
+		/datum/body_marking/waist,
+		/datum/body_marking/womb_tattoo,
+		/datum/body_marking/butterfly
 	)
 
 /datum/species/human/northern/check_roundstart_eligible()
 	return TRUE
-	
+
 
 /datum/species/human/northern/get_skin_list()
 	return list(
@@ -97,6 +92,8 @@
 		"East Raneshen (Nshkormh)" = SKIN_COLOR_LALVESTINE,
 		"Naledi" = SKIN_COLOR_NALEDI,
 		"Naledi South" = SKIN_COLOR_NALEDI_LIGHT,
+		"Naledi West" = SKIN_COLOR_NALEDI_B,
+		"Naledi East" = SKIN_COLOR_NALEDI_D,
 		"Kazengun" = SKIN_COLOR_KAZENGUN
 	)
 

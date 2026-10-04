@@ -22,7 +22,7 @@ GLOBAL_LIST_INIT(ghost_verbs, list(
 	set name = "Journey to the Underworld"
 	set category = "Spirit"
 
-	switch(alert("Descend to the Underworld?",,"Yes","No"))
+	switch(alert(usr, "Descend to the Underworld?",,"Yes","No"))
 		if("Yes")
 			if(mob.mind && mob.mind.warband_ID != 0)
 				if(mob.mind.original_char)
@@ -70,7 +70,6 @@ GLOBAL_LIST_INIT(ghost_verbs, list(
 
 /mob/verb/returntolobby()
 	set name = "{RETURN TO LOBBY}"
-	set category = "Preferences.Options"
 	set hidden = 1
 
 	if(key)

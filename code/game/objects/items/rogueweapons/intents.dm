@@ -19,13 +19,21 @@
 	var/chargetime = 0
 	/// Amount of fatigue removed per tick of full charge.
 	var/chargedrain = 0
+	var/hold_grace = 0
+	var/hold_ramp = 0
+	var/hold_ramp_window = RANGED_HOLD_RAMP_WINDOW
 	/// Fatigue removed on release.
 	var/releasedrain = 1
 	/// Extra fatigue removed on missing the target, or if the enemy dodges.
 	var/misscost = 1
 	var/tranged = 0
-	/// Turns of auto-aim as well as the 'swoosh'.
+	/// Sound played to the charger when a charge/draw reaches full. Null = no sound.
+	var/ready_sound
+	var/needs_loaded_launcher = FALSE
+	/// Turns of auto-aim as well as the attack anim.
 	var/noaa = FALSE
+	/// Restores turf-click auto-aim on a noaa intent silently (so without the attack anim).
+	var/force_autoaim = FALSE
 	var/warnie = ""
 	var/pointer = 'icons/effects/mousemice/human_attack.dmi'
 	/// Invoked clickCD.
@@ -97,16 +105,16 @@
 	/// Cleave pattern for hitting secondary targets on normal attacks. Null = no cleave.
 	var/datum/cleave_pattern/cleave
 
-	var/list/static/bonk_animation_types = list(
+	var/static/list/bonk_animation_types = list(
 		BCLASS_BLUNT,
 		BCLASS_SMASH,
 		BCLASS_DRILL,
 	)
-	var/list/static/swipe_animation_types = list(
+	var/static/list/swipe_animation_types = list(
 		BCLASS_CUT,
 		BCLASS_CHOP,
 	)
-	var/list/static/thrust_animation_types = list(
+	var/static/list/thrust_animation_types = list(
 		BCLASS_STAB,
 		BCLASS_PICK,
 	)
@@ -164,6 +172,8 @@
 		inspec += "\n<b>No Early Release</b>"
 	if(chargedrain)
 		inspec += "\n<b>Drain While Charged:</b> [chargedrain]"
+		if(hold_grace)
+			inspec += "\n<b>Free Hold:</b> [DisplayTimeText(get_hold_grace())]"
 	if(releasedrain)
 		inspec += "\n<b>Drain On Release:</b> [releasedrain]"
 	if(misscost)
@@ -195,7 +205,7 @@
 				str +="|[bodyzone2readablezone(part)]|"
 			inspec += str
 	if(intent_intdamage_factor != 1)
-		inspec += "\n<b>Integrity Damage:</b> [intent_intdamage_factor * 100]%"
+		inspec += "\n<b>Integrity[intent_intdamage_factor < 1 ? " / Part" : ""] Damage:</b> [intent_intdamage_factor * 100]%"
 		if(masteritem)
 			inspec += " <span class='info'><a href='?src=[REF(masteritem)];explaindemolitionmod=1'>{?}</a></span>"
 	if(demolition_mod != 1)
@@ -219,22 +229,42 @@
 		inspec += " | Type: "
 		switch(swingdelay_type)
 			if(SWINGDELAY_NORMAL)
-				inspec += SPAN_TOOLTIP("The swing will be without any unusual effects.", "<font color='#e6e6e6'><u>Normal</u></font>")
+				inspec += SPAN_TOOLTIP("The attack has no additional effects or drawbacks.", "<font color='#e6e6e6'><u>Normal</u></font>")
 			if(SWINGDELAY_PENALTY)
-				inspec += SPAN_TOOLTIP("The swing will reduce my defense by a significant amount.", "<font color='#dab141'><u>Difficult</u></font>")
+				inspec += SPAN_TOOLTIP("The attack significantly reduces my ability to dodge or parry while performing it.", "<font color='#dab141'><u>Difficult</u></font>")
 			if(SWINGDELAY_CANCEL, SWINGDELAY_CANCELSLOW)
-				inspec += SPAN_TOOLTIP("I will have no chance to defend while swinging, and a strike against me will interrupt it.", "<font color='#a70d0d'><u>Rigid</u></font>")
-		
+				inspec += SPAN_TOOLTIP("The attack prevents me from dodging or parrying, and is interrupted if I am struck while performing it. However, it cannot be parried nor dodged.", "<font color='#a70d0d'><u>Rigid</u></font>")
+
 	if(cleave)
 		inspec += "\n<b>Cleave:</b> [cleave.desc]"
-		inspec += "\n  Max additional targets: [cleave.max_targets ? cleave.max_targets : "Unlimited"]"
-		inspec += "\n  Prioritizes living targets over dead."
+		inspec += "\n	Max additional targets: [cleave.max_targets ? cleave.max_targets : "Unlimited"]"
+		inspec += "\n	Prioritizes living targets over dead."
 		if(cleave.diagonal_desc)
-			inspec += "\n  [cleave.diagonal_desc]"
+			inspec += "\n	[cleave.diagonal_desc]"
 		inspec += "\n<tt>[cleave.get_pattern_display()]</tt>"
 	inspec += "<br>----------------------"
 
 	to_chat(user, "[inspec.Join()]")
+
+/datum/intent/proc/get_part_damage_factor()
+	return min(1, intent_intdamage_factor)
+
+/datum/intent/proc/out_of_effective_range(atom/target, mob/user)
+	if(!effective_range || !target || !user)
+		return FALSE
+	if(isliving(target))
+		var/mob/living/L = target
+		if(!(L.mobility_flags & MOBILITY_STAND))
+			return FALSE
+	var/dist = get_dist(target, user)
+	switch(effective_range_type)
+		if(EFF_RANGE_EXACT)
+			return dist != effective_range
+		if(EFF_RANGE_ABOVE)
+			return dist < effective_range
+		if(EFF_RANGE_BELOW)
+			return dist > effective_range
+	CRASH("effective_range found without a valid effective_range_type on [type] used by [user]")
 
 /datum/intent/proc/get_chargetime()
 	if(chargetime)
@@ -242,17 +272,40 @@
 	else
 		return 0
 
-/datum/intent/proc/get_chargedrain()
-	if(chargedrain)
-		return chargedrain
-	else
+/datum/intent/proc/get_hold_grace()
+	if(!hold_grace)
 		return 0
+	. = hold_grace
+	if(mastermob)
+		. += (mastermob.STAPER - RANGED_HOLD_GRACE_PER_BASELINE) * RANGED_HOLD_GRACE_PER_BONUS
+	return max(0, .)
+
+/datum/intent/proc/get_hold_instability(held_for)
+	if(!hold_ramp || hold_ramp_window <= 0)
+		return 0
+	return clamp((held_for - get_hold_grace()) / hold_ramp_window, 0, 1)
+
+/datum/intent/proc/get_chargedrain(held_for = 0)
+	if(!chargedrain)
+		return 0
+	return chargedrain * (1 + (get_hold_instability(held_for) * hold_ramp))
 
 /datum/intent/proc/get_releasedrain()
 	if(releasedrain)
 		return releasedrain
 	else
 		return 0
+
+/datum/intent/proc/launcher_is_loaded()
+	var/obj/item/gun/launcher = masteritem
+	if(!istype(launcher))
+		return TRUE
+	return launcher.can_shoot()
+
+/datum/intent/proc/get_ready_sound()
+	if(needs_loaded_launcher && !launcher_is_loaded())
+		return null
+	return ready_sound
 
 /datum/intent/proc/parrytime()
 	return 0
@@ -329,6 +382,17 @@
 		mob_light = mastermob.mob_light(glow_color, glow_intensity, FLASH_LIGHT_SPELLGLOW)
 	if(mob_charge_effect)
 		mastermob.vis_contents += mob_charge_effect
+
+/datum/intent/proc/on_charge_cancel()
+	if(!tranged || !mastermob?.client)
+		return
+	if(!mastermob.client.charging)
+		return
+	if(mastermob.stamina >= mastermob.max_stamina)
+		return
+	var/obj/item/gun/ballistic/revolver/grenadelauncher/launcher = masteritem
+	if(istype(launcher))
+		INVOKE_ASYNC(launcher, TYPE_PROC_REF(/obj/item/gun/ballistic/revolver/grenadelauncher, pay_letdown_drain), mastermob, mastermob.client.chargedprog / 100)
 
 /datum/intent/proc/on_mouse_up()
 	if(chargedloop)
@@ -431,8 +495,7 @@
 
 /datum/intent/stab/militia
 	name = "militia stab"
-	damfactor = 1.1
-	penfactor = PEN_HEAVY
+	penfactor = PEN_MEDIUM
 
 /datum/intent/pick //now like icepick intent, we really went in a circle huh
 	name = "pick"
@@ -466,7 +529,7 @@
 	clickcd = 4 // Just like knife pick!
 	swingdelay = 1
 	releasedrain = 0 //no stamina loss, as charges are lost as it drills
-	
+
 /datum/intent/pick/bad	//One-handed intents
 	name = "sluggish pick"
 	icon_state = "inpick"
@@ -521,7 +584,9 @@
 	noaa = TRUE
 	charging_slowdown = 3
 	warnoffset = 20
-	var/strength_check = FALSE //used when we fire HEAVY bows
+	hold_grace = RANGED_HOLD_GRACE
+	hold_ramp = RANGED_HOLD_RAMP
+	needs_loaded_launcher = TRUE
 
 /datum/intent/shoot/prewarning()
 	if(masteritem && mastermob)
@@ -539,8 +604,10 @@
 	noaa = TRUE
 	charging_slowdown = 3
 	warnoffset = 20
-	var/strength_check = FALSE //used when we fire HEAVY bows
-	
+	hold_grace = RANGED_HOLD_GRACE
+	hold_ramp = RANGED_HOLD_RAMP
+	needs_loaded_launcher = TRUE
+
 /datum/intent/proc/arc_check()
 	return FALSE
 
@@ -556,12 +623,15 @@
 	icon_state = "inshoot"
 	tranged = 1
 	warnie = "aimwarn"
+	ready_sound = 'sound/foley/slingload.ogg'
 	item_d_type = "stab"
 	chargetime = 0.1
 	no_early_release = FALSE
 	noaa = TRUE
 	charging_slowdown = 3
 	warnoffset = 20
+	hold_grace = RANGED_HOLD_GRACE
+	hold_ramp = RANGED_HOLD_RAMP
 
 /datum/intent/swing/prewarning()
 	if(masteritem && mastermob)
@@ -578,7 +648,7 @@
 	noaa = FALSE
 	animname = "bite"
 	hitsound = list('sound/combat/hits/punch/punch_hard (1).ogg', 'sound/combat/hits/punch/punch_hard (2).ogg', 'sound/combat/hits/punch/punch_hard (3).ogg')
-	misscost = 3
+	misscost = 1
 	releasedrain = 1
 	swingdelay = 0
 	clickcd = CLICK_CD_FAST // Same speed as katar — fists are the free unarmed weapon
@@ -596,51 +666,160 @@
 	if(ismob(target))
 		var/mob/M = target
 		var/list/targetl = list(target)
-		user.visible_message(span_taunt("[user] taunts [M]!"), span_taunt("I taunt [M]!"), ignored_mobs = targetl)
-		targetl.Add(user)
-		user.emote("taunt")
+		var/mob/living/L = user
+		var/taunticon = "taunt"
+		var/custom_offset = 21
+		var/taunt_message = "[user] taunts [M]!"
+		var/is_pacifist = istype(L.patron, /datum/patron/divine/eora) || HAS_TRAIT(L, TRAIT_PACIFISM)
+
 		if(M.mind)
-			var/mob/living/L = user
-			var/taunticon = "taunt" // Regular fist
-			var/custom_offset = 21
-			if(istype(L.patron, /datum/patron/inhumen/graggar) || L.get_stress_amount() > 10 || L.get_flaw(/datum/charflaw/addiction/paranoid))
-				taunticon = "midfinger" // Very rude, but we're also a Rude Person (or stressed)
-				custom_offset = 23
-
-			var/datum/charflaw/averse/AV = L.get_flaw(/datum/charflaw/averse)
-			if(AV)
-				if(AV.check_aversion(L, M))
-					taunticon = "midfinger"	// We hate this person in particular
-
-			if(istype(L.patron, /datum/patron/divine/eora) || HAS_TRAIT(L, TRAIT_PACIFISM))
+			if(is_pacifist)
 				taunticon = "thumbsdown"
 				custom_offset = 24
+				taunt_message = "[user] berates [M] disapprovingly!"
+			else
+				var/datum/charflaw/averse/AV = L.get_flaw(/datum/charflaw/averse)
+				if(AV && AV.check_aversion(L, M))
+					taunticon = "midfinger"
+					custom_offset = 23
+					taunt_message = "[user] flips [M] off with extreme prejudice!"
+
+				else if(istype(L.patron, /datum/patron/divine/necra) && (HAS_TRAIT(M, TRAIT_DEATHLESS) && !HAS_TRAIT(M, TRAIT_VAMP_DREAMS)))
+					taunticon = "midfinger"
+					custom_offset = 23
+					taunt_message = "[user] flips [M] off with extreme prejudice!"
+
+				else if(istype(L.patron, /datum/patron/vheslyn))
+					taunticon = "midfinger"
+					custom_offset = 23
+					taunt_message = "[user] flips [M] off with extreme prejudice!"
+
+				else if(istype(L.patron, /datum/patron/inhumen/graggar))
+					taunticon = "midfinger"
+					custom_offset = 23
+					taunt_message = "[user] rudely flips [M] off!"
+
+				else if(L.get_stress_amount() > 10 || L.get_flaw(/datum/charflaw/addiction/paranoid))
+					taunticon = "midfinger"
+					custom_offset = 23
+					taunt_message = "[user] flips [M] off!"
 
 			L.play_overhead_private_rclickemote(targetl, taunticon, custom_offset)
-			user.changeNext_move(CLICK_CD_FAST)	// Mostly to prevent spamming the animation too heavily.
-			to_chat(M, span_taunt("[user] taunts me!"))
+			to_chat(M, span_taunt(taunt_message))
+			user.visible_message(span_taunt(taunt_message), span_taunt(taunt_message), ignored_mobs = targetl)
+			user.emote("taunt")
+			user.changeNext_move(CLICK_CD_FAST) // Mostly to prevent spamming the animation too heavily.
 		else
+			if(is_pacifist)
+				taunticon = "thumbsdown"
+				custom_offset = 24
+				taunt_message = "[user] berates [M] disapprovingly!"
+
+			user.visible_message(span_taunt(taunt_message), span_taunt(taunt_message), ignored_mobs = targetl)
+			user.emote("taunt")
+
 			M.taunted(user)
+			if(M.ai_controller)
+				M.ai_controller.set_blackboard_key(BB_BASIC_MOB_CURRENT_TARGET, user)
+				M.ai_controller.set_blackboard_key(BB_HIGHEST_THREAT_MOB, user)
+			var/datum/component/ai_aggro_system/aggro = M.GetComponent(/datum/component/ai_aggro_system)
+			if(aggro)
+				aggro.add_threat_to_mob(user, 300)
 	return
+
+/// A punch with claw visual only. All damage, armor, wound, timing, stamina, and parry behavior remains inherited from punch.
+/datum/intent/unarmed/punch/cosmetic_claw
+	name = "cosmetic claw (punch)"
+	desc = "A punch delivered with natural claws. Its presentation changes, but it behaves exactly like PUNCH."
+	animname = ATTACK_EFFECT_CLAW
+	hitsound = "bluntwooshmed"
+	miss_text = "throw a clawed punch at the air"
+	miss_sound = "bluntwooshmed"
+
+/datum/intent/unarmed/punch/cosmetic_claw/retractable
+	attack_verb = list("swipes", "rakes", "grazes")
+	miss_text = "swipe retractable claws through the air"
+
+/datum/intent/unarmed/punch/cosmetic_claw/hooked
+	attack_verb = list("gouges", "hooks", "rakes")
+	miss_text = "swipe hooked claws through the air"
+
+/datum/intent/unarmed/punch/cosmetic_claw/heavy
+	attack_verb = list("swipes", "buffets", "rakes")
+	miss_text = "swing heavy claws through the air"
+
+/datum/intent/unarmed/punch/cosmetic_claw/talons
+	attack_verb = list("gouges", "rakes", "scores")
+	miss_text = "lash sharp talons through the air"
+
+/datum/intent/unarmed/punch/cosmetic_claw/chitinous
+	attack_verb = list("scrapes", "scythes", "rakes")
+	miss_text = "scrape chitinous claws through the air"
 
 /datum/intent/unarmed/claw
 	name = "claw"
 	//icon_state
 	attack_verb = list("mauls", "scratches", "claws")
 	chargetime = 0
-	animname = "blank22"
+	animname = "cut"
 	hitsound = list('sound/combat/hits/punch/punch (1).ogg', 'sound/combat/hits/punch/punch (2).ogg', 'sound/combat/hits/punch/punch (3).ogg')
-	misscost = 5
-	releasedrain = 4	//More than punch cus pen factor.
+	misscost = 1
+	releasedrain = 1	//More than punch cus pen factor.
 	swingdelay = 0
 	penfactor = PEN_NONE
+	rmb_ranged = TRUE //for taunt sovl
 	candodge = TRUE
 	canparry = TRUE
 	blade_class = BCLASS_CUT
-	miss_text = "claw at the air"
+	miss_text = "claws at the air"
 	miss_sound = "punchwoosh"
 	item_d_type = "slash"
-	
+
+/datum/intent/unarmed/claw/rmb_ranged(atom/target, mob/user)
+	if(user.stat >= UNCONSCIOUS)
+		return
+	if(ismob(target))
+		var/mob/M = target
+		var/list/targetl = list(target)
+		var/mob/living/L = user
+		var/taunticon = "taunt"
+		var/custom_offset = 21
+		var/taunt_message = "[user] taunts [M]!"
+		var/is_pacifist = istype(L.patron, /datum/patron/divine/eora) || HAS_TRAIT(L, TRAIT_PACIFISM) //keeping it because its funny, yes even for deadite Eorans to just thumbs you down while the rest give the finger
+
+		if(M.mind)
+			if(is_pacifist)
+				taunticon = "thumbsdown"
+				custom_offset = 24
+				taunt_message = "[user] berates [M] disapprovingly!"
+
+			else if(!HAS_TRAIT(M, TRAIT_DEATHLESS) && HAS_TRAIT(L, TRAIT_DEATHLESS)) //RAGE AGAINST THE LYVING
+				taunticon = "midfinger"
+				custom_offset = 23
+				taunt_message = "[user] flips [M] off with extreme prejudice!"
+
+			L.play_overhead_private_rclickemote(targetl, taunticon, custom_offset)
+			to_chat(M, span_taunt(taunt_message))
+			user.visible_message(span_taunt(taunt_message), span_taunt(taunt_message), ignored_mobs = targetl)
+			user.emote("taunt")
+			user.changeNext_move(CLICK_CD_FAST) // Mostly to prevent spamming the animation too heavily.
+		else
+			if(is_pacifist)
+				taunticon = "thumbsdown"
+				custom_offset = 24
+				taunt_message = "[user] berates [M] disapprovingly!"
+
+			user.visible_message(span_taunt(taunt_message), span_taunt(taunt_message), ignored_mobs = targetl)
+			user.emote("taunt")
+
+			M.taunted(user)
+			if(M.ai_controller)
+				M.ai_controller.set_blackboard_key(BB_BASIC_MOB_CURRENT_TARGET, user)
+				M.ai_controller.set_blackboard_key(BB_HIGHEST_THREAT_MOB, user)
+			var/datum/component/ai_aggro_system/aggro = M.GetComponent(/datum/component/ai_aggro_system)
+			if(aggro)
+				aggro.add_threat_to_mob(user, 300)
+	return
 
 /datum/intent/unarmed/shove
 	name = "shove"
@@ -648,6 +827,7 @@
 	attack_verb = list("shoves", "pushes")
 	chargetime = 0
 	noaa = TRUE
+	force_autoaim = TRUE
 	rmb_ranged = TRUE
 	misscost = 5
 	item_d_type = "blunt"
@@ -659,12 +839,11 @@
 		var/mob/M = target
 		var/list/targetl = list(target)
 		user.visible_message(span_blue("[user] shoos [M] away."), span_blue("I shoo [M] away."), ignored_mobs = targetl)
-		targetl.Add(user)
 		if(M.mind)
 			var/mob/living/L = user
 			L.play_overhead_private_rclickemote(targetl, "dismiss")
 			user.changeNext_move(CLICK_CD_FAST)	// Mostly to prevent spamming the animation too heavily.
-			to_chat(M, span_blue("[user] shoos me away."))
+			to_chat(M, span_blue("[user] shoos [M] away."))
 		else
 			M.shood(user)
 	return
@@ -675,8 +854,9 @@
 	attack_verb = list("grabs")
 	chargetime = 0
 	noaa = TRUE
+	force_autoaim = TRUE
 	rmb_ranged = TRUE
-	releasedrain = 10
+	releasedrain = 2
 	misscost = 8
 	candodge = TRUE
 	canparry = TRUE
@@ -689,12 +869,11 @@
 		var/mob/M = target
 		var/list/targetl = list(target)
 		user.visible_message(span_yellow("[user] beckons [M] to come closer."), span_yellow("I beckon [M] to come closer."), ignored_mobs = targetl)
-		targetl.Add(user)
 		if(M.mind)
 			var/mob/living/L = user
 			L.play_overhead_private_rclickemote(targetl, "beckon")
 			user.changeNext_move(CLICK_CD_FAST)	// Mostly to prevent spamming the animation too heavily.
-			to_chat(M, span_yellow("[user] beckons me to come closer."))
+			to_chat(M, span_yellow("[user] beckons [M] to come closer."))
 		else
 			M.beckoned(user)
 	return
@@ -716,19 +895,22 @@
 		var/mob/M = target
 		var/list/targetl = list(target)
 		user.visible_message(span_green("[user] waves friendly at [M]."), span_green("I wave friendly at [M]."), ignored_mobs = targetl)
-		targetl.Add(user)
 		if(M.mind)	// Waving at an NPC doesn't need to show this.
 			var/mob/living/L = user
 			L.play_overhead_private_rclickemote(targetl, "wavefriendly")
 			user.changeNext_move(CLICK_CD_FAST)	// Mostly to prevent spamming the animation too heavily.
-			to_chat(M, span_green("[user] gives me a friendly wave."))
+			to_chat(M, span_green("[user] waves friendly at [M]."))
 	return
+
+/datum/intent/simple
+	miss_text = "swings at nothing"
+	miss_sound = "punchwoosh"
 
 /datum/intent/simple/headbutt
 	name = "headbutt"
 	icon_state = "instrike"
 	attack_verb = list("headbutts", "rams")
-	animname = "blank22"
+	animname = "strike"
 	blade_class = BCLASS_BLUNT
 	hitsound = "punch_hard"
 	chargetime = 0
@@ -736,13 +918,15 @@
 	swingdelay = 0
 	candodge = TRUE
 	canparry = TRUE
+	miss_text = "rams nothing"
+	miss_sound = "bluntwooshmed"
 	item_d_type = "blunt"
 
 /datum/intent/simple/claw
 	name = "claw"
 	icon_state = "instrike"
 	attack_verb = list("claws", "pecks")
-	animname = "blank22"
+	animname = "cut"
 	blade_class = BCLASS_CUT
 	hitsound = "smallslash"
 	chargetime = 0
@@ -750,7 +934,8 @@
 	swingdelay = 3
 	candodge = TRUE
 	canparry = TRUE
-	miss_text = "slash the air"
+	miss_text = "claws at nothing"
+	miss_sound = "bladewooshsmall"
 	item_d_type = "slash"
 
 /datum/intent/simple/claw/simplewwnpc
@@ -761,7 +946,7 @@
 	name = "bite"
 	icon_state = "instrike"
 	attack_verb = list("bites")
-	animname = "blank22"
+	animname = "bite"
 	blade_class = BCLASS_CUT
 	hitsound = "smallslash"
 	chargetime = 0
@@ -769,6 +954,8 @@
 	swingdelay = 3
 	candodge = TRUE
 	canparry = TRUE
+	miss_text = "snaps at nothing"
+	miss_sound = "bladewooshsmall"
 	item_d_type = "stab"
 
 
@@ -776,7 +963,7 @@
 	name = "hack"
 	icon_state = "instrike"
 	attack_verb = list("hacks at", "chops at", "bashes")
-	animname = "blank22"
+	animname = "chop"
 	blade_class = BCLASS_CUT
 	hitsound = list("genchop", "genslash")
 	chargetime = 0
@@ -784,13 +971,15 @@
 	swingdelay = 3
 	candodge = TRUE
 	canparry = TRUE
+	miss_text = "hacks at nothing"
+	miss_sound = "bladewooshlarge"
 	item_d_type = "slash"
 
 /datum/intent/simple/spear
 	name = "spear"
 	icon_state = "instrike"
 	attack_verb = list("stabs", "skewers")
-	animname = "blank22"
+	animname = "stab"
 	blade_class = BCLASS_CUT
 	hitsound = list("genthrust", "genstab")
 	chargetime = 0
@@ -798,6 +987,8 @@
 	swingdelay = 3
 	candodge = TRUE
 	canparry = TRUE
+	miss_text = "thrusts at nothing"
+	miss_sound = "bladewooshmed"
 	item_d_type = "stab"
 
 /datum/intent/bless
@@ -847,6 +1038,10 @@
 	name = "light"
 	icon_state = "inlight"
 
+/datum/intent/hand/convert
+	name = "convert"
+	icon_state = "inbless"
+
 /datum/intent/effect
 	blade_class = BCLASS_EFFECT
 
@@ -857,11 +1052,13 @@
 	attack_verb = list("dazes")
 	animname = "strike"
 	hitsound = list('sound/combat/hits/blunt/daze_hit.ogg')
-	chargetime = 0
 	penfactor = PEN_NONE
-	swingdelay = 6
+	swingdelay = 1 SECONDS
 	damfactor = 1
 	item_d_type = "blunt"
 	intent_effect = /datum/status_effect/debuff/dazed
 	target_parts = list(BODY_ZONE_HEAD)
 	intent_intdamage_factor = BLUNT_DEFAULT_INT_DAMAGEFACTOR
+	candodge = FALSE
+	canparry = FALSE
+	swingdelay_type = SWINGDELAY_CANCEL
