@@ -66,6 +66,10 @@
 			to_chat(user, span_warning("The lobby is too small for the Divorce aspect to be taken."))
 			user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 			return
+		if(linked_lobby)
+			to_chat(user, span_warning("The lobby is already divorced. It cannot split again."))
+			user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
+			return
 		break
 
 	for(var/datum/warbands/source in list(incoming_warband, incoming_subtype) + incoming_aspects)
