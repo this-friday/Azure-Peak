@@ -29,12 +29,15 @@
 		return
 
 	candidates = shuffle(candidates)
-	var/list/departing = candidates.Copy(1, round(candidates.len / 2) + 1) // half, rounded down
+	var/departing_count = -round(-candidates.len / 2)
+	var/list/departing = candidates.Copy(1, departing_count + 1)
 
 	// the second warband
 	var/datum/warband_manager/new_manager = new /datum/warband_manager()
 	SSwarbands.register_manager(new_manager)
 	new_manager.linked_lobby = src
+	new_manager.lobby_chat_number = 2
+	lobby_chat_number = 1
 	linked_lobby = new_manager
 	new_manager.lobby_chat_muted_until = lobby_chat_muted_until
 	cancel_all_swap_offers("Role swap cancelled. The lobby was split.")
@@ -51,7 +54,7 @@
 		if(member.client)
 			member.client.screen -= button
 		new_manager.create_HUD_instance(member)
-		to_chat(member, span_boldwarning("You've been pushed into another warband."))
+		to_chat(member, span_boldwarning("You've been pushed into another warband. You are now in WARBAND 2."))
 		
 	var/list/officer_candidates = list()
 	for(var/mob/living/member in departing)
@@ -61,7 +64,12 @@
 
 	new_manager.promote_new_warlord(new_warlord)
 	new_manager.start_creation_timer()
-	var/announcement = span_redteamradio("The lobby has been split, and [new_warlord.real_name] now leads a second warband. For planning's sake, both lobbies still share this chat.")
+	var/old_warlord_name = "the original Warlord"
+	for(var/mob/living/member in lobby_members)
+		if(member.mind?.special_role == ROLE_WARLORD)
+			old_warlord_name = member.real_name
+			break
+	var/announcement = span_redteamradio("The lobby has been split. WARBAND 1 is led by [old_warlord_name]. WARBAND 2 is led by [new_warlord.real_name]. For planning's sake, both lobbies still share this chat.")
 	announce_to_lobby(announcement)
 	new_manager.announce_to_lobby(announcement)
 	for(var/mob/living/member in lobby_members + new_manager.lobby_members)

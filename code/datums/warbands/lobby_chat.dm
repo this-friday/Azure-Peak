@@ -8,16 +8,31 @@
 /datum/warband_manager
 	var/lobby_chat_muted_until = 0
 	var/list/pending_swap_offers = list()	// an associated list of: target ckey + offer details | used to track Role Swap requests between warband members
+	var/lobby_chat_number = 1 // which side of a split this lobby is on: 1 = the original warband, 2 = the breakaway. only matters while linked_lobby is set
+	var/static/list/lobby_chat_palettes = list(
+		list("label" = "WARBAND 1", "tag" = "#e8bf67", "warlord" = "#e8bf67", "officer" = "#d8a657", "grunt" = "#bdbdbd"),
+		list("label" = "WARBAND 2", "tag" = "#4fd1e0", "warlord" = "#63dcec", "officer" = "#4aa8e0", "grunt" = "#9ec4dc"),
+	)
+
+/datum/warband_manager/proc/get_lobby_chat_palette()
+	return lobby_chat_palettes[clamp(lobby_chat_number, 1, lobby_chat_palettes.len)]
+
+/datum/warband_manager/proc/get_lobby_chat_label()
+	if(!linked_lobby)
+		return ""
+	var/list/palette = get_lobby_chat_palette()
+	return palette["label"]
 
 // returns a style based on the provided special_role
 /datum/warband_manager/proc/get_warband_lobby_style(role)
-	var/list/style = list("color" = "#bdbdbd", "size" = "100%", "weight" = "normal")
+	var/list/palette = get_lobby_chat_palette()
+	var/list/style = list("color" = palette["grunt"], "size" = "100%", "weight" = "normal")
 	if(role == ROLE_WARLORD)
-		style["color"] = "#e8bf67"
+		style["color"] = palette["warlord"]
 		style["size"] = "126%"
 		style["weight"] = "bold"
 	else if(role == ROLE_WARLORD_LIEUTENANT || role == ROLE_WARLORD_ASPIRANT)
-		style["color"] = "#d8a657"
+		style["color"] = palette["officer"]
 		style["size"] = "108%"
 		style["weight"] = "bold"
 	return style
@@ -31,7 +46,6 @@
 	if(!manager)
 		to_chat(src, span_warning("Your warband lobby channel isn't available right now."))
 		return
-
 	if(GLOB.say_disabled)
 		to_chat(src, span_danger("Speech is currently admin-disabled."))
 		return
@@ -65,11 +79,14 @@
 	var/size = style["size"]
 	var/speaker_name = mob.real_name
 	var/speaker_ckey = mob.ckey
-	var/lobby_line = "<font color='[col]'><span style='font-size:[size];font-weight:[style["weight"]]'><b>[speaker_name]</b>: <span class='message'>[message]</span></span></font>"
+	var/list/palette = manager.get_lobby_chat_palette()
+	var/lobby_label = manager.get_lobby_chat_label()
+	var/label_tag = lobby_label ? "<font color='[palette["tag"]]'><b>\[[lobby_label]\]</b></font> " : "" // only shown if the lobby's been split
+	var/final_message = "[label_tag]<font color='[col]'><span style='font-size:[size];font-weight:[style["weight"]]'><b>[speaker_name]</b>: <span class='message'>[message]</span></span></font>"
 
 	var/list/recipients = list()
 	var/list/hearing_members = manager.lobby_members.Copy()
-	if(manager.linked_lobby) // sundered lobbies share their chat, so the two hosts can conspire
+	if(manager.linked_lobby) // split lobbies share their chat
 		hearing_members |= manager.linked_lobby.lobby_members
 	for(var/mob/living/lobby_member in hearing_members)
 		var/client/lobby_client = lobby_member.client
@@ -81,10 +98,10 @@
 	recipients |= src
 
 	for(var/client/receiving_client in recipients)
-		to_chat(receiving_client, lobby_line)
+		to_chat(receiving_client, final_message)
 
 	// deadchat mirror
-	// shows the message + real_name (admins also see the ckey in parens)
+	// shows the message + real_name (admins also see the ckey in parenthesis)
 	for(var/mob/dead/dead_watcher in GLOB.player_list)
 		var/client/deadchat_client = dead_watcher.client
 		if(!deadchat_client || deadchat_client == src)
@@ -96,7 +113,7 @@
 		var/admin_suffix = ""
 		if(deadchat_client in GLOB.admins)
 			admin_suffix = " ([speaker_ckey]) <a href='?_src_=holder;[HrefToken()];adminplayeropts=[REF(mob)]'>\[PP\]</a>"
-		var/dead_line = span_gamedeadsay("<span class='prefix'>WARBAND:</span> <font color='[col]'><b>[speaker_name]</b>[admin_suffix]</font>: <span class='dsayspeech'>\"[message]\"</span>")
+		var/dead_line = span_gamedeadsay("<span class='prefix'>[lobby_label ? lobby_label : "WARBAND"]:</span> <font color='[col]'><b>[speaker_name]</b>[admin_suffix]</font>: <span class='dsayspeech'>\"[message]\"</span>")
 		to_chat(deadchat_client, dead_line)
 
 // a warlord-only toggle for a 2-minute lobby silence

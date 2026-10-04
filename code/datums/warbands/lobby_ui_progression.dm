@@ -63,7 +63,7 @@
 			if(member.mind && member.mind.special_role != ROLE_WARLORD)
 				other_members++
 		if(other_members < 4)
-			to_chat(user, span_warning("The lobby is too small for the Divorce aspect to be taken. A minimum of four members is required."))
+			to_chat(user, span_warning("The lobby is too small for the Divorce aspect to be taken."))
 			user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 			return
 		break
