@@ -14,10 +14,12 @@ export const WarbandDebug = () => {
     bypass_rarity = false,
     poll_active = false,
     poll_seconds_left: pollSecondsLeft = 0,
+    server_ready = false,
   } = data as any;
 
   const bypassRarity = !!bypass_rarity;
   const pollActive = !!poll_active;
+  const serverReady = !!server_ready;
 
   const [selectedCkey, setSelectedCkey] = useState('');
   const [ckeyFilter, setCkeyFilter] = useState('');
@@ -31,7 +33,7 @@ export const WarbandDebug = () => {
     : availableCkeys;
 
   const hasWarlord = members.some((m) => m.role === 'Warlord');
-  const canCreate = hasWarlord && !pollActive;
+  const canCreate = hasWarlord && !pollActive && serverReady;
 
   const handleAdd = () => {
     if (!selectedCkey) return;
@@ -103,7 +105,7 @@ export const WarbandDebug = () => {
                       <Button
                         fluid
                         icon="bullhorn"
-                        disabled={pollActive}
+                        disabled={pollActive || !serverReady}
                         onClick={() => act('poll_candidates', { poll_size: pollSize })}
                         tooltip="Polls ghosts who have Warband enabled in their antag prefs. You'll be told how many qualify before the poll's sent."
                       >
@@ -174,6 +176,13 @@ export const WarbandDebug = () => {
                 {!hasWarlord && members.length > 0 && (
                   <Stack.Item>
                     <Box color="bad">A Warlord is required.</Box>
+                  </Stack.Item>
+                )}
+                {!serverReady && (
+                  <Stack.Item>
+                    <Box color="bad">
+                      The server is still initializing.
+                    </Box>
                   </Stack.Item>
                 )}
                 {pollActive && (

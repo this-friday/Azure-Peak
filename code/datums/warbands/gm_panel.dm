@@ -29,8 +29,12 @@
 /datum/warband_spawner_ui/ui_close()
 	qdel(src)
 
+/datum/warband_spawner_ui/proc/server_ready()
+	return Master.current_runlevel
+
 /datum/warband_spawner_ui/ui_data(mob/user)
 	return list(
+		"server_ready" = server_ready(),
 		"members" = members,
 		"bypass_rarity" = bypass_rarity,
 		"poll_active" = poll_active,
@@ -88,6 +92,9 @@
 			bypass_rarity = !bypass_rarity
 
 		if("poll_candidates")
+			if(!server_ready())
+				to_chat(ui.user, span_warning("The server is still initializing."))
+				return TRUE
 			if(poll_active)
 				to_chat(ui.user, span_warning("A candidate poll is already running."))
 				return TRUE
@@ -95,6 +102,9 @@
 			INVOKE_ASYNC(src, PROC_REF(try_start_candidate_poll), poll_size, ui.user.client)
 
 		if("create_warband")
+			if(!server_ready())
+				to_chat(ui.user, span_warning("The server is still initializing."))
+				return TRUE
 			if(poll_active)
 				to_chat(ui.user, span_warning("A candidate poll is still running."))
 				return TRUE
@@ -105,6 +115,9 @@
 	return TRUE
 
 /datum/warband_spawner_ui/proc/create_warband(mob/admin_mob, bypass = FALSE)
+	if(!server_ready())
+		to_chat(admin_mob, span_warning("The server is still initializing."))
+		return FALSE
 	if(SSwarbands.warband_managers_busy)
 		to_chat(admin_mob, span_warning("The Warband subsystem is occupied."))
 		return FALSE
