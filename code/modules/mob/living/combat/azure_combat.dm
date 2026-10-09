@@ -185,14 +185,12 @@
 		prob_us = max(prob_us, prob_opp)
 		prob_opp = max(prob_us, prob_opp)
 
-	return list("us" = prob_us, "opp" = prob_opp, "instantloss" = instantloss, "instantwin" = instantwin)
+	return list("us" = prob_us, "opp" = prob_opp)
 
 /mob/living/carbon/human/proc/clash(mob/user, obj/item/IM, obj/item/IU)
 	var/mob/living/carbon/human/HU = user
 
 	var/list/odds = get_clash_odds(HU, IM, IU)
-	var/instantloss = odds["instantloss"]
-	var/instantwin = odds["instantwin"]
 	var/prob_us = odds["us"]
 	var/prob_opp = odds["opp"]
 

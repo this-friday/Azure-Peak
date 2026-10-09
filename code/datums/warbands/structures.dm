@@ -100,7 +100,7 @@
 						to_chat(user, span_warning("If order isn't restored, we shall be found in dire straits."))
 						return
 					if(linked_warband.disorder <= 8)
-						to_chat(user, span_warning("Unrest is rampant in our ranks. We won't hold together for much longer."))
+						to_chat(user, span_warning("Unrest runs rampant in our ranks. We won't hold together for much longer."))
 						return
 					if(linked_warband.disorder <= 10)
 						to_chat(user, span_warning("Order has completely broken down. We are akin to bandits."))
@@ -352,7 +352,7 @@
 								if(race_choice)
 									linked_warband.summon_envoy(user, loc, src, race_choice, depth_choice)
 					else
-						to_chat(user, span_userdanger("No reinforcements remain."))					
+						to_chat(user, span_userdanger("No reinforcements remain."))
 				if("Summon GOONS (NPCs)")
 					if(!user.mind.warband_manager.outskirts_established)
 						to_chat(user, span_warning("It's far too soon to prepare the soldiery. We should allow time for our envoys to scout a path, first."))
@@ -385,7 +385,7 @@
 						for(var/obj/item/treaty/bag_treaty in bag.contents)
 							to_chat(user, span_userdanger("I'm carrying a Treaty. I should set it down somewhere before I return."))
 							return
-					linked_warband.return_envoy(user)						
+					linked_warband.return_envoy(user)
 					return
 				else
 					return
@@ -517,7 +517,7 @@
 				to_chat(officer, span_warning("Our scouts report lurkers in our camp's outskirts. They've spotted [linked_warband.incoming_mobs.len] potential foe(s)."))
 		if(linked_warband.combatmusic && linked_warband.combatmusic.len)
 			if(L.cmode_music_override != linked_warband.combatmusic)
-				if(!L.cmode_music_override || L.cmode_music_override.len <= 0)
+				if(!L.cmode_music_override)
 					L.originalcmode = L.cmode_music
 				else
 					L.originalcmode = L.cmode_music_override
@@ -692,7 +692,7 @@
 	if(!encounter.encounter_active || encounter.encounter_disabled)
 		linked_warband.besieging_mobs -= L
 		return ..()
-	
+
 /obj/structure/fluff/traveltile/warband/camp_to_outskirts
 	color = "#ff35f5"
 	var/obj/effect/landmark/chosen_landmark
@@ -719,14 +719,14 @@
 		if(readycheck == "I AM READY")
 			if(chosen_landmark)
 				to_chat(user, span_warning("The Rot prevented a simple walk down Azuria's main road. This is the safest route from my Warcamp."))
-				to_chat(user, span_warning("Before I return, I'll need to SCOUT A PATH (Warband Verb Tab)."))
+				to_chat(user, span_warning("Before I return, I'll need to SCOUT A PATH (RoleUnique Verb Tab)."))
 				user.forceMove(chosen_landmark.loc)
 				user.visible_message(span_bold("[user] emerges from a hidden path!"))
 				return
 		return
 
 	// if they don't match the warband ID, we assume they rebelled VERY early into the round (for whatever reason) and just let them leave
-	if(user.mind.warband_ID != warband_ID || user.mind.special_role == ROLE_WARLORD_GRUNT) // we'll let grunts leave too	
+	if(user.mind.warband_ID != warband_ID || user.mind.special_role == ROLE_WARLORD_GRUNT) // we'll let grunts leave too
 		if(chosen_landmark)
 			user.forceMove(chosen_landmark.loc)
 			return
@@ -739,7 +739,7 @@
 				if(linked_warband.spawns <= 0)
 					to_chat(user, span_warning("No reinforcements remain to serve as an Envoy. We haven't even left the camp. How the fuck did this happen?"))
 					return
-	
+
 				var/list/depth_options = list("Simple Envoy", "Use a Character Slot")
 				var/depth_choice = tgui_input_list(user, "How should the Envoy look?", "Envoy Creation", depth_options)
 				switch(depth_choice)

@@ -53,7 +53,7 @@
 	ADD_TRAIT(H, TRAIT_NOBLE, TRAIT_GENERIC)
 	if(should_wear_femme_clothes(H))
 		r_hand = /obj/item/rogueweapon/mace/parasol
-		belt = /obj/item/storage/belt/rogue/leather/cloth/lady
+		belt = /obj/item/storage/belt/rogue/leather/cloth/upgraded/lady
 		armor = /obj/item/clothing/suit/roguetown/shirt/dress/gown/wintergown
 		shirt = /obj/item/clothing/suit/roguetown/shirt/shortshirt
 		id = /obj/item/clothing/ring/signet

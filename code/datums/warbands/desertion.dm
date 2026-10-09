@@ -43,7 +43,7 @@
 			if(bossman.real_name == mind.warband_recruiter_name)
 				if(!autoresolve) // if we're autoresolving, their direct boss is the one who exiled them, so we can skip past this as they don't need to be alerted
 					bossman.mind.unresolved_exile_names += real_name
-					to_chat(bossman, span_warning("My subordinate, [real_name], has been branded an exile by my Warband. I can resolve this (RESOLVE EXILES in the Warband Tab)"))
+					to_chat(bossman, span_warning("My subordinate, [real_name], has been branded an exile by my Warband. I can resolve this (RESOLVE EXILES in the RoleUnique tab)"))
 		to_chat(src, span_boldred("I have been exiled from the Warband."))
 		faction.Remove(old_faction_string)
 		faction -= list("warband_[initial_ID]")
@@ -125,7 +125,7 @@
 		goon.faction.Remove(old_faction_string)
 		goon.faction |= list("warband_[mind.warband_ID]")
 		goon.warband_ID = mind.warband_ID
-	
+
 	new_warband_manager.members += src
 
 	switch(advjob) // ideally it'd be fun to give each Feud lieutenant their own schism path, but we don't have enough bands for this atm
@@ -140,7 +140,7 @@
 			new_warband_manager.faithlocks = list(patron.type)
 			add_verb(src, /mob/living/carbon/human/proc/enlighten)
 
-		if("Magician") // a magician in schism (potentially) creates a sorcerer-king 
+		if("Magician") // a magician in schism (potentially) creates a sorcerer-king
 			if(mind.warband_manager.disorder >= 5)
 				for(var/obj/item/equipped_item in get_equipped_items() + held_items)
 					if(istype(equipped_item, /obj/item/rogueweapon/woodstaff/implement/grand))

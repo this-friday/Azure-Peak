@@ -39,7 +39,7 @@
 	cloak = /obj/item/clothing/cloak/thrall
 	gloves = /obj/item/clothing/gloves/roguetown/leather
 	belt = /obj/item/storage/belt/rogue/leather
-	beltl = /obj/item/rogueweapon/scabbard/sword	
+	beltl = /obj/item/rogueweapon/scabbard/sword
 	beltr = /obj/item/clothing/neck/roguetown/psicross/wood
 	backl = /obj/item/storage/backpack/rogue/satchel/black
 	shoes = /obj/item/clothing/shoes/roguetown/boots/leather
@@ -61,7 +61,7 @@
 
 		// given full Telomancy
 		var/datum/magic_aspect/telomancy/telomancy = new()
-		telomancy.grant_all_spells(H.mind)
+		telomancy.grant_ordered(H.mind)
 		qdel(telomancy)
 
 		var/datum/devotion/C = new /datum/devotion(H, H.patron)

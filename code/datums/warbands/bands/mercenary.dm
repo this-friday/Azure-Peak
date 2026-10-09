@@ -48,19 +48,19 @@
 	combatmusic = list('sound/music/combat_routier.ogg')
 
 // and as a second example:
-/datum/warbands/subtypes/ruma
-	title = "RUMA CLAN"
-	universal_warlordclasses = list(/datum/advclass/mercenary/seonjang) // the warlord gets one exclusive subclass (seonjang)
-	universal_gruntclasses = list(/datum/advclass/mercenary/rumaclan, /datum/advclass/mercenary/rumaclan_sasu) // while grunts and lieutenants only get these two
-	combatmusic = list('sound/music/combat_kazengite.ogg')
-
 /datum/warbands/subtypes/northmen
 	title = "NORTHMEN"
-	universal_warlordclasses = list(/datum/advclass/mercenary/gronn_heavy, /datum/advclass/mercenary/atgervi_shaman)
-	universal_lieutenantclasses = list(/datum/advclass/mercenary/atgervi)
-	universal_gruntclasses = list(/datum/advclass/mercenary/gronn)
+	universal_warlordclasses = list(/datum/advclass/mercenary/gronn_heavy, /datum/advclass/mercenary/atgervi_shaman)  // the warlord gets two exclusive subclasses (heavy & shaman)
+	universal_lieutenantclasses = list(/datum/advclass/mercenary/atgervi) // while lieutenants only get these
+	universal_gruntclasses = list(/datum/advclass/mercenary/gronn) // and grunts only get these
 	combatmusic = list('sound/music/combat_shaman2.ogg')
 	faithlock = ALL_GRONNIC_PATRONS
+
+/datum/warbands/subtypes/ruma
+	title = "RUMA CLAN"
+	universal_gruntclasses = list(/datum/advclass/mercenary/rumaclan, /datum/advclass/mercenary/rumaclan_sasu)
+	combatmusic = list('sound/music/combat_kazengite.ogg')
+
 
 /datum/warbands/subtypes/blackoak
 	title = "BLACK OAK"
@@ -174,7 +174,7 @@
 				armor = /obj/item/clothing/suit/roguetown/armor/brigandine/gronn
 				pants = /obj/item/clothing/under/roguetown/trou/leather/atgervi
 				wrists = /obj/item/clothing/wrists/roguetown/bracers
-				shoes = /obj/item/clothing/shoes/roguetown/boots/leather/atgervi
+				shoes = /obj/item/clothing/shoes/roguetown/boots/leather
 				belt = /obj/item/storage/belt/rogue/leather
 				neck = /obj/item/clothing/neck/roguetown/chaincoif/chainmantle
 			if(WARBAND_MERC_DROW)
@@ -323,7 +323,7 @@
 				r_hand = /obj/item/rogueweapon/sword/sabre/mulyeog/rumahench
 				l_hand = /obj/item/rogueweapon/scabbard/sword/kazengun/steel
 				belt = /obj/item/storage/belt/rogue/leather
-				armor = /obj/item/clothing/suit/roguetown/armor/regenerating/skin/easttats
+				armor = /obj/item/clothing/suit/roguetown/armor/regenerating/skin
 				cloak = /obj/item/clothing/cloak/eastcloak1
 				shirt = /obj/item/clothing/suit/roguetown/shirt/undershirt/eastshirt2
 				pants = /obj/item/clothing/under/roguetown/heavy_leather_pants/eastpants2
@@ -399,7 +399,7 @@
 				tail = new /obj/item/organ/tail/lizard()
 				tail.accessory_colors = body_color
 				tail.Insert(H)
-				
+
 				var/obj/item/organ/snout/lizard/snout = H.getorgan(/obj/item/organ/snout)
 				if(snout)
 					snout.Remove(H, 1)

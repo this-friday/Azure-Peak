@@ -50,7 +50,7 @@
 	if(!ispath(aspect_path, /datum/magic_aspect))
 		return
 	var/datum/magic_aspect/granted = new aspect_path
-	granted.grant_all_spells(H.mind, bonus_castings = 1)
+	granted.grant_ordered(H.mind)
 	to_chat(H, span_notice("I have bound myself to the aspect of [granted.name]. Its every spell flows through me."))
 	qdel(granted)
 

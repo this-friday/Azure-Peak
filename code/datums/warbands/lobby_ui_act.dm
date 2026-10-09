@@ -18,8 +18,7 @@
 		if("refresh")
 			update_static_data(user, ui)
 		if("edit_character")
-			user.client.prefs.current_tab = 1
-			user.client.prefs.ShowChoices(usr, 4)
+			user.client.prefs.ShowChoices(user, PREFERENCE_TAB_CHARACTER_CREATOR)
 		if("create_character")
 			if(user.mind.special_role == ROLE_WARLORD)
 				to_chat(user, span_warning("Use the finalize button to complete your warband."))
@@ -65,7 +64,7 @@
 				advance_stage_timer()
 				INVOKE_ASYNC(src, PROC_REF(spawn_warcamp))
 				for(var/mob/living/carbon/human/member in lobby_members)
-					to_chat(member, span_greenteamradio("The Warlord has advanced to class selection. You may now choose your class."))
+					to_chat(member, span_greentext("The Warlord has advanced to class selection. You may now choose your class."))
 				update_static_data_for_all_viewers()
 				return
 		if("create_warband")
@@ -283,10 +282,10 @@
 			INVOKE_ASYNC(src, PROC_REF(handle_role_swap_request), user)
 			return
 		if("view_laws")
-			to_chat(user, span_greenteamradio("AZURIA'S LAWS ARE AS FOLLOWS:"))
+			to_chat(user, span_greentext("AZURIA'S LAWS ARE AS FOLLOWS:"))
 			user.playsound_local(user, 'sound/misc/notice (2).ogg', 100, FALSE)
 			for(var/law in GLOB.laws_of_the_land)
-				to_chat(user, span_memo(law))
+				to_chat(user, span_info(law))
 			return
 		if("view_vip")
 			var/returned_vip = params["enemy"]

@@ -1,4 +1,4 @@
-/*	
+/*
 	LOBBY CHAT
 	in-lobby warband characters are given a TRAIT_FORCED_LOBBY_CHAT trait
 	this intercepts their say() chat, and instead sends their messages into their warband's Lobby Chat
@@ -49,7 +49,7 @@
 	if(GLOB.say_disabled)
 		to_chat(src, span_danger("Speech is currently admin-disabled."))
 		return
-	if(!(prefs.chat_toggles & CHAT_OOC))
+	if(!(prefs.chat_toggles & CHAT_OOC_MUTED))
 		to_chat(src, span_danger("You have OOC muted."))
 		return
 
@@ -64,7 +64,7 @@
 	message = copytext_char(sanitize(message), 1, MAX_MESSAGE_LEN)
 	if(!message)
 		return
-	if(handle_spam_prevention(message, MUTE_LOOC)) 
+	if(handle_spam_prevention(message, MUTE_LOOC))
 		return
 	if(findtext(message, "byond://")) // ctrl c'd from looc.dm & deadsay.dm
 		to_chat(src, "<B>Advertising other servers is not allowed.</B>")
@@ -92,7 +92,7 @@
 		var/client/lobby_client = lobby_member.client
 		if(!lobby_client)
 			continue
-		if(!(lobby_client.prefs.chat_toggles & CHAT_OOC))
+		if(!(lobby_client.prefs.chat_toggles & CHAT_OOC_MUTED))
 			continue
 		recipients |= lobby_client
 	recipients |= src
@@ -126,11 +126,11 @@
 	var/announcement
 	if(lobby_chat_muted_until > world.time)
 		lobby_chat_muted_until = 0
-		announcement = span_greenteamradio("The Warlord lifts the silence. The lobby may speak freely.")
+		announcement = span_greentext("The Warlord lifts the silence. The lobby may speak freely.")
 		user.playsound_local(user, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 	else
 		lobby_chat_muted_until = world.time + 2 MINUTES
-		announcement = span_redteamradio("The Warlord silences the lobby. Only the Warlord may speak for the next 2 minutes.")
+		announcement = span_redtext("The Warlord silences the lobby. Only the Warlord may speak for the next 2 minutes.")
 		user.playsound_local(user, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
 	announce_to_lobby(announcement)
 	if(linked_lobby) // mutes are shared between linked lobbies
@@ -239,9 +239,9 @@
 	var/target_name = target.client?.prefs?.real_name || target.ckey
 	requester.mind.special_role = target_role
 	target.mind.special_role = requester_role
-	to_chat(requester, span_greenteamradio("The swap is made. I now serve as [display_role(target_role)]."))
-	to_chat(target, span_greenteamradio("The swap is made. I now serve as [display_role(requester_role)]."))
-	announce_to_lobby(span_redteamradio("[requester_name] and [target_name] have swapped roles."))
+	to_chat(requester, span_greentext("The swap was accepted. I now serve as [display_role(target_role)]."))
+	to_chat(target, span_greentext("The swap was accepted. I now serve as [display_role(requester_role)]."))
+	announce_to_lobby(span_redtext("[requester_name] and [target_name] have swapped roles."))
 	requester.playsound_local(requester, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 	target.playsound_local(target, 'sound/misc/warband/menusound1.ogg', 100, FALSE)
 	update_static_data_for_all_viewers()

@@ -43,11 +43,11 @@
 	r_hand = /obj/item/rogueweapon/woodstaff
 	backl = /obj/item/storage/backpack/rogue/satchel
 	backpack_contents = list(
-		/obj/item/flashlight/flare/torch/lantern/prelit, 
+		/obj/item/flashlight/flare/torch/lantern/prelit,
 		/obj/item/reagent_containers/glass/bottle/rogue/healthpotnew,
 		/obj/item/recipe_book/alchemy,
 		/obj/item/reagent_containers/glass/bottle/waterskin,
-		/obj/item/book/spellbook,
+		/obj/item/rogueweapon/spellbook/grand,
 		/obj/item/rogueweapon/huntingknife/idagger/silver/arcyne
 	)
 

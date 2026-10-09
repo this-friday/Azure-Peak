@@ -34,12 +34,12 @@
 	head = /obj/item/clothing/head/roguetown/roguehood/shalal/hijab/keeper
 	shirt = /obj/item/clothing/suit/roguetown/shirt/robe/monk
 	mask = /obj/item/clothing/mask/rogue/duelmask/keeper
-	belt = /obj/item/storage/belt/rogue/leather/rope/dark
+	belt = /obj/item/storage/belt/rogue/leather/rope/upgraded/dark
 	backl = /obj/item/storage/backpack/rogue/backpack
 	shoes = /obj/item/clothing/shoes/roguetown/boots/leather/reinforced
 	backpack_contents = list(
 		/obj/item/reagent_containers/glass/bottle/rogue/strongmanapot,
-		/obj/item/rope/chain, 
+		/obj/item/rope/chain,
 		/obj/item/reagent_containers/glass/bottle/rogue/healthpotnew,
 		/obj/item/flashlight/flare/torch/lantern/prelit
 	)
@@ -86,7 +86,7 @@
 
 	if(H.patron.type == /datum/patron/divine/ravox)
 		id = /obj/item/clothing/neck/roguetown/psicross/ravox
-	
+
 	if(H.patron.type == /datum/patron/divine/necra)
 		id = /obj/item/clothing/neck/roguetown/psicross/necra
 
@@ -100,7 +100,7 @@
 	if(H.patron.type == /datum/patron/divine/malum)
 		id = /obj/item/clothing/neck/roguetown/psicross/malum
 		cloak = /obj/item/clothing/cloak/templar/malumite
-		
+
 	if(H.patron.type == /datum/patron/divine/xylix)
 		cloak = /obj/item/clothing/cloak/templar/xylixian
 		id = /obj/item/clothing/neck/roguetown/psicross/xylix

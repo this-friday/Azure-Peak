@@ -1,4 +1,4 @@
-// essentially the same as the base human_npc 
+// essentially the same as the base human_npc
 // except we're DROPPING the Loot, Call for Help & Leap Attack subtrees, and ADDING travel_to_point + outskirts blackboard entries
 /datum/ai_controller/human_npc/melee/goon
 	ai_movement = /datum/ai_movement/hybrid_pathing/dumb_hybrid_movement/goon
@@ -36,10 +36,7 @@
 		/datum/ai_planning_subtree/generic_stand,
 		/datum/ai_planning_subtree/basic_melee_attack_subtree/human_npc,
 		/datum/ai_planning_subtree/outskirts_attack,
-		/datum/ai_planning_subtree/use_powder,
-		/datum/ai_planning_subtree/use_bandage,
 		/datum/ai_planning_subtree/use_throwable,
-		/datum/ai_planning_subtree/use_healing_drink,
 		/datum/ai_planning_subtree/generic_wield,
 		/datum/ai_planning_subtree/kick_attack,
 		/datum/ai_planning_subtree/generic_resist,

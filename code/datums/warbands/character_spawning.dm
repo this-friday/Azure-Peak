@@ -1,11 +1,11 @@
 
-/*	
+/*
 	CHARACTER SPAWNING
 	- everything that happens as a character is spawned from the lobby
 
 	1 - SPAWN CHARACTER			// spawn a character w/the options selected from the lobby
-	2 - EQUIP CHARACTER			// final step of spawning a character | equips them, sets their traits + adds them to the faction			
-	3 - ASSIGN GRUNT			// binds lieutenants to grunts and vice versa	
+	2 - EQUIP CHARACTER			// final step of spawning a character | equips them, sets their traits + adds them to the faction
+	3 - ASSIGN GRUNT			// binds lieutenants to grunts and vice versa
 	4 - CHANGE CHARACTER		// changes the current character slot
 	5 - LOAD CHARACTER			// loads the current character slot
 	6 - STAT WIPE				// performs a full stat & trait wipe on the target mob
@@ -158,11 +158,11 @@
 /*
 	binds lieutenants to grunts and vice versa, depending on who is spawning
 	limit of 2 grunts per lieutenant
-	
+
 	MODES:
 	1. lieutenant provided: when a lieutenant spawns, collect all unassigned grunts. add them to the mind.subordinates list until they hit the cap
 	2. grunt provided: when a grunt spawns, find them a lieutenant. add their name to the grunt's mind.warband_recruiter_name entry, and add themselves to the lieutenant's mind.subordinates
-	
+
 */
 /datum/warband_manager/proc/assign_grunt(mob/living/carbon/human/lieutenant, mob/living/carbon/human/grunt)
 	var/grunts_per_lt = warband_grunts_per_lieutenant()
@@ -182,21 +182,21 @@
 			if(member.mind.special_role == ROLE_WARLORD_GRUNT && !member.mind.warband_recruiter_name)
 				unassigned_grunts += member
 		if(!unassigned_grunts.len)
-			to_chat(lieutenant, span_greenteamradio("My subordinates are yet to arrive."))
+			to_chat(lieutenant, span_greentext("My subordinates are yet to arrive."))
 			return
-		
+
 		var/assigned_count = 0
 		for(var/mob/living/carbon/human/waiting_grunt in unassigned_grunts)
 			if(assigned_count >= grunts_per_lt)
 				break
-			
+
 			lieutenant.mind.subordinates += waiting_grunt
 			waiting_grunt.mind.warband_recruiter_name = lieutenant.real_name
-			to_chat(waiting_grunt, span_greenteamradio("My Lieutenant, [lieutenant.real_name], has arrived."))
-			to_chat(lieutenant, span_greenteamradio("[waiting_grunt.real_name] is my subordinate."))
+			to_chat(waiting_grunt, span_greentext("My Lieutenant, [lieutenant.real_name], has arrived."))
+			to_chat(lieutenant, span_greentext("[waiting_grunt.real_name] is my subordinate."))
 			assigned_count++
 		return
-	
+
 	// MODE 2: a grunt spawns
 	if(grunt && !lieutenant)
 		if(!grunt.mind || grunt.mind.special_role != ROLE_WARLORD_GRUNT)
@@ -210,9 +210,9 @@
 			if(member.mind.special_role == ROLE_WARLORD_LIEUTENANT || member.mind.special_role == ROLE_WARLORD_ASPIRANT)
 				if(member.mind.subordinates.len < grunts_per_lt)
 					available_lieutenants += member
-		
+
 		if(!available_lieutenants.len)
-			to_chat(grunt, span_greenteamradio("My Lieutenant is yet to arrive."))
+			to_chat(grunt, span_greentext("My Lieutenant is yet to arrive."))
 			return
 
 		var/mob/living/carbon/human/chosen_lieutenant
@@ -223,12 +223,12 @@
 			if(current_count < lowest_count)
 				lowest_count = current_count
 				chosen_lieutenant = lieu
-		
+
 		if(chosen_lieutenant)
 			chosen_lieutenant.mind.subordinates += grunt
 			grunt.mind.warband_recruiter_name = chosen_lieutenant.real_name
-			to_chat(grunt, span_greenteamradio("[chosen_lieutenant.real_name] is my Lieutenant."))
-			to_chat(chosen_lieutenant, span_greenteamradio("[grunt.real_name], my subordinate, has arrived."))
+			to_chat(grunt, span_greentext("[chosen_lieutenant.real_name] is my Lieutenant."))
+			to_chat(chosen_lieutenant, span_greentext("[grunt.real_name], my subordinate, has arrived."))
 		return
 
 	return
@@ -273,7 +273,7 @@
 /*
 	applies the client's active character slot to the current mob
 
-*/ 
+*/
 /datum/warband_manager/proc/load_appearance(mob/living/carbon/human/user, mob/living/carbon/human/target)
 	var/client/source = user?.client || target?.client
 	if(!source?.prefs)
@@ -329,7 +329,7 @@
 
 /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// GIVE TREATY
-/* 
+/*
 	after a tiny delay, gives recently-spawned warlords & lieutenants a free treaty
 
 */
@@ -340,7 +340,7 @@
 		return
 	if(!linked_faction)
 		return
-	
+
 	var/obj/item/treaty/new_treaty = new /obj/item/treaty(user.loc)
 	new /obj/item/natural/feather(user.loc)
 	new_treaty.firstparty = linked_faction.name
@@ -363,7 +363,7 @@
 	var/calculated_size = selected_warband?.get_base_squad_size(user, primary_class) || 4
 
 	calculated_size += squad_size_bonus	// applied before doubling so the warlord's multiplier scales it correctly
- 
+
 	if(user.mind.special_role == ROLE_WARLORD)
 		calculated_size *= 2
 

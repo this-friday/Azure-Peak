@@ -3,7 +3,7 @@
 // lets an admin/gamemaster manually assemble a warband w/the ckeys they provide
 /client/proc/warband_gm_panel()
 	set name = "Warband - Spawner"
-	set category = "Game Master"
+	set category = "Game Master.Events"
 	if(!holder)
 		return
 	var/datum/warband_spawner_ui/D = new()

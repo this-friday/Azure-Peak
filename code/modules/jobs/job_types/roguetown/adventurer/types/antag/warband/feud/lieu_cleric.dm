@@ -32,7 +32,7 @@
 	pants = /obj/item/clothing/under/roguetown/tights/black
 	shoes = /obj/item/clothing/shoes/roguetown/shortboots
 	beltl = /obj/item/rogueweapon/scabbard/sheath
-	belt = /obj/item/storage/belt/rogue/leather/rope/dark
+	belt = /obj/item/storage/belt/rogue/leather/rope/upgraded/dark
 	backl = /obj/item/storage/backpack/rogue/satchel
 	l_hand = /obj/item/rogueweapon/woodstaff
 	gloves = /obj/item/clothing/gloves/roguetown/bandages/pugilist
@@ -90,7 +90,7 @@
 		pants = /obj/item/clothing/under/roguetown/skirt/black
 		wrists = /obj/item/clothing/wrists/roguetown/bracers/leather/heavy
 		H.adjust_skillrank_up_to(/datum/skill/misc/sneaking = 5)
-		H.adjust_skillrank_up_to(/datum/skill/misc/music = 4)		
+		H.adjust_skillrank_up_to(/datum/skill/misc/music = 4)
 		H.adjust_skillrank_up_to(/datum/skill/misc/climbing = 3)
 		H.adjust_skillrank_up_to(/datum/skill/misc/lockpicking = 3)
 	if(H.patron.type == /datum/patron/divine/eora)

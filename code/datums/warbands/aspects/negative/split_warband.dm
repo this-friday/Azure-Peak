@@ -10,6 +10,8 @@
 	(NOTE: Only one Warband will receive a warcamp, and the other will be spawned directly into the world.)"
 	warning = "...of an open schism in their ranks."
 	points = 1
+	rarity = 1
+	storytellerlimit = /datum/patron/inhumen/baotha
 	random_blacklisted = TRUE // a timeout selecting this (when assumedly the warlord's afk) would be too weird
 
 /datum/warbands/aspects/split_warband/on_warband_confirmed(datum/warband_manager/manager, intensity = 1)
@@ -55,7 +57,7 @@
 			member.client.screen -= button
 		new_manager.create_HUD_instance(member)
 		to_chat(member, span_boldwarning("You've been pushed into another warband. You are now in WARBAND 2."))
-		
+
 	var/list/officer_candidates = list()
 	for(var/mob/living/member in departing)
 		if(member.mind.special_role == ROLE_WARLORD_LIEUTENANT || member.mind.special_role == ROLE_WARLORD_ASPIRANT)
@@ -69,7 +71,7 @@
 		if(member.mind?.special_role == ROLE_WARLORD)
 			old_warlord_name = member.real_name
 			break
-	var/announcement = span_redteamradio("The lobby has been split. WARBAND 1 is led by [old_warlord_name]. WARBAND 2 is led by [new_warlord.real_name]. For planning's sake, both lobbies still share this chat.")
+	var/announcement = span_redtext("The lobby has been split. WARBAND 1 is led by [old_warlord_name]. WARBAND 2 is led by [new_warlord.real_name]. For planning's sake, both lobbies still share this chat.")
 	announce_to_lobby(announcement)
 	new_manager.announce_to_lobby(announcement)
 	for(var/mob/living/member in lobby_members + new_manager.lobby_members)

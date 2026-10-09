@@ -20,13 +20,13 @@
 /obj/item/treaty/get_mechanics_examine(mob/user)
 	. = ..()
 	. += span_info("<span style='color:#e8bf67'>OPEN:</span> Unroll the treaty by resizing the window.")
-	. += span_info("<span style='color:#e8bf67'>DRAFT:</span> Holding a feather in your off-hand, choose terms from the 'Available Terms' section in order to draft them.")
+	. += span_info("<span style='color:#e8bf67'>DRAFT:</span> While holding a feather in your off-hand, choose terms from the 'Available Terms' section in order to draft them.")
 	. += span_info("<span style='color:#e8bf67'>SIGN:</span> The relevant authorities for a Term must sign within the 'Active Terms' section.")
 	. += span_info("<span style='color:#e8bf67'>FINALIZE:</span> Hurling a completed treaty into an open flame at dawn will finalize it.")
 	. += span_info("<span style='color:#e8bf67'>SWIFT FINALIZE:</span> Invoke the Ignition miracle upon a completed treaty.")
 	. += span_info("<span style='color:#ae1919'>BEWARE I:</span> If a single term is unsigned, finalization will fail. Freeform terms are exceptions.")
 	. += span_info("<span style='color:#ae1919'>BEWARE II:</span> Burning a treaty at any time BESIDES dawn will result in failure. Only a SWIFT FINALIZE can circumvent this requirement.")
-	. += span_info("<span style='color:#ae1919'>BEWARE III:</span> Drafting a new Term will un-sign all signed terms.")
+	. += span_info("<span style='color:#ae1919'>BEWARE III:</span> Drafting or modifying a Term will nullify any existing signatures.")
 
 /obj/item/treaty/Initialize()
 	..()
@@ -145,7 +145,7 @@
 	// PERSONAL AUTHORITY
 	if(party_name == user_name || (original_name && party_name == original_name))
 		return TRUE
-	
+
 	// FACTION AUTHORITY (currently just flavor)
 	for(var/datum/treaty_flavor/faction in SSwarbands.treaty_flavor_factions)
 		if(faction.name != party_name)

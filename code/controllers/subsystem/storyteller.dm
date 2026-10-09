@@ -1998,7 +1998,7 @@ SUBSYSTEM_DEF(gamemode)
 	crowned.times_chosen++
 	GLOB.featured_stats[FEATURED_STATS_STORYTELLERS]["entries"][crowned.name] = crowned.times_chosen
 	log_storyteller("Divine interventions now favour [crowned.name] ([best_count] follower\s).")
-		return highest.type
+	return crowned.type
 
 /// Refreshes statistics regarding alive statuses of certain professions or antags, like nobles
 /datum/controller/subsystem/gamemode/proc/refresh_alive_stats(roundstart = FALSE)

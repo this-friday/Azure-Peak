@@ -15,10 +15,10 @@
 		/datum/skill/combat/maces = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/combat/crossbows = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/combat/wrestling = SKILL_LEVEL_JOURNEYMAN,
-		/datum/skill/combat/knives = SKILL_LEVEL_JOURNEYMAN,		
+		/datum/skill/combat/knives = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/combat/unarmed = SKILL_LEVEL_NOVICE,
 		/datum/skill/misc/athletics = SKILL_LEVEL_EXPERT,
-		/datum/skill/misc/reading = SKILL_LEVEL_EXPERT,		
+		/datum/skill/misc/reading = SKILL_LEVEL_EXPERT,
 		/datum/skill/misc/swimming = SKILL_LEVEL_NOVICE,
 		/datum/skill/misc/climbing = SKILL_LEVEL_NOVICE,
 		/datum/skill/misc/riding = SKILL_LEVEL_JOURNEYMAN,
@@ -35,7 +35,7 @@
 		head = /obj/item/clothing/head/roguetown/witchhat/thrall
 		armor = /obj/item/clothing/suit/roguetown/shirt/robe/tabardblack/alt
 	else
-		armor = /obj/item/clothing/suit/roguetown/shirt/robe/wizard	
+		armor = /obj/item/clothing/suit/roguetown/shirt/robe/wizard
 		head = /obj/item/clothing/head/roguetown/wizhat
 
 	neck = /obj/item/clothing/neck/roguetown/bevor
@@ -54,10 +54,10 @@
 	l_hand = /obj/item/rogueweapon/sword/decorated
 	backl = /obj/item/storage/backpack/rogue/satchel
 	backpack_contents = list(
-		/obj/item/reagent_containers/glass/bottle/rogue/poison, 
+		/obj/item/reagent_containers/glass/bottle/rogue/poison,
 		/obj/item/reagent_containers/glass/bottle/rogue/healthpotnew,
 		/obj/item/recipe_book/magic,
-		/obj/item/book/spellbook,
+		/obj/item/rogueweapon/spellbook/grand,
 		/obj/item/rogueweapon/huntingknife/idagger/silver/arcyne
 	)
 

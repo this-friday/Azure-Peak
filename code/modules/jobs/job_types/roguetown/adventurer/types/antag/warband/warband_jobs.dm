@@ -4,7 +4,7 @@
 	faction = "Station"
 	total_positions = 0
 	spawn_positions = 0
-	min_pq = null 
+	min_pq = null
 	max_pq = null
 	announce_latejoin = FALSE
 
@@ -69,7 +69,7 @@
 
 /datum/outfit/job/roguetown/warband/warband_envoy/pre_equip(mob/living/carbon/human/H, used_slot)
 	..()
-	to_chat(H, span_warning("As an Envoy, you may return to your main character by interacting with a Rally Point. In the event of an emergency, use the ABANDON ENVOY verb in your Warband tab. Failing that, re-enter your corpse."))
+	to_chat(H, span_warning("As an Envoy, you may return to your main character by interacting with a Rally Point. In the event of an emergency, use the ABANDON ENVOY verb in your RoleUnique tab. Failing that, re-enter your corpse."))
 	to_chat(H, span_warning("If you embark for diplomacy, you should consider fetching a Treaty from the Campaign Planner."))
 	add_verb(H, /mob/living/carbon/human/proc/abandon_envoy)
 	add_verb(H, /mob/living/carbon/human/proc/shortcut)
@@ -77,9 +77,9 @@
 	add_verb(H, /mob/living/carbon/human/proc/communicate)
 	H.mind.warband_manager.members += H
 	H.pronouns = "he/him"
-	backl = /obj/item/storage/backpack/rogue/satchel	
+	backl = /obj/item/storage/backpack/rogue/satchel
 	backpack_contents = list(
-		/obj/item/rogueweapon/huntingknife/idagger/steel/special = 1, 
+		/obj/item/rogueweapon/huntingknife/idagger/steel/special = 1,
 		/obj/item/rogueweapon/scabbard/sheath = 1,
 		/obj/item/flashlight/flare/torch/lantern/prelit = 1,
 		/obj/item/natural/feather,
@@ -103,7 +103,7 @@
 			if(should_wear_femme_clothes(H))
 				cloak = /obj/item/clothing/cloak/half/red
 				shirt = /obj/item/clothing/suit/roguetown/shirt/tunic/red
-				pants = /obj/item/clothing/under/roguetown/tights/black	
+				pants = /obj/item/clothing/under/roguetown/tights/black
 			else
 				head = /obj/item/clothing/head/roguetown/chaperon/greyscale
 				cloak = /obj/item/clothing/cloak/half/red
@@ -127,7 +127,7 @@
 		if("Nobility")
 			ADD_TRAIT(H, TRAIT_NOBLE, TRAIT_GENERIC)
 			if(should_wear_femme_clothes(H))
-				belt = /obj/item/storage/belt/rogue/leather/cloth/lady
+				belt = /obj/item/storage/belt/rogue/leather/cloth/upgraded/lady
 				armor = /obj/item/clothing/suit/roguetown/shirt/dress/gown/wintergown
 				shirt = /obj/item/clothing/suit/roguetown/shirt/shortshirt
 				id = /obj/item/clothing/ring/signet

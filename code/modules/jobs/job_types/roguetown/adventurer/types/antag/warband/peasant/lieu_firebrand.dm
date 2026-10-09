@@ -22,7 +22,7 @@
 		/datum/skill/craft/masonry = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/craft/engineering = SKILL_LEVEL_MASTER,
 		/datum/skill/craft/blacksmithing = SKILL_LEVEL_EXPERT,
-		/datum/skill/craft/armorsmithing = SKILL_LEVEL_EXPERT, 
+		/datum/skill/craft/armorsmithing = SKILL_LEVEL_EXPERT,
 		/datum/skill/craft/weaponsmithing = SKILL_LEVEL_EXPERT,
 		/datum/skill/magic/arcane = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/misc/climbing = SKILL_LEVEL_JOURNEYMAN,
@@ -51,10 +51,9 @@
 	backr = /obj/item/gun/ballistic/revolver/grenadelauncher/crossbow/slurbow
 	backl = /obj/item/storage/backpack/rogue/backpack
 	backpack_contents = list(/obj/item/reagent_containers/glass/bottle/rogue/healthpotnew = 1,
-		/obj/item/rogueweapon/hammer/steel = 1,	
-		/obj/item/lockpickring/mundane = 1,		
+		/obj/item/rogueweapon/hammer/steel = 1,
+		/obj/item/lockpickring/mundane = 1,
 		/obj/item/flashlight/flare/torch/lantern = 1,
-		/obj/item/contraption/linker = 1,	
 		/obj/item/flint = 1,
 		/obj/item/bomb/smoke = 2,
 		/obj/item/impact_grenade/explosion = 4,

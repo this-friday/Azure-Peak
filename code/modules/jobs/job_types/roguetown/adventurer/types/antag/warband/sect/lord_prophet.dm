@@ -31,7 +31,7 @@
 	mask = /obj/item/clothing/head/roguetown/roguehood/shalal/hijab/prophet
 	cloak = /obj/item/clothing/cloak/matron/prophet
 	neck = /obj/item/clothing/neck/roguetown/chaincoif/chainmantle
-	belt = /obj/item/storage/belt/rogue/leather/rope/dark
+	belt = /obj/item/storage/belt/rogue/leather/rope/upgraded/dark
 	beltr = /obj/item/rogueweapon/sickle
 	backl = /obj/item/storage/backpack/rogue/satchel
 	shirt = /obj/item/clothing/suit/roguetown/shirt/robe/monk/holy
@@ -74,7 +74,7 @@
 	if(H.patron.type == /datum/patron/divine/xylix)
 		wrists = /obj/item/clothing/neck/roguetown/luckcharm
 		H.adjust_skillrank_up_to(/datum/skill/misc/sneaking = 6)
-		H.adjust_skillrank_up_to(/datum/skill/misc/music = 6)		
+		H.adjust_skillrank_up_to(/datum/skill/misc/music = 6)
 		H.adjust_skillrank_up_to(/datum/skill/misc/climbing = 3)
 		H.adjust_skillrank_up_to(/datum/skill/misc/lockpicking = 3)
 	if(H.patron.type == /datum/patron/divine/eora)

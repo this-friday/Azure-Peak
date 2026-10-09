@@ -16,7 +16,7 @@
 		/datum/skill/misc/climbing = SKILL_LEVEL_EXPERT,
 		/datum/skill/craft/carpentry = SKILL_LEVEL_EXPERT,
 		/datum/skill/craft/crafting = SKILL_LEVEL_EXPERT,
-		/datum/skill/combat/wrestling = SKILL_LEVEL_EXPERT,	
+		/datum/skill/combat/wrestling = SKILL_LEVEL_EXPERT,
 		/datum/skill/combat/shields = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/misc/athletics = SKILL_LEVEL_JOURNEYMAN,
 		/datum/skill/combat/polearms = SKILL_LEVEL_APPRENTICE,
@@ -52,21 +52,21 @@
 	if(H.mind)
 		H.mind.AddSpell(new	/datum/action/cooldown/spell/mending)
 		H.mind.AddSpell(new	/datum/action/cooldown/spell/conjure_aegis)
-		var/coverclass = list("Guidance","Hawk's Eyes","Giant's Strength","Stoneskin","Fortitude","Haste")
+		var/coverclass = list("Guidance","Hawk's Eyes","Giant's Strength","Blood Rush","Fortitude","Haste")
 		var/coverclass_choice = input("I was taught a simple spell to aid our efforts!", "I REMEMBER") as anything in coverclass
 		switch(coverclass_choice)
 			if("Guidance")
-				H.mind.AddSpell(new /datum/action/cooldown/spell/guidance)
+				H.mind.AddSpell(new /datum/action/cooldown/spell/augment_buff/guidance)
 			if("Hawk's Eyes")
-				H.mind.AddSpell(new /datum/action/cooldown/spell/hawks_eyes)
+				H.mind.AddSpell(new /datum/action/cooldown/spell/augment_buff/attune_hawk)
 			if("Giant's Strength")
-				H.mind.AddSpell(new /datum/action/cooldown/spell/giants_strength)
-			if("Stoneskin")
-				H.mind.AddSpell(new /datum/action/cooldown/spell/stoneskin)
+				H.mind.AddSpell(new /datum/action/cooldown/spell/augment_buff/attune_giant)
+			if("Blood Rush")
+				H.mind.AddSpell(new /datum/action/cooldown/spell/augment_buff/blood_rush)
 			if("Fortitude")
-				H.mind.AddSpell(new /datum/action/cooldown/spell/fortitude)
+				H.mind.AddSpell(new /datum/action/cooldown/spell/augment_buff/fortitude)
 			if("Haste")
-				H.mind.AddSpell(new /datum/action/cooldown/spell/haste)
+				H.mind.AddSpell(new /datum/action/cooldown/spell/augment_buff/attune_haste)
 
 /obj/item/clothing/gloves/roguetown/plate/iron/layman
 	name = "bronze gauntlets"

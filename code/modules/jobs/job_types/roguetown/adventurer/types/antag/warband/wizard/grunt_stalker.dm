@@ -25,7 +25,7 @@
 		/datum/skill/misc/athletics = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/misc/reading = SKILL_LEVEL_APPRENTICE,
 		/datum/skill/magic/arcane = SKILL_LEVEL_NOVICE,
-	
+
 	)
 	outfit = /datum/outfit/job/roguetown/warband/wizard/grunt/stalker
 
@@ -44,9 +44,9 @@
 	l_hand = /obj/item/rogueweapon/sword/sabre/hook
 	if(H.mind)
 		var/datum/magic_aspect/illusion/illusion = new() // 2 castings of every Illusion spell (currently just Invisibility)
-		var/datum/action/cooldown/spell/blink/blink = new() // 2 castings of Blink	
-		blink.set_bonus_castings(1)			
-		illusion.grant_all_spells(H.mind, bonus_castings = 1)
+		var/datum/action/cooldown/spell/blink/blink = new() // 2 castings of Blink
+		blink.set_bonus_castings(1)
+		illusion.grant_ordered(H.mind)
 		qdel(illusion)
 		H.mind.AddSpell(blink)
 		H.mind.AddSpell(new /datum/action/cooldown/spell/projectile/fetch)

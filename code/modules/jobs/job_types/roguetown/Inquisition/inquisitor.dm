@@ -53,7 +53,6 @@
 		TRAIT_PERFECT_TRACKER,
 		TRAIT_PURITAN,
 		TRAIT_LAWEXPERT,
-		TRAIT_SLEUTH,
 		)
 	subclass_stats = list(
 		STATKEY_CON = 1,

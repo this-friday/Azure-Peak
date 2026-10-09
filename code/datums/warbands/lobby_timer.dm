@@ -249,7 +249,7 @@
 				if(field.client_only || isnull(details[field.key]))
 					continue
 				casus_belli_selection.vars[field.key] = details[field.key]
-			announce_to_lobby(span_redteamradio("The most-supported casus belli proposal ([winner["term_name"]]) carries the day."))
+			announce_to_lobby(span_redtext("The most-supported casus belli proposal ([winner["term_name"]]) was automatically chosen."))
 			return TRUE
 
 	var/list/no_input_terms = list()
@@ -274,7 +274,7 @@
 	var/picked_type = pick(candidate_pool)
 	casus_belli_selection = new picked_type()
 	auto_fill_term_fields(casus_belli_selection)
-	announce_to_lobby(span_redteamradio("With no proposals made, a random casus belli was selected: [casus_belli_selection.name]."))
+	announce_to_lobby(span_redtext("With no proposals made, a random casus belli was selected: [casus_belli_selection.name]."))
 	return TRUE
 
 /datum/warband_manager/proc/auto_fill_term_fields(datum/treaty/terms/term)

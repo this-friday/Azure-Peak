@@ -49,4 +49,4 @@
 	chosen.on_warband_confirmed(manager) // fire the chosen aspect's own confirmation hook
 
 	for(var/mob/living/member in manager.lobby_members)
-		to_chat(member, span_redteamradio("Fated Suffering has selected [chosen.title]."))
+		to_chat(member, span_redtext("Fated Suffering has selected [chosen.title]."))

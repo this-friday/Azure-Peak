@@ -39,7 +39,7 @@
 
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ASSOCIATE
-/* 
+/*
 	the following variables track association & exile status
 		warband_exile_IDs 			// given when someone is exiled | it's the ID of their former warband
 		warband_recruiter_name		// given when a veteran is spawned, an outsider is associated, or an exiled veteran is associated by a new lieutenant
@@ -99,7 +99,7 @@
 			if(target.mind && (target.real_name in user.mind.unresolved_exile_names)) // if your subordinate got exiled, using Associate on them affirms that you wanna keep 'em as a pal
 				user.mind.unresolved_exile_names -= target.real_name
 				to_chat(user, span_warning("Since this was in question, I shall make it official."))
-				for(var/mob/living/carbon/human/member in user.mind.warband_manager.members) 
+				for(var/mob/living/carbon/human/member in user.mind.warband_manager.members)
 					to_chat(member, span_warning("The [user.job], [user.real_name], acts in defiance of [target.real_name]'s exile and has ordered their men to treat [target.real_name] as an associate."))
 
 			return FALSE
@@ -108,11 +108,11 @@
 			if(user.mind.warband_ID in target.mind.warband_exile_IDs) // if they're re-associating with an exile (warband ID is found in their exile ID list)
 				if(!(target in user.mind.subordinates)) // only do this if they aren't already a subordinate
 					// if a lieutenant's the one doing this, they become a personal ally
-					if(user.mind.special_role == ROLE_WARLORD_LIEUTENANT || user.mind.special_role == ROLE_WARLORD_ASPIRANT) 
-						for(var/mob/living/carbon/human/member in user.mind.warband_manager.members) 
+					if(user.mind.special_role == ROLE_WARLORD_LIEUTENANT || user.mind.special_role == ROLE_WARLORD_ASPIRANT)
+						for(var/mob/living/carbon/human/member in user.mind.warband_manager.members)
 							to_chat(member, span_warning("The [user.job], [user.real_name], acts in defiance of [target.real_name]'s exile and has ordered their men to treat [target.real_name] as an associate."))
 						if(!target.mind.warband_recruiter_name)
-							target.mind.warband_recruiter_name = user.real_name 
+							target.mind.warband_recruiter_name = user.real_name
 						if(!(target in user.mind.subordinates)) // if they weren't our subordinate we adopt them
 							user.mind.subordinates += target
 						if(!(personal_faction_tag in target.faction))
@@ -177,7 +177,7 @@
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////// ORDER
-/* 
+/*
 	give orders to your squad of mobs
 	the given order depends on your target
 
@@ -196,7 +196,7 @@
 	associated_skill = /datum/skill/misc/athletics
 	chargedrain = 1
 	chargetime = 0 SECONDS
-	releasedrain = 0 
+	releasedrain = 0
 	recharge_time = 1 SECONDS
 	var/order_range = 12
 	overlay_state = "recruit_guard"
@@ -219,7 +219,7 @@
 		tile.summon_grunt_squad_at_tile(caster)
 		return TRUE
 
-	// ^ if the caster shares the tile's warband ID, the same can be done for the camp-facing outskirts tile, 
+	// ^ if the caster shares the tile's warband ID, the same can be done for the camp-facing outskirts tile,
 	if(istype(target, /obj/structure/fluff/traveltile/warband/outskirts_to_camp))
 		var/obj/structure/fluff/traveltile/warband/outskirts_to_camp/camp_tile = target
 		if(caster.mind.warband_ID == camp_tile.warband_ID)
@@ -320,15 +320,15 @@
 								dirtext += "southeast"
 							else
 								dirtext = ", although I cannot make out an exact direction"
-						
+
 						SEND_SOUND(player, S)
 						to_chat(player, span_warning("I hear a warhorn somewhere [dirtext]."))
-				
+
 					// music override
 					if(ishuman(player))
 						var/mob/living/carbon/human/P = player
 						if(P.cmode_music_override != H.mind.warband_manager.combatmusic)
-							if(!P.cmode_music_override || P.cmode_music_override.len <= 0)
+							if(!P.cmode_music_override)
 								P.originalcmode = P.cmode_music
 							else if(!P.originalcmode) // if something's already overriding the music, we'll leave it alone
 								P.originalcmode = P.cmode_music_override
@@ -399,11 +399,11 @@
 					grunt.ai_controller?.CancelActions()
 					grunt.ai_controller?.set_blackboard_key(BB_TRAVEL_DESTINATION, get_turf(target_location))
 					msg = "<span style='color:#ec3333'>charge.</span>"
-		
+
 				if("follow")
 					manager.add_follower(grunt)	// adds to both members and followers
 					msg = "<span style='color:#57536e'>follow me.</span>"
-					
+
 				if("neutral")
 					manager.clear_followers()
 					grunt.pet_passive = TRUE
@@ -420,7 +420,7 @@
 					grunt.pet_passive = FALSE
 					grunt.apply_status_effect(/datum/status_effect/buff/warband_attack)
 					msg = "<span style='color:#ff0000'>give 'em hell.</span>"
-					
+
 				if("survive")
 					cooldown = TRUE
 					grunt.pet_passive = FALSE

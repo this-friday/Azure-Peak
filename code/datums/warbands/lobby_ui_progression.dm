@@ -54,7 +54,7 @@
 		to_chat(user, span_warning("The selection's points must balance before advancing."))
 		user.playsound_local(user, 'sound/misc/warband/menusound_fail.ogg', 100, FALSE)
 		return
-		
+
 	for(var/datum/warbands/aspects/aspect in incoming_aspects)
 		if(!istype(aspect, ASPECT_SPLIT))
 			continue
@@ -115,8 +115,8 @@
 				warband_info += "<br>- <span style='color:#c9a347'><b>[aspect.title]</b></span>: [aspect.summary]"
 		else
 			warband_info += "."
-		to_chat(member, span_greenteamradio(warband_info))
-		to_chat(member, span_redteamradio("A Warband is chosen. But what are you fighting for? Propose a Casus Belli."))
+		to_chat(member, span_bold(warband_info))
+		to_chat(member, span_redtext("A Warband is chosen. But what are you fighting for? Propose a Casus Belli."))
 
 	update_static_data_for_all_viewers()
 	send_warnings()
@@ -187,7 +187,7 @@
 			if(timed_out)
 				to_chat(member, span_boldwarning("TIME EXPIRED! The warband has been auto-finalized. You may now create your character."))
 			else
-				to_chat(member, span_greenteamradio("The Warlord has established the warband. You may now finalize your character."))
+				to_chat(member, span_greentext("The Warlord has established the warband. You may now finalize your character."))
 			member.playsound_local(member, 'sound/misc/warband/menusound3.ogg', 100, FALSE)
 
 // spawns every member who readied up during finalization
